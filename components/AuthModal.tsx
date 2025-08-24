@@ -15,13 +15,13 @@ export default function AuthModal({
 }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
   const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
   const [error, setError] = useState<string | null>(null);
-  const [joinList, setJoinList] = useState(true); // default checked
+  const [joinList, setJoinList] = useState(true);
   const [name, setName] = useState("");
   const emailRef = useRef<HTMLInputElement | null>(null);
 
-  // Reset to initial mode each time modal opens
   useEffect(() => {
     if (open) {
       setMode(initialMode);
@@ -30,11 +30,11 @@ export default function AuthModal({
       setTimeout(() => emailRef.current?.focus(), 80);
     } else {
       setEmail("");
+      setPw("");
       setName("");
     }
   }, [open, initialMode]);
 
-  // ESC to close
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -43,8 +43,17 @@ export default function AuthModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  function validEmail(v: string) {
-    return /\S+@\S+\.\S+/.test(v.trim());
+  const validEmail = (v: string) => /\S+@\S+\.\S+/.test(v.trim());
+
+  function normalizeSupabaseError(msg?: string): string {
+    if (!msg) return "Something went wrong. Please try again.";
+    const m = msg.toLowerCase();
+    if (m.includes("invalid login credentials")) return "Incorrect email or password.";
+    if (m.includes("email not confirmed")) return "Please confirm your email, then sign in.";
+    if (m.includes("user already registered") || m.includes("user already exists"))
+      return "An account with this email already exists. Try signing in.";
+    if (m.includes("password should be at least")) return "Password must be at least 6 characters.";
+    return msg;
   }
 
   async function submit(e: React.FormEvent) {
@@ -56,6 +65,10 @@ export default function AuthModal({
       setError("Please enter a valid email.");
       return;
     }
+    if (!pw || pw.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
     if (mode === "signup" && !name.trim()) {
       setError("Please enter your name.");
       return;
@@ -64,38 +77,43 @@ export default function AuthModal({
     try {
       setPhase("sending");
 
-      // Send a magic link. Works for both new + existing users.
-      const { error } = await supabase.auth.signInWithOtp({
-        email: em,
-        options: {
-          // Must be in Supabase Auth → URL Configuration → (Additional Redirect URLs)
-          emailRedirectTo: "https://drinkvelah.com/auth/callback",
-          shouldCreateUser: true,
-        },
-      });
-      if (error) throw error;
+      if (mode === "signup") {
+        // Create account (Supabase will send confirmation email if enabled)
+        const { error: signUpErr } = await supabase.auth.signUp({
+          email: em,
+          password: pw,
+          options: { data: { full_name: name.trim() } },
+        });
+        if (signUpErr) throw signUpErr;
 
-      // Optional: add to waitlist on signup tap
-      if (mode === "signup" && joinList) {
-        try {
-          await fetch("/api/join-waitlist", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: em }),
-          });
-        } catch {
-          // ignore; auth email already sent
+        // Optional: also add to newsletter
+        if (joinList) {
+          try {
+            await fetch("/api/join-waitlist", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: em }),
+            });
+          } catch {
+            // ignore; account creation already succeeded
+          }
         }
+
+        // Success state for signup (user might need to confirm email)
+        setPhase("done");
+      } else {
+        // Sign in with password
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: em,
+          password: pw,
+        });
+        if (signInErr) throw signInErr;
+
+        setPhase("done");
       }
-
-      // NOTE: user_metadata can't be set via signInWithOtp.
-      // If you want to store `name`, we can add a tiny /api/profile to save it separately.
-
-      await new Promise((r) => setTimeout(r, 250));
-      setPhase("done");
     } catch (err: any) {
       setPhase("form");
-      setError("Couldn’t send the sign-in link. Please try again in a minute.");
+      setError(normalizeSupabaseError(err?.message));
     }
   }
 
@@ -114,61 +132,56 @@ export default function AuthModal({
           <div className="font-semibold">
             {mode === "signup" ? "Create your account" : "Sign in"}
           </div>
-          <button
-            className="btn btn-ghost h-9 focus-visible:outline-none focus-visible:ring-0"
-            onClick={onClose}
-          >
-            ✕
-          </button>
+          <button className="btn btn-ghost h-9" onClick={onClose}>✕</button>
         </div>
 
-        {/* Body (scroll-safe, padded) */}
+        {/* Body */}
         <div className="relative">
           <div className="p-5 md:p-6 max-h-[85vh] overflow-auto">
             {/* FORM */}
-            <div
-              className={`space-y-4 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${
-                phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
-            >
+            <div className={`space-y-4 transition-opacity duration-300 ${phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"}`}>
               <form onSubmit={submit} noValidate className="space-y-4">
                 {mode === "signup" && (
                   <div className="space-y-2">
-                    <label htmlFor="auth-name" className="text-sm">
-                      Name
-                    </label>
+                    <label htmlFor="auth-name" className="text-sm">Name</label>
                     <input
                       id="auth-name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="border rounded-2xl px-3 py-2 w-full focus:outline-none focus:ring-0"
+                      className="border rounded-2xl px-3 py-2 w-full"
                       placeholder="Your Name"
                     />
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <label htmlFor="auth-email" className="text-sm">
-                    Email
-                  </label>
+                  <label htmlFor="auth-email" className="text-sm">Email</label>
                   <input
                     id="auth-email"
                     ref={emailRef}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border rounded-2xl px-3 py-2 w-full focus:outline-none focus:ring-0"
+                    className="border rounded-2xl px-3 py-2 w-full"
                     placeholder="you@company.com"
                     aria-invalid={!!error}
                   />
                 </div>
 
-                {/* No password field with magic-link */}
+                <div className="space-y-2">
+                  <label htmlFor="auth-pw" className="text-sm">Password</label>
+                  <input
+                    id="auth-pw"
+                    type="password"
+                    value={pw}
+                    onChange={(e) => setPw(e.target.value)}
+                    className="border rounded-2xl px-3 py-2 w-full"
+                    placeholder="••••••••"
+                  />
+                </div>
 
-                {error && (
-                  <div className="text-sm text-red-600 animate-soft-shake">{error}</div>
-                )}
+                {error && <div className="text-sm text-red-600 animate-soft-shake">{error}</div>}
 
                 {mode === "signup" && (
                   <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
@@ -182,35 +195,24 @@ export default function AuthModal({
                   </label>
                 )}
 
-                {/* Primary submit button (no outline) */}
-                <button
-                  type="submit"
-                  className="btn btn-primary h-10 w-full focus-visible:outline-none focus-visible:ring-0"
-                >
-                  {mode === "signup" ? "Send sign-up link" : "Send sign-in link"}
+                <button type="submit" className="btn btn-primary h-10 w-full">
+                  {mode === "signup" ? "Sign up" : "Sign in"}
                 </button>
 
-                {/* Single toggle link under the button */}
                 <div className="pt-2 text-center text-sm text-slate-600">
                   {mode === "signup" ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        setMode("signin");
-                        setError(null);
-                      }}
-                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-velah focus-visible:outline-none focus-visible:ring-0"
+                      onClick={() => { setMode("signin"); setError(null); }}
+                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-velah"
                     >
                       Have an account? Sign in
                     </button>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => {
-                        setMode("signup");
-                        setError(null);
-                      }}
-                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-velah focus-visible:outline-none focus-visible:ring-0"
+                      onClick={() => { setMode("signup"); setError(null); }}
+                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-velah"
                     >
                       New here? Create an account
                     </button>
@@ -220,33 +222,22 @@ export default function AuthModal({
             </div>
 
             {/* SENDING */}
-            <div
-              className={`p-6 flex items-center justify-center gap-3 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${
-                phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
-            >
+            <div className={`p-6 flex items-center justify-center gap-3 transition-opacity duration-300 ${phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"}`}>
               <div className="loader" aria-hidden />
               <div className="text-sm text-slate-600">
-                {mode === "signup" ? "Sending your sign-up link…" : "Sending your sign-in link…"}
+                {mode === "signup" ? "Creating your account…" : "Signing you in…"}
               </div>
             </div>
 
             {/* DONE */}
-            <div
-              className={`p-6 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${
-                phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
-            >
+            <div className={`p-6 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"}`}>
               <div className="success-check" aria-hidden />
               <div className="text-emerald-700 text-sm">
-                Check your email for a secure link to continue.
+                {mode === "signup"
+                  ? "Account created. Check your email if verification is required."
+                  : "Signed in successfully."}
               </div>
-              <button
-                className="btn btn-ghost h-9 focus-visible:outline-none focus-visible:ring-0"
-                onClick={onClose}
-              >
-                Close
-              </button>
+              <button className="btn btn-ghost h-9" onClick={onClose}>Close</button>
             </div>
           </div>
         </div>
