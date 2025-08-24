@@ -1,4 +1,4 @@
-// app/api/join-waitlist/route.ts
+// app/api/resend-confirmation/route.ts
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -9,83 +9,52 @@ import crypto from "crypto";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const HASH_SECRET = process.env.HASH_SECRET!;
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
 const EXP_HOURS = Number(process.env.WAITLIST_CONFIRM_EXP_HOURS || 24);
-
-function sha256(s: string) {
-  return crypto.createHash("sha256").update(s, "utf8").digest("hex");
-}
-function getClientIP(req: Request) {
-  const xf = req.headers.get("x-forwarded-for") || "";
-  const parts = xf.split(",").map(s => s.trim()).filter(Boolean);
-  return parts[0] || req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "";
-}
+const COOLDOWN_MIN = 15;
 
 export async function POST(req: Request) {
-  // lazy init so Next doesn’t touch envs at build time
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
   const resend = new Resend(RESEND_API_KEY);
 
   try {
-    const ua = req.headers.get("user-agent") || "";
-    const ip = getClientIP(req) || "";
-    const { email, zone } = await req.json();
-
+    const { email } = await req.json();
     if (!email || typeof email !== "string") {
-      return NextResponse.json({ ok: false, error: "Email required" }, { status: 400 });
+      return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    const ip_hash = ip ? sha256(`${ip}:${HASH_SECRET}`) : null;
-
-    // Upsert by case-insensitive email (email_lc unique index exists)
-    const { data: row, error } = await supabase
+    const { data: rows } = await supabase
       .from("newsletter")
-      .upsert(
-        {
-          email,
-          zone: zone || null,
-          user_agent: ua || null,
-          ip_hash,
-          // status default is 'pending' from DB; if already confirmed, we won’t re-send
-        },
-        { onConflict: "email_lc", ignoreDuplicates: false }
-      )
-      .select()
-      .single();
+      .select("id, status, confirmation_sent_at")
+      .eq("email_lc", email.toLowerCase())
+      .limit(1);
 
-    if (error) {
-      // don’t leak info; just say ok
-      return NextResponse.json({ ok: true });
-    }
+    const row = rows?.[0];
+    if (!row) return NextResponse.json({ ok: true }); // no leak
 
-    // If already confirmed → do nothing extra
-    if (row?.status === "confirmed") {
-      return NextResponse.json({ ok: true });
-    }
+    if (row.status === "confirmed") return NextResponse.json({ ok: true });
 
-    // For new/pending → (re)issue token + send email (replace any old token)
-    const token = crypto.randomUUID();
-    const { error: updErr } = await supabase
-      .from("newsletter")
-      .update({ confirmation_token: token, confirmation_sent_at: new Date().toISOString(), status: "pending" })
-      .eq("email_lc", email.toLowerCase());
-
-    if (updErr) {
+    const now = new Date();
+    const last = row.confirmation_sent_at ? new Date(row.confirmation_sent_at) : null;
+    if (last && now.getTime() - last.getTime() < COOLDOWN_MIN * 60_000) {
       return NextResponse.json({ ok: true }); // still hide specifics
     }
 
+    const token = crypto.randomUUID();
+    await supabase
+      .from("newsletter")
+      .update({ confirmation_token: token, confirmation_sent_at: now.toISOString(), status: "pending" })
+      .eq("id", row.id);
+
     const confirmUrl = `${BASE_URL}/api/confirm?token=${encodeURIComponent(token)}`;
 
-    // Send the transactional email (no tracking, no reply)
     await resend.emails.send({
       from: "Velah <no-reply@drinkvelah.com>",
       to: email,
       subject: "Confirm your Velah waitlist",
       text: [
-        "Thanks for joining Velah!",
-        "Please confirm your email by clicking the link below:",
+        "Click the link below to confirm your email:",
         confirmUrl,
         "",
         `This link will expire in ${EXP_HOURS} hours.`,
@@ -95,7 +64,6 @@ export async function POST(req: Request) {
       ].join("\n"),
       html: `
         <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;color:#111">
-          <p>Thanks for joining <strong>Velah</strong>!</p>
           <p>Please confirm your email by clicking the button below:</p>
           <p>
             <a href="${confirmUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#000;color:#fff;text-decoration:none;font-weight:600">
