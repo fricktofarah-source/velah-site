@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, } from "react";
 
 type MixItem = { size: "1L" | "5G"; qty: number };
 type Suggestion = {
@@ -102,7 +102,7 @@ export default function Subscription() {
   // helpers
   const clamp = (n: number) => Math.max(0, Math.min(99, Math.floor(n || 0)));
   const step = (setter: (n: number) => void, dir: 1 | -1) =>
-    setter(prev => clamp(prev + dir));
+    setter((prev: number) => clamp(prev + dir));
 
   return (
     <div className="grid gap-8 md:grid-cols-2 items-start">
