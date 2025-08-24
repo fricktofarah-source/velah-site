@@ -15,7 +15,6 @@ export default function AuthModal({
 }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
   const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
   const [error, setError] = useState<string | null>(null);
   const [joinList, setJoinList] = useState(true); // default checked
@@ -31,7 +30,7 @@ export default function AuthModal({
       setTimeout(() => emailRef.current?.focus(), 80);
     } else {
       setEmail("");
-      setPw("");
+      setName("");
     }
   }, [open, initialMode]);
 
@@ -57,51 +56,46 @@ export default function AuthModal({
       setError("Please enter a valid email.");
       return;
     }
-    if (!pw || pw.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (mode === "signup" && !name.trim()) {
+      setError("Please enter your name.");
       return;
     }
-
-    if (mode === "signup" && !name.trim()) {
-  setError("Please enter your name.");
-  return;
-}
 
     try {
       setPhase("sending");
 
-      if (mode === "signup") {
-  const { error } = await supabase.auth.signUp({
-    email: em,
-    password: pw,
-    options: {
-      data: { full_name: name.trim() }   // <— store name in user_metadata
-    }
-  });
-  if (error) throw error;
-
-        if (joinList) {
-    try {
-      await fetch("/api/join-waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: em }),
+      // Send a magic link. Works for both new + existing users.
+      const { error } = await supabase.auth.signInWithOtp({
+        email: em,
+        options: {
+          // Must be in Supabase Auth → URL Configuration → (Additional Redirect URLs)
+          emailRedirectTo: "https://drinkvelah.com/auth/callback",
+          shouldCreateUser: true,
+        },
       });
-    } catch {
-      // ignore errors here, since auth already succeeded
-    }
-  }
+      if (error) throw error;
 
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
-        if (error) throw error;
+      // Optional: add to waitlist on signup tap
+      if (mode === "signup" && joinList) {
+        try {
+          await fetch("/api/join-waitlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: em }),
+          });
+        } catch {
+          // ignore; auth email already sent
+        }
       }
 
-      await new Promise((r) => setTimeout(r, 350));
+      // NOTE: user_metadata can't be set via signInWithOtp.
+      // If you want to store `name`, we can add a tiny /api/profile to save it separately.
+
+      await new Promise((r) => setTimeout(r, 250));
       setPhase("done");
     } catch (err: any) {
       setPhase("form");
-      setError(err?.message ?? "Something went wrong. Try again.");
+      setError("Couldn’t send the sign-in link. Please try again in a minute.");
     }
   }
 
@@ -138,7 +132,6 @@ export default function AuthModal({
               }`}
             >
               <form onSubmit={submit} noValidate className="space-y-4">
-
                 {mode === "signup" && (
                   <div className="space-y-2">
                     <label htmlFor="auth-name" className="text-sm">
@@ -171,43 +164,30 @@ export default function AuthModal({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="auth-pw" className="text-sm">
-                    Password
-                  </label>
-                  <input
-                    id="auth-pw"
-                    type="password"
-                    value={pw}
-                    onChange={(e) => setPw(e.target.value)}
-                    className="border rounded-2xl px-3 py-2 w-full focus:outline-none focus:ring-0"
-                    placeholder="••••••••"
-                  />
-                </div>
+                {/* No password field with magic-link */}
 
                 {error && (
                   <div className="text-sm text-red-600 animate-soft-shake">{error}</div>
                 )}
 
                 {mode === "signup" && (
-  <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
-    <input
-      type="checkbox"
-      className="accent-black"
-      checked={joinList}
-      onChange={(e) => setJoinList(e.target.checked)}
-    />
-    Also join the Velah newsletter
-  </label>
-)}
-
+                  <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
+                    <input
+                      type="checkbox"
+                      className="accent-black"
+                      checked={joinList}
+                      onChange={(e) => setJoinList(e.target.checked)}
+                    />
+                    Also join the Velah newsletter
+                  </label>
+                )}
 
                 {/* Primary submit button (no outline) */}
                 <button
                   type="submit"
                   className="btn btn-primary h-10 w-full focus-visible:outline-none focus-visible:ring-0"
                 >
-                  {mode === "signup" ? "Sign up" : "Sign in"}
+                  {mode === "signup" ? "Send sign-up link" : "Send sign-in link"}
                 </button>
 
                 {/* Single toggle link under the button */}
@@ -247,7 +227,7 @@ export default function AuthModal({
             >
               <div className="loader" aria-hidden />
               <div className="text-sm text-slate-600">
-                {mode === "signup" ? "Creating your account…" : "Signing you in…"}
+                {mode === "signup" ? "Sending your sign-up link…" : "Sending your sign-in link…"}
               </div>
             </div>
 
@@ -259,9 +239,7 @@ export default function AuthModal({
             >
               <div className="success-check" aria-hidden />
               <div className="text-emerald-700 text-sm">
-                {mode === "signup"
-                  ? "Account created. Check your email if verification is required."
-                  : "Signed in successfully."}
+                Check your email for a secure link to continue.
               </div>
               <button
                 className="btn btn-ghost h-9 focus-visible:outline-none focus-visible:ring-0"
