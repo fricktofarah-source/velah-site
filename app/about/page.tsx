@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-/* ---------------- utils ---------------- */
+/** ---------- tiny utils ---------- */
 function cn(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(" ");
 }
@@ -12,7 +12,7 @@ const prefersReducedMotion =
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
-/* ---------------- hooks ---------------- */
+/** ---------- Scroll reveal hook ---------- */
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   const [visible, setVisible] = useState(false);
@@ -26,7 +26,7 @@ function useReveal<T extends HTMLElement>() {
     if (!el) return;
     const io = new IntersectionObserver(
       (ents) => ents.forEach((e) => e.isIntersecting && setVisible(true)),
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 }
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
     );
     io.observe(el);
     return () => io.disconnect();
@@ -35,7 +35,8 @@ function useReveal<T extends HTMLElement>() {
   return { ref, visible };
 }
 
-function useParallax(max = 60) {
+/** ---------- Parallax hook (hero only) ---------- */
+function useParallax(max = 50) {
   const [y, setY] = useState(0);
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -47,54 +48,43 @@ function useParallax(max = 60) {
   return y;
 }
 
-function useCountUp(target: number, durationMs = 1600) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setValue(target);
-      return;
-    }
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / durationMs);
-      setValue(Math.round(target * (1 - Math.cos(p * Math.PI)) / 2)); // ease-in-out
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [target, durationMs]);
-  return value;
-}
-
-/* --------------- layout helpers --------------- */
+/** ---------- Section wrapper with reveal ---------- */
 function Section({
-  children,
   className,
+  children,
   bleed = false,
 }: {
-  children: React.ReactNode;
   className?: string;
+  children: React.ReactNode;
   bleed?: boolean;
 }) {
   const { ref, visible } = useReveal<HTMLDivElement>();
-  const base =
-    "transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] " +
-    (visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6");
+  const wrap = (
+    <div
+      ref={ref}
+      className={cn(
+        "transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
 
   if (bleed) {
-    return (
-      <section className={cn("py-20 md:py-28", className)}>
-        <div ref={ref} className={base}>{children}</div>
-      </section>
-    );
+    // ↑ slightly more breathing room than before
+    return <section className="py-20 md:py-28">{wrap}</section>;
   }
+
   return (
-    <section className={cn("mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28", className)}>
-      <div ref={ref} className={base}>{children}</div>
+    <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28">
+      {wrap}
     </section>
   );
 }
 
-/* --- fade wrapper for images (top & bottom fade-to-white) --- */
+/** ---------- NEW: Fade wrapper for bigger, softer white blends ---------- */
 function FadeEdges({
   children,
   top = true,
@@ -102,19 +92,19 @@ function FadeEdges({
   className,
 }: {
   children: React.ReactNode;
-  top?: boolean;      // show top fade?
-  bottom?: boolean;   // show bottom fade?
+  top?: boolean; // show top fade?
+  bottom?: boolean; // show bottom fade?
   className?: string;
 }) {
   return (
     <div className={cn("relative", className)}>
       {children}
-      {/* larger, softer fades: shorter on mobile, longer on desktop */}
       {top && (
         <div
           className={cn(
             "pointer-events-none absolute inset-x-0 top-0",
             "bg-gradient-to-b from-white to-transparent",
+            // BIGGER fades (shorter on mobile, longer on desktop)
             "h-28 md:h-48 lg:h-56"
           )}
         />
@@ -132,61 +122,71 @@ function FadeEdges({
   );
 }
 
-/* ---------------- page ---------------- */
+/** ---------- Page ---------- */
 export default function AboutPage() {
   const parallaxY = useParallax(56);
-  const bottlesEliminated = useCountUp(947000); // adjust
-  const co2Reduced = useCountUp(78411); // kg — adjust
-
   const isiOS = useMemo(
-    () => typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent),
+    () =>
+      typeof navigator !== "undefined" &&
+      /iphone|ipad|ipod/i.test(navigator.userAgent),
     []
   );
 
   return (
     <>
-      {/* HERO — full-bleed, calm, no top fade, buttons harmonious */}
-      <header className="relative isolate overflow-hidden">
-        {/* background image with ONLY bottom fade */}
-        <FadeEdges top={false} bottom className="absolute inset-0 -z-10">
+      {/* HERO — serene + nature vibe via canopy image, parallax on copy */}
+      <header className="relative isolate overflow-hidden bg-white">
+        {/* background stack with NO top fade, only bottom blend */}
+        <FadeEdges top={false} bottom className="absolute inset-0 -z-10" aria-hidden>
+          {/* subtle gradient base so text always readable */}
+          <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_80%_-10%,#E6F5F8_0%,#FFFFFF_60%)]" />
+          {/* nature canopy */}
           <Image
-            src="/assets/Glaciar-water.jpg" // your wide serene water/glacier
+            src="/assets/Glaciar-water.jpg" /* /public/assets */
             alt=""
             fill
             priority
             className="object-cover object-center opacity-50"
             sizes="100vw"
           />
+          <div className="absolute inset-0 bg-white/35" />
         </FadeEdges>
 
-        {/* soft wash for readability */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/70 via-white/40 to-white/80" />
-
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-24 md:pt-32 pb-32 md:pb-40">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-20 md:pt-28 pb-24 md:pb-32">
           <div
             className="max-w-3xl"
-            style={{ transform: `translateY(${prefersReducedMotion ? 0 : parallaxY}px)` }}
+            style={{
+              transform: `translateY(${prefersReducedMotion ? 0 : parallaxY}px)`,
+            }}
           >
-            <h1 className="text-[40px] md:text-[56px] leading-[1.05] font-semibold tracking-tight text-slate-900">
+            {/* BIG headline with image-filled “Velah” for oomf */}
+            <h1 className="mt-4 text-[40px] leading-[1.05] md:text-[56px] font-semibold tracking-tight text-slate-900">
               The story behind{" "}
-              <span className="bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-cover bg-center">
+              <span
+                className={cn(
+                  "bg-clip-text text-transparent",
+                  // use a leafy texture to color the text
+                  "bg-[url('/assets/leaf-texture.jpg')] bg-center bg-cover"
+                )}
+              >
                 Velah
               </span>
             </h1>
-            <p className="mt-5 text-slate-700 md:text-lg md:leading-8">
-              Eco-luxury hydration. Glass over plastic. Ritual over routine. Purity without
-              compromise.
+
+            <p className="mt-5 text-slate-600 leading-7 md:text-lg md:leading-8">
+              Eco-luxury hydration, designed for modern homes. Glass over plastic.
+              Ritual over routine. Purity without compromise.
             </p>
+
             <div className="mt-8 flex items-center gap-3">
-              <a
-                href="/hydration"
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/90 backdrop-blur text-slate-900 hover:bg-white"
-              >
+              <a href="/hydration" className="btn btn-primary h-11 rounded-full px-6">
                 Explore your hydration
               </a>
               <button
-                onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/60 backdrop-blur text-slate-900 hover:bg-white"
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("velah:open-waitlist"))
+                }
+                className="btn btn-ghost h-11 rounded-full px-6"
               >
                 Join waitlist
               </button>
@@ -195,7 +195,7 @@ export default function AboutPage() {
         </div>
       </header>
 
-      {/* BIG NARRATIVE LINE — image-filled type (no punctuation) */}
+      {/* BIG NARRATIVE LINE — image-filled type (updated copy, no punctuation) */}
       <Section bleed>
         <div className="flex items-center justify-center">
           <h2
@@ -210,24 +210,9 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* ABSTRACT VISUAL / DIVIDER WITH BIG FADES */}
+      {/* BOTTLE MOMENT — product in nature, full width, fades both sides */}
       <Section bleed className="pt-0">
-        <FadeEdges top bottom className="w-full">
-          <div className="relative w-full h-[65vh]">
-            <Image
-              src="/assets/nature-detail.jpg" // or your abstract ripple/lines artwork
-              alt=""
-              fill
-              className="object-cover opacity-30"
-              sizes="100vw"
-            />
-          </div>
-        </FadeEdges>
-      </Section>
-
-      {/* BOTTLE / BRAND SHOT — fully visible (object-contain) */}
-      <Section bleed className="pt-0">
-        <FadeEdges top bottom className="w-full">
+        <FadeEdges top bottom>
           <div className="relative w-full h-[90vh] flex items-center justify-center bg-white">
             <Image
               src="/assets/about-origin.png"
@@ -241,126 +226,182 @@ export default function AboutPage() {
         </FadeEdges>
       </Section>
 
-      {/* ORIGIN COPY — presentation tone */}
+      {/* ORIGIN COPY */}
       <Section>
         <div className="mx-auto max-w-3xl">
-          <h3 className="text-2xl md:text-3xl font-semibold">Origin</h3>
-          <p className="mt-4 text-slate-700 md:text-lg">
-            Velah began with a simple question: why accept plastic as the default? We set out to
-            bring back the clarity of glass and the calm of a considered ritual—delivered weekly,
-            designed to be refilled and reused.
+          <h2 className="text-2xl md:text-3xl font-semibold">Origin</h2>
+          <p className="mt-4 text-slate-600 leading-7 md:text-lg md:leading-8">
+            Velah began with a simple question: why accept plastic as the default?
+            We set out to bring back the clarity of glass and the calm of a
+            considered ritual—delivered weekly, designed to be refilled and reused.
           </p>
-          <p className="mt-4 text-slate-700 md:text-lg">
-            From Dubai, we’re building a closed-loop system that reduces waste and elevates everyday
-            hydration into something quietly special.
+          <p className="mt-3 text-slate-600 leading-7 md:text-lg md:leading-8">
+            From Dubai, we’re building a closed-loop system that reduces waste and
+            elevates everyday hydration into something quietly special.
           </p>
         </div>
       </Section>
 
-      {/* SUSTAINABILITY — headline + flowing points */}
-      <Section>
+      {/* ——— SUSTAINABILITY (your existing layout retained) ——— */}
+      <Section className="bg-white">
+        {/* Oversized wordmark strip for oomf */}
         <div className="text-center">
-          <div className="mx-auto max-w-5xl text-[32px] sm:text-[44px] md:text-[60px] font-semibold tracking-tight leading-[1.05] bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-center bg-cover">
+          <div
+            className={cn(
+              "mx-auto max-w-5xl text-[32px] leading-[1.05] sm:text-[44px] md:text-[60px] font-semibold tracking-tight",
+              "bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-center bg-cover"
+            )}
+          >
             Sustainability
           </div>
           <p className="mt-3 text-slate-600 md:text-lg">
             A refillable loop that feels good to use—and good to the planet.
           </p>
         </div>
-        <div className="mt-8 mx-auto max-w-4xl text-slate-700 md:text-lg">
-          <ul className="space-y-3">
-            <li>• Refill, not landfill — durable glass in continuous circulation.</li>
-            <li>• Materials that last — pristine taste, effortless cleaning.</li>
-            <li>• Smarter local routes — fresher water, lighter footprint.</li>
-          </ul>
-        </div>
-      </Section>
 
-      {/* IMPACT COUNTERS WITH FADES */}
-      <Section bleed>
-        <FadeEdges top bottom className="relative w-full">
-          <div className="absolute inset-0 -z-10">
+        {/* Three pillars (kept), no layout change */}
+        <div className="mt-10 grid md:grid-cols-3 gap-6">
+          <div className="rounded-2xl border p-6">
+            <div className="text-3xl" aria-hidden>
+              ♻️
+            </div>
+            <h3 className="mt-3 text-lg font-semibold">Refill, not landfill</h3>
+            <p className="mt-2 text-slate-600">
+              Our glass gallons circulate in a closed loop. Every return saves plastic,
+              energy, and visual noise at home.
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <div className="text-3xl" aria-hidden>
+              🌿
+            </div>
+            <h3 className="mt-3 text-lg font-semibold">Materials that last</h3>
+            <p className="mt-2 text-slate-600">
+              Glass preserves taste and cleans beautifully. Fewer replacements, less waste.
+            </p>
+          </div>
+          <div className="rounded-2xl border p-6">
+            <div className="text-3xl" aria-hidden>
+              🗺️
+            </div>
+            <h3 className="mt-3 text-lg font-semibold">Smarter routes</h3>
+            <p className="mt-2 text-slate-600">
+              Local deliveries in Dubai reduce miles traveled and emissions—fresh water,
+              lighter footprint.
+            </p>
+          </div>
+        </div>
+
+        {/* Process strip — add fades around the bg image without changing layout */}
+        <div className="mt-10 relative overflow-hidden rounded-3xl border">
+          <FadeEdges top bottom>
             <Image
-              src="/assets/Glaciar-water.jpg"
+              src="/assets/nature-detail.jpg" /* add image */
               alt=""
               fill
-              className="object-cover opacity-40"
+              className="object-cover opacity-30"
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80" />
-          </div>
-
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-24 md:py-32">
-            <div className="grid gap-12 md:grid-cols-2">
-              <div>
-                <div className="text-sm uppercase tracking-wide text-slate-600">Bottles Eliminated (500mL)</div>
-                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                  {bottlesEliminated.toLocaleString()}+
-                </div>
-              </div>
-              <div>
-                <div className="text-sm uppercase tracking-wide text-slate-600">CO₂ Emissions Reduced</div>
-                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                  {co2Reduced.toLocaleString()} kg
-                </div>
-              </div>
+          </FadeEdges>
+          <div className="relative z-10 grid md:grid-cols-3 gap-6 p-6 md:p-10">
+            <div className="rounded-2xl bg-white/85 backdrop-blur p-5 border">
+              <div className="font-semibold">1 • Clean Source</div>
+              <p className="mt-1 text-slate-700">
+                Purified for clarity and taste—no plastics, no aftertaste.
+              </p>
             </div>
-            <div className="mt-8 text-slate-600">Dubai, UAE</div>
-          </div>
-        </FadeEdges>
-      </Section>
-
-      {/* CERTIFICATIONS — minimalist badges */}
-      <Section>
-        <div className="text-slate-800/80 text-sm uppercase tracking-wide">Certified Standards</div>
-        <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Supplier Certifications</h3>
-
-        <ul className="mt-6 flex flex-wrap items-center gap-4 md:gap-6">
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">NSF</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">ISO</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">CE</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WRAS</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WQA</li>
-        </ul>
-      </Section>
-
-      {/* PARTNERS — simple logo rail */}
-      <Section>
-        <div className="text-slate-800/80 text-sm uppercase tracking-wide">Our Partners</div>
-        <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Trusted by leading groups</h3>
-
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 opacity-90">
-          {[
-            "Partner One","Partner Two","Partner Three","Partner Four",
-            "Partner Five","Partner Six","Partner Seven","Partner Eight",
-          ].map((name) => (
-            <div
-              key={name}
-              className="aspect-[3/2] flex items-center justify-center bg-white/70 backdrop-blur border border-slate-200"
-            >
-              <span className="text-slate-600">{name}</span>
+            <div className="rounded-2xl bg-white/85 backdrop-blur p-5 border">
+              <div className="font-semibold">2 • Glass Loop</div>
+              <p className="mt-1 text-slate-700">
+                Fill, deliver, collect, sanitize, repeat. A loop designed to endure.
+              </p>
             </div>
-          ))}
+            <div className="rounded-2xl bg-white/85 backdrop-blur p-5 border">
+              <div className="font-semibold">3 • Local Routes</div>
+              <p className="mt-1 text-slate-700">
+                Efficient drops in your area keep things fresh and energy-smart.
+              </p>
+            </div>
+          </div>
         </div>
       </Section>
 
-      {/* CTA — mirrors hero buttons */}
+      {/* PROCESS / CRAFT (kept) */}
       <Section>
-        <div className="text-center">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border">
+            <Image
+              src="/assets/about-process.jpg"
+              alt="Filling process"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-semibold">Clarity, step by step</h2>
+            <ol className="mt-4 space-y-3 text-slate-700">
+              <li className="flex gap-3">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border">
+                  1
+                </span>
+                Source & purify for pristine taste.
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border">
+                  2
+                </span>
+                Fill glass gallons; sanitize, seal, and batch-track.
+              </li>
+              <li className="flex gap-3">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border">
+                  3
+                </span>
+                Deliver to your door. Empty bottles collected, cleaned, and returned to the loop.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </Section>
+
+      {/* COMMUNITY (kept) */}
+      <Section>
+        <div className="rounded-2xl border p-6 md:p-10">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-semibold">Community & impact</h2>
+              <p className="mt-4 text-slate-600 leading-7">
+                We partner with local organizations to support responsible water use and
+                material recovery. As we grow, so does our capacity to give back.
+              </p>
+            </div>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border">
+              <Image
+                src="/assets/about-community.jpg"
+                alt="Community initiatives"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* CTA (kept) */}
+      <Section className="pt-0">
+        <div className="rounded-2xl border p-6 md:p-10 text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Join the refillable future</h2>
           <p className="mt-3 text-slate-600 md:text-lg">
             Select your plan in minutes. Change or skip any week.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="/hydration"
-              className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/90 backdrop-blur text-slate-900 hover:bg-white"
-            >
+            <a href="/hydration" className="btn btn-primary h-11 rounded-full px-6">
               Start your hydration
             </a>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}
-              className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/60 backdrop-blur text-slate-900 hover:bg-white"
+              className="btn btn-ghost h-11 rounded-full px-6"
             >
               Join waitlist
             </button>
