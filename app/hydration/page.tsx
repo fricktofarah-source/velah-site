@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import AddToHome from "../../components/AddToHome";
 
 /* ---------- helpers ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -301,6 +302,7 @@ export default function HydrationPage() {
           </div>
         </section>
       </div>
+      <AddToHome />
     </main>
   );
 }
