@@ -5,113 +5,94 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import crypto from "crypto";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const HASH_SECRET = process.env.HASH_SECRET!;
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
-const EXP_HOURS = Number(process.env.WAITLIST_CONFIRM_EXP_HOURS || 24);
-
-const isEmail = (v: string) => /\S+@\S+\.\S+/.test(v.trim());
-const sha256 = (s: string) => crypto.createHash("sha256").update(s, "utf8").digest("hex");
-const ipFrom = (req: Request) => {
-  const xf = req.headers.get("x-forwarded-for") || "";
-  const parts = xf.split(",").map(s => s.trim()).filter(Boolean);
-  return parts[0] || req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "";
-};
+const CONFIRM_BASE = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
 
 export async function POST(req: Request) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-  const resend = new Resend(RESEND_API_KEY);
-
   try {
-    // Accept JSON or HTML form
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+
     const ct = req.headers.get("content-type") || "";
     const isJson = ct.includes("application/json");
-    const isForm = ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data");
+    const body = isJson ? await req.json().catch(() => ({})) : {};
+    const email = String(body.email || "").trim().toLowerCase();
+    const zone = (body.zone || "").toString().slice(0, 120) || null;
+    const noEmail = Boolean(body.noEmail);                // ← NEW: silent mode
+    const name = (body.name || "").toString().slice(0, 120) || null;
 
-    let email: string | null = null;
-    let zone: string | null = null;
-
-    if (isJson) {
-      const body = await req.json().catch(() => ({}));
-      if (typeof body?.email === "string") email = body.email.trim();
-      if (typeof body?.zone === "string") zone = body.zone.trim();
-    } else if (isForm) {
-      const form = await req.formData();
-      const e = form.get("email");
-      const z = form.get("zone");
-      if (typeof e === "string") email = e.trim();
-      if (typeof z === "string") zone = z.trim();
-    } else {
-      // best-effort fallback
-      try {
-        const body = await req.json();
-        if (typeof body?.email === "string") email = body.email.trim();
-        if (typeof body?.zone === "string") zone = body.zone.trim();
-      } catch {
-        const form = await req.formData().catch(() => null);
-        const e = form?.get("email");
-        const z = form?.get("zone");
-        if (typeof e === "string") email = e.trim();
-        if (typeof z === "string") zone = z.trim();
-      }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return NextResponse.json({ ok: false, error: "Invalid email." }, { status: 400 });
     }
 
-    if (!email || !isEmail(email)) {
-      return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
+    // Best-effort context
+    const ua = req.headers.get("user-agent") || null;
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+
+    // Insert row tolerant to schema (only send columns that likely exist)
+    // Try the richest shape first; fall back to minimal if needed.
+    let inserted = null;
+    let errorMsg: string | null = null;
+
+    // Attempt 1: common extended schema
+    {
+      const { data, error } = await admin
+        .from("newsletter")
+        .insert([{ email, email_lc: email, zone, user_agent: ua, ip, status: noEmail ? "pending" : "pending" }])
+        .select()
+        .single();
+      if (!error) inserted = data;
+      else errorMsg = error.message;
     }
 
-    const ua = req.headers.get("user-agent") || "";
-    const ip = ipFrom(req) || "";
-    const ip_hash = ip ? sha256(`${ip}:${HASH_SECRET}`) : null;
-
-    // Upsert by email_lc (unique index)
-    const { data: row } = await supabase
-      .from("newsletter")
-      .upsert(
-        { email, zone: zone || null, user_agent: ua || null, ip_hash },
-        { onConflict: "email_lc", ignoreDuplicates: false }
-      )
-      .select()
-      .single();
-
-    // If already confirmed: return success (no email)
-    if (row?.status === "confirmed") {
-      return NextResponse.json({ ok: true });
+    // Attempt 2: basic schema (email + created_at only)
+    if (!inserted) {
+      const { data, error } = await admin.from("newsletter").insert([{ email }]).select().single();
+      if (!error) inserted = data;
+      else errorMsg = error.message;
     }
 
-    // Issue/refresh token and send confirmation
-    const token = crypto.randomUUID();
-    await supabase
-      .from("newsletter")
-      .update({ confirmation_token: token, confirmation_sent_at: new Date().toISOString(), status: "pending" })
-      .eq("email_lc", email.toLowerCase());
+    if (!inserted) {
+      return NextResponse.json({ ok: false, error: `Couldn’t add to waitlist: ${errorMsg || "unknown error"}` }, { status: 400 });
+    }
 
-    const confirmUrl = `${BASE_URL}/api/confirm?token=${encodeURIComponent(token)}`;
+    // Silent path: skip email entirely (used by signup flow to avoid double emails)
+    if (noEmail) {
+      return NextResponse.json({ ok: true, id: inserted.id || null, silent: true });
+    }
 
+    // Normal path: send confirmation email via Resend (if you still want double opt-in here)
+    const resend = new Resend(RESEND_API_KEY);
+    const confirmUrl = `${CONFIRM_BASE}/confirm/success`; // adjust if you have a tokenized link
     await resend.emails.send({
       from: "Velah <no-reply@drinkvelah.com>",
       to: email,
-      subject: "Confirm your Velah waitlist",
-      text: `Thanks for joining Velah!\nConfirm here: ${confirmUrl}\n\nThis link expires in ${EXP_HOURS} hours.\n\n— Velah Team\nThis is an automated message. Please do not reply.`,
+      subject: "You’re on the Velah waitlist",
+      text: [
+        `Hi${name ? " " + name : ""},`,
+        "",
+        "You’re on the Velah waitlist. We’ll reach out when your area opens.",
+        "",
+        "If you didn’t request this, you can ignore this message.",
+        "",
+        "— Velah Team",
+        "This is an automated message. Please do not reply.",
+      ].join("\n"),
       html: `
         <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;color:#111">
-          <p>Thanks for joining <strong>Velah</strong>!</p>
-          <p><a href="${confirmUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#000;color:#fff;text-decoration:none;font-weight:600">Confirm my email</a></p>
-          <p style="color:#555">This link expires in ${EXP_HOURS} hours.</p>
-          <hr style="border:none;border-top:1px solid #eee;margin:16px 0" />
-          <p style="color:#777;font-size:12px">This is an automated message. Please do not reply.</p>
+          <p>Hi${name ? " " + name : ""},</p>
+          <p>You’re on the <strong>Velah</strong> waitlist. We’ll email you when your area opens.</p>
+          <p style="color:#777;font-size:12px;margin-top:24px">This is an automated message. Please do not reply.</p>
         </div>
       `,
     });
 
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    // Never leak internals to the client; always return a JSON response
-    console.error("join-waitlist error:", err);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, id: inserted.id || null });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
   }
 }
