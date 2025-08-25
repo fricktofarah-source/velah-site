@@ -7,7 +7,7 @@
   "background_color": "#ffffff",
   "theme_color": "#7FCBD8",
   "icons": [
-    { "src": "/velah_ripple.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/velah_ripple.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

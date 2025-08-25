@@ -4,15 +4,15 @@ import type { Metadata } from "next";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Velah",
   description: "Eco-luxury water in reusable glass gallons. Dubai & GCC.",
   manifest: "/manifest.json",
   themeColor: "#7FCBD8",
   icons: {
-    icon: "/velah_ripple.png",        // generic
-    apple: "/velah_ripple.png",       // iOS home-screen icon
-    shortcut: "/velah_ripple.png",    // fallback
+    icon: "/icon-192x192.png",
+    apple: "/apple-touch-icon.png",
+    shortcut: "/icon-192x192.png",
   },
 };
 
