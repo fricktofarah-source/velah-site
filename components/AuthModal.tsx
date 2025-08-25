@@ -45,14 +45,14 @@ export default function AuthModal({
 
   const validEmail = (v: string) => /\S+@\S+\.\S+/.test(v.trim());
 
-  function normalizeSupabaseError(msg?: string): string {
+  function normalizeErr(msg?: string): string {
     if (!msg) return "Something went wrong. Please try again.";
     const m = msg.toLowerCase();
     if (m.includes("invalid login credentials")) return "Incorrect email or password.";
     if (m.includes("email not confirmed")) return "Please confirm your email, then sign in.";
-    if (m.includes("user already registered") || m.includes("user already exists"))
+    if (m.includes("already exists") || m.includes("already registered"))
       return "An account with this email already exists. Try signing in.";
-    if (m.includes("password should be at least")) return "Password must be at least 6 characters.";
+    if (m.includes("password")) return "Password must be at least 6 characters.";
     return msg;
   }
 
@@ -61,59 +61,37 @@ export default function AuthModal({
     setError(null);
 
     const em = email.trim().toLowerCase();
-    if (!validEmail(em)) {
-      setError("Please enter a valid email.");
-      return;
-    }
-    if (!pw || pw.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (mode === "signup" && !name.trim()) {
-      setError("Please enter your name.");
-      return;
-    }
+    if (!validEmail(em)) return setError("Please enter a valid email.");
+    if (!pw || pw.length < 6) return setError("Password must be at least 6 characters.");
+    if (mode === "signup" && !name.trim()) return setError("Please enter your name.");
 
     try {
       setPhase("sending");
 
       if (mode === "signup") {
-        // Create account (Supabase will send confirmation email if enabled)
-        const { error: signUpErr } = await supabase.auth.signUp({
-          email: em,
-          password: pw,
-          options: { data: { full_name: name.trim() } },
+        // Call our server route (no CORS, no redirects)
+        const res = await fetch("/api/auth-signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: em, password: pw, name, joinList }),
         });
-        if (signUpErr) throw signUpErr;
+        const data = await res.json().catch(() => ({} as any));
+        if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t create the account.");
 
-        // Optional: also add to newsletter
-        if (joinList) {
-          try {
-            await fetch("/api/join-waitlist", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: em }),
-            });
-          } catch {
-            // ignore; account creation already succeeded
-          }
-        }
-
-        // Success state for signup (user might need to confirm email)
+        // Show success (Supabase will send confirmation email if required)
         setPhase("done");
       } else {
-        // Sign in with password
+        // Direct sign-in with password (client → Supabase)
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: em,
           password: pw,
         });
         if (signInErr) throw signInErr;
-
         setPhase("done");
       }
     } catch (err: any) {
       setPhase("form");
-      setError(normalizeSupabaseError(err?.message));
+      setError(normalizeErr(err?.message));
     }
   }
 
@@ -129,9 +107,7 @@ export default function AuthModal({
       <div className="card w-full max-w-md overflow-hidden animate-pop-in">
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
-          <div className="font-semibold">
-            {mode === "signup" ? "Create your account" : "Sign in"}
-          </div>
+          <div className="font-semibold">{mode === "signup" ? "Create your account" : "Sign in"}</div>
           <button className="btn btn-ghost h-9" onClick={onClose}>✕</button>
         </div>
 
