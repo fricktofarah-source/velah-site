@@ -197,8 +197,7 @@ export default function Navbar() {
       <nav className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
         {/* Center the middle perfectly with 1fr | auto | 1fr */}
         <div
-          className="w-full px-3 sm:px-4 lg:px-6 py-3 grid items-center gap-4"
-          style={{ gridTemplateColumns: "1fr auto 1fr" }}
+          className="w-full px-3 sm:px-4 lg:px-6 py-3 grid items-center gap-4 grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr]"
         >
           {/* LEFT: Logo */}
           <div className="justify-self-start flex items-center shrink-0">
@@ -213,7 +212,7 @@ export default function Navbar() {
           </div>
 
           {/* MIDDLE: Centered nav */}
-          <div className="hidden md:flex items-center justify-center gap-7 whitespace-nowrap justify-self-center min-w-0">
+          <div className="hidden md:flex items-center justify-center md:justify-center gap-7 whitespace-nowrap justify-self-center md:col-start-2 min-w-0">
             <a href="#about" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("about"); }}>About</a>
             <a href="#sustainability" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>Sustainability</a>
             <a href="#subscription" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>Subscription</a>
