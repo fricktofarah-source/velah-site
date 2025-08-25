@@ -81,35 +81,33 @@ function Section({
     (visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6");
 
   if (bleed) {
-    // more breathing room than before
+    // a bit more breathing room
     return (
       <section className={cn("py-20 md:py-28", className)}>
-        <div ref={ref} className={base}>
-          {children}
-        </div>
+        <div ref={ref} className={base}>{children}</div>
       </section>
     );
   }
   return (
     <section className={cn("mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28", className)}>
-      <div ref={ref} className={base}>
-        {children}
-      </div>
+      <div ref={ref} className={base}>{children}</div>
     </section>
   );
 }
 
-/* --------- fade wrapper (bigger, softer fades; toggle top/bottom) --------- */
+/* --------- fade wrapper (toggle edges; adjustable size) --------- */
 function FadeEdges({
   children,
   top = true,
   bottom = true,
   className,
+  size = "h-28 md:h-48 lg:h-56", // default fade depth
 }: {
   children: React.ReactNode;
   top?: boolean;
   bottom?: boolean;
   className?: string;
+  size?: string;
 }) {
   return (
     <div className={cn("relative", className)}>
@@ -119,7 +117,7 @@ function FadeEdges({
           className={cn(
             "pointer-events-none absolute inset-x-0 top-0",
             "bg-gradient-to-b from-white to-transparent",
-            "h-28 md:h-48 lg:h-56"
+            size
           )}
         />
       )}
@@ -128,7 +126,7 @@ function FadeEdges({
           className={cn(
             "pointer-events-none absolute inset-x-0 bottom-0",
             "bg-gradient-to-t from-white to-transparent",
-            "h-28 md:h-48 lg:h-56"
+            size
           )}
         />
       )}
@@ -149,21 +147,21 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* HERO — full-bleed, calm, buttons always harmonious */}
+      {/* HERO — full-bleed; lighter wash; only bottom fade so the image shows */}
       <header className="relative isolate overflow-hidden">
-        {/* hero background with ONLY bottom fade (top stays clean) */}
-        <FadeEdges top={false} bottom className="absolute inset-0 -z-10">
+        <FadeEdges top={false} bottom className="absolute inset-0 -z-10" size="h-16 md:h-24 lg:h-32">
           <Image
-            src="/assets/water-texture.jpg" // wide, serene water/glacier/lake
-            alt=""
+            src="/assets/water-texture.jpg"
+            alt="Water background texture"
             fill
             priority
-            className="object-cover object-center opacity-50"
+            className="object-cover object-center opacity-60"
             sizes="100vw"
           />
         </FadeEdges>
-        {/* soft wash for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/40 to-white/80" />
+
+        {/* lighten the overlay so it doesn't wash out the image */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/15 to-white/50" />
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 md:pt-28 pb-28 md:pb-36">
           <div
@@ -198,7 +196,7 @@ export default function AboutPage() {
         </div>
       </header>
 
-      {/* BIG NARRATIVE LINE — image-filled type (new, no punctuation) */}
+      {/* BIG NARRATIVE LINE — image-filled type (no punctuation) */}
       <Section bleed>
         <div className="flex items-center justify-center">
           <h2
@@ -213,9 +211,9 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* BOTTLE MOMENT — product in nature, full width (fades both sides) */}
+      {/* BOTTLE MOMENT — stronger blending (bigger fades) */}
       <Section bleed className="pt-0">
-        <FadeEdges top bottom>
+        <FadeEdges top bottom size="h-32 md:h-56 lg:h-64">
           <div className="relative w-full h-[90vh] flex items-center justify-center bg-white">
             <Image
               src="/assets/about-origin.png"
@@ -264,9 +262,9 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* IMPACT COUNTERS — with a background image and BIG fades */}
+      {/* IMPACT COUNTERS — nature-detail with LIGHTER blending */}
       <Section bleed>
-        <FadeEdges top bottom>
+        <FadeEdges top bottom size="h-16 md:h-28 lg:h-32">
           <div className="relative w-full">
             <div className="absolute inset-0 -z-10">
               <Image
@@ -304,47 +302,29 @@ export default function AboutPage() {
         </FadeEdges>
       </Section>
 
-      {/* CERTIFICATIONS — minimalist badges (no heavy boxes) */}
+      {/* CERTIFICATIONS — minimalist badges */}
       <Section>
         <div className="text-slate-800/80 text-sm uppercase tracking-wide">Certified Standards</div>
         <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Supplier Certifications</h3>
 
         <ul className="mt-6 flex flex-wrap items-center gap-4 md:gap-6">
-          {/* Replace text with small SVGs/logos when you have them */}
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">
-            NSF
-          </li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">
-            ISO
-          </li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">
-            CE
-          </li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">
-            WRAS
-          </li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">
-            WQA
-          </li>
+          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">NSF</li>
+          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">ISO</li>
+          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">CE</li>
+          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WRAS</li>
+          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WQA</li>
         </ul>
       </Section>
 
-      {/* PARTNERS — simple, elegant logo rail (no cards) */}
+      {/* PARTNERS — simple logo rail */}
       <Section>
         <div className="text-slate-800/80 text-sm uppercase tracking-wide">Our Partners</div>
         <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Trusted by leading groups</h3>
 
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 opacity-90">
-          {/* Replace with real logo images as they come in */}
           {[
-            "Partner One",
-            "Partner Two",
-            "Partner Three",
-            "Partner Four",
-            "Partner Five",
-            "Partner Six",
-            "Partner Seven",
-            "Partner Eight",
+            "Partner One","Partner Two","Partner Three","Partner Four",
+            "Partner Five","Partner Six","Partner Seven","Partner Eight",
           ].map((name) => (
             <div
               key={name}
@@ -356,7 +336,7 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* CTA — mirrors hero buttons for harmony */}
+      {/* CTA — mirrors hero buttons */}
       <Section>
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Join the refillable future</h2>
