@@ -106,7 +106,7 @@ export default function AboutPage() {
                     <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_80%_-10%,#E6F5F8_0%,#FFFFFF_60%)]" />
                     {/* nature canopy */}
                     <Image
-                        src="/assets/canopy.jpg" /* add this image in /public/assets */
+                        src="/assets/Glaciar-water.jpg" /* add this image in /public/assets */
                         alt=""
                         fill
                         priority
@@ -121,10 +121,6 @@ export default function AboutPage() {
                         className="max-w-3xl"
                         style={{ transform: `translateY(${prefersReducedMotion ? 0 : parallaxY}px)` }}
                     >
-                        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-slate-600 bg-white/70 backdrop-blur">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Refillable Glass • Dubai & GCC
-                        </div>
 
                         {/* BIG headline with image-filled “Velah” for oomf */}
                         <h1 className="mt-4 text-[40px] leading-[1.05] md:text-[56px] font-semibold tracking-tight text-slate-900">
@@ -191,13 +187,13 @@ export default function AboutPage() {
                             elevates everyday hydration into something quietly special.
                         </p>
                     </div>
-                    <div className="order-1 md:order-2 relative aspect-[4/3] rounded-2xl overflow-hidden border">
+                    <div className="relative w-full h-[90vh]">
                         <Image
                             src="/assets/about-origin.png"
                             alt="Velah glass bottles"
                             fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="object-contain md:object-cover"
+                            sizes="100vw"
                         />
                     </div>
                 </div>
