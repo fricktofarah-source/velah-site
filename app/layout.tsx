@@ -6,7 +6,14 @@ import Footer from "../components/Footer";
 
 export const metadata: Metadata = {
   title: "Velah",
-  description: "Eco‑luxury water in reusable glass gallons. Dubai & GCC.",
+  description: "Eco-luxury water in reusable glass gallons. Dubai & GCC.",
+  manifest: "/manifest.json",
+  themeColor: "#7FCBD8",
+  icons: {
+    icon: "/velah_ripple.png",        // generic
+    apple: "/velah_ripple.png",       // iOS home-screen icon
+    shortcut: "/velah_ripple.png",    // fallback
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
