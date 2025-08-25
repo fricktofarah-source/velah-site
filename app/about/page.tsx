@@ -57,7 +57,7 @@ function useCountUp(target: number, durationMs = 1600) {
     const start = performance.now();
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / durationMs);
-      setValue(Math.round(target * (1 - Math.cos(p * Math.PI)) / 2));
+      setValue(Math.round(target * (1 - Math.cos(p * Math.PI)) / 2)); // ease-in-out
       if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -82,13 +82,13 @@ function Section({
 
   if (bleed) {
     return (
-      <section className={cn("py-16 md:py-24", className)}>
+      <section className={cn("py-20 md:py-28", className)}>
         <div ref={ref} className={base}>{children}</div>
       </section>
     );
   }
   return (
-    <section className={cn("mx-auto max-w-6xl px-4 sm:px-6 py-16 md:py-24", className)}>
+    <section className={cn("mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28", className)}>
       <div ref={ref} className={base}>{children}</div>
     </section>
   );
@@ -97,34 +97,37 @@ function Section({
 /* --- fade wrapper for images (top & bottom fade-to-white) --- */
 function FadeEdges({
   children,
-  top = "h-24",
-  bottom = "h-24",
+  top = true,
+  bottom = true,
   className,
 }: {
   children: React.ReactNode;
-  top?: "h-16" | "h-24" | "h-32";
-  bottom?: "h-16" | "h-24" | "h-32";
+  top?: boolean;      // show top fade?
+  bottom?: boolean;   // show bottom fade?
   className?: string;
 }) {
-  const topH = top === "h-32" ? "h-32" : top === "h-16" ? "h-16" : "h-24";
-  const bottomH = bottom === "h-32" ? "h-32" : bottom === "h-16" ? "h-16" : "h-24";
   return (
     <div className={cn("relative", className)}>
       {children}
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0",
-          "bg-gradient-to-b from-white to-transparent",
-          topH
-        )}
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-0",
-          "bg-gradient-to-t from-white to-transparent",
-          bottomH
-        )}
-      />
+      {/* larger, softer fades: shorter on mobile, longer on desktop */}
+      {top && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0",
+            "bg-gradient-to-b from-white to-transparent",
+            "h-28 md:h-48 lg:h-56"
+          )}
+        />
+      )}
+      {bottom && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0",
+            "bg-gradient-to-t from-white to-transparent",
+            "h-28 md:h-48 lg:h-56"
+          )}
+        />
+      )}
     </div>
   );
 }
@@ -142,11 +145,12 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* HERO — full-bleed, calm, buttons always harmonious */}
+      {/* HERO — full-bleed, calm, no top fade, buttons harmonious */}
       <header className="relative isolate overflow-hidden">
-        <FadeEdges className="absolute inset-0 -z-10" top="h-24" bottom="h-24">
+        {/* background image with ONLY bottom fade */}
+        <FadeEdges top={false} bottom className="absolute inset-0 -z-10">
           <Image
-            src="/assets/Glaciar-water.jpg" // wide serene water/glacier
+            src="/assets/Glaciar-water.jpg" // your wide serene water/glacier
             alt=""
             fill
             priority
@@ -191,7 +195,7 @@ export default function AboutPage() {
         </div>
       </header>
 
-      {/* BIG NARRATIVE LINE — image-filled type (original copy) */}
+      {/* BIG NARRATIVE LINE — image-filled type (no punctuation) */}
       <Section bleed>
         <div className="flex items-center justify-center">
           <h2
@@ -201,17 +205,17 @@ export default function AboutPage() {
               "bg-clip-text text-transparent bg-[url('/assets/glass-in-stream.jpg')] bg-cover bg-center"
             )}
           >
-            WATER, WITHOUT WASTE
+            GLASS NOT PLASTIC
           </h2>
         </div>
       </Section>
 
-      {/* ABSTRACT VISUAL / DIVIDER */}
+      {/* ABSTRACT VISUAL / DIVIDER WITH BIG FADES */}
       <Section bleed className="pt-0">
-        <FadeEdges className="w-full" top="h-24" bottom="h-24">
+        <FadeEdges top bottom className="w-full">
           <div className="relative w-full h-[65vh]">
             <Image
-              src="/assets/nature-detail.jpg" // or an abstract ripple/lines artwork
+              src="/assets/nature-detail.jpg" // or your abstract ripple/lines artwork
               alt=""
               fill
               className="object-cover opacity-30"
@@ -221,9 +225,9 @@ export default function AboutPage() {
         </FadeEdges>
       </Section>
 
-      {/* BOTTLE / BRAND SHOT — fully visible (no crop) */}
+      {/* BOTTLE / BRAND SHOT — fully visible (object-contain) */}
       <Section bleed className="pt-0">
-        <FadeEdges className="w-full" top="h-24" bottom="h-24">
+        <FadeEdges top bottom className="w-full">
           <div className="relative w-full h-[90vh] flex items-center justify-center bg-white">
             <Image
               src="/assets/about-origin.png"
@@ -272,9 +276,9 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* IMPACT COUNTERS */}
+      {/* IMPACT COUNTERS WITH FADES */}
       <Section bleed>
-        <FadeEdges className="relative w-full" top="h-24" bottom="h-24">
+        <FadeEdges top bottom className="relative w-full">
           <div className="absolute inset-0 -z-10">
             <Image
               src="/assets/Glaciar-water.jpg"
@@ -286,8 +290,8 @@ export default function AboutPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80" />
           </div>
 
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28">
-            <div className="grid gap-10 md:grid-cols-2">
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-24 md:py-32">
+            <div className="grid gap-12 md:grid-cols-2">
               <div>
                 <div className="text-sm uppercase tracking-wide text-slate-600">Bottles Eliminated (500mL)</div>
                 <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
@@ -301,7 +305,7 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 text-slate-600">Dubai, UAE</div>
+            <div className="mt-8 text-slate-600">Dubai, UAE</div>
           </div>
         </FadeEdges>
       </Section>
