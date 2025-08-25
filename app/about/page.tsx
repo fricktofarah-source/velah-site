@@ -47,20 +47,24 @@ function useParallax(max = 60) {
   return y;
 }
 
-function useCountUp(target: number, durationMs = 1600) {
+/** Count-up that restarts when target changes (quick) */
+function useCountUp(target: number, durationMs = 700) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     if (prefersReducedMotion) {
       setValue(target);
       return;
     }
+    let raf = 0;
     const start = performance.now();
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / durationMs);
-      setValue(Math.round((target * (1 - Math.cos(p * Math.PI))) / 2)); // ease-in-out
-      if (p < 1) requestAnimationFrame(tick);
+      const eased = (1 - Math.cos(p * Math.PI)) / 2; // ease-in-out
+      setValue(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [target, durationMs]);
   return value;
 }
@@ -81,7 +85,6 @@ function Section({
     (visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6");
 
   if (bleed) {
-    // a bit more breathing room
     return (
       <section className={cn("py-20 md:py-28", className)}>
         <div ref={ref} className={base}>{children}</div>
@@ -95,13 +98,13 @@ function Section({
   );
 }
 
-/* --------- fade wrapper (toggle edges; adjustable size) --------- */
+/* --------- fade wrapper (only used for about-origin now) --------- */
 function FadeEdges({
   children,
   top = true,
   bottom = true,
   className,
-  size = "h-28 md:h-48 lg:h-56", // default fade depth
+  size = "h-32 md:h-56 lg:h-64",
 }: {
   children: React.ReactNode;
   top?: boolean;
@@ -134,11 +137,39 @@ function FadeEdges({
   );
 }
 
+/* --------- simple preloader (locks scroll until ready) --------- */
+function usePageReady() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const done = () => setReady(true);
+    if (document.readyState === "complete") done();
+    else {
+      window.addEventListener("load", done, { once: true });
+      setTimeout(done, 1500); // fallback
+    }
+    // lock scroll while loading
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("load", done);
+    };
+  }, []);
+  useEffect(() => {
+    if (ready) document.body.style.overflow = "";
+  }, [ready]);
+  return ready;
+}
+
 /* ---------------- page ---------------- */
 export default function AboutPage() {
+  const ready = usePageReady();
+
   const parallaxY = useParallax(56);
-  const bottlesEliminated = useCountUp(947000); // adjust
-  const co2Reduced = useCountUp(78411); // kg — adjust
+  // counters become "planned" and animate when in view
+  const { ref: impactRef, visible: impactVisible } = useReveal<HTMLDivElement>();
+  const plannedBottles = useCountUp(impactVisible ? 947000 : 0, 700);
+  const plannedCO2 = useCountUp(impactVisible ? 78411 : 0, 700);
 
   const isiOS = useMemo(
     () => typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent),
@@ -147,21 +178,34 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* HERO — full-bleed; lighter wash; only bottom fade so the image shows */}
-      <header className="relative isolate overflow-hidden">
-        <FadeEdges top={false} bottom className="absolute inset-0 -z-10" size="h-16 md:h-24 lg:h-32">
-          <Image
-            src="/assets/water-texture.jpg"
-            alt="Water background texture"
-            fill
-            priority
-            className="object-cover object-center opacity-60"
-            sizes="100vw"
-          />
-        </FadeEdges>
+      {/* PRELOADER */}
+      {!ready && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center">
+          <div className="animate-pulse text-xl tracking-wide">Velah</div>
+          <div className="mt-3 h-1 w-32 overflow-hidden rounded bg-slate-200">
+            <div className="h-full w-1/2 animate-[loading_0.9s_ease-in-out_infinite_alternate] bg-slate-400" />
+          </div>
+          <style jsx global>{`
+            @keyframes loading {
+              from { transform: translateX(-10%); }
+              to { transform: translateX(60%); }
+            }
+          `}</style>
+        </div>
+      )}
 
-        {/* lighten the overlay so it doesn't wash out the image */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/15 to-white/50" />
+      {/* HERO — full-bleed, no blending now (just lighter wash so BG shows) */}
+      <header className="relative isolate overflow-hidden">
+        <Image
+          src="/assets/water-texture.jpg"
+          alt="Water background texture"
+          fill
+          priority
+          className="object-cover object-center opacity-70"
+          sizes="100vw"
+        />
+        {/* lighter wash so image is visible */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/40" />
 
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 md:pt-28 pb-28 md:pb-36">
           <div
@@ -196,7 +240,7 @@ export default function AboutPage() {
         </div>
       </header>
 
-      {/* BIG NARRATIVE LINE — image-filled type (no punctuation) */}
+      {/* BIG NARRATIVE LINE — unchanged */}
       <Section bleed>
         <div className="flex items-center justify-center">
           <h2
@@ -211,7 +255,7 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* BOTTLE MOMENT — stronger blending (bigger fades) */}
+      {/* BOTTLE MOMENT — keep blending ONLY here */}
       <Section bleed className="pt-0">
         <FadeEdges top bottom size="h-32 md:h-56 lg:h-64">
           <div className="relative w-full h-[90vh] flex items-center justify-center bg-white">
@@ -227,7 +271,7 @@ export default function AboutPage() {
         </FadeEdges>
       </Section>
 
-      {/* ORIGIN COPY — presentation tone */}
+      {/* ORIGIN COPY */}
       <Section>
         <div className="mx-auto max-w-3xl">
           <h3 className="text-2xl md:text-3xl font-semibold">Origin</h3>
@@ -243,7 +287,7 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* SUSTAINABILITY LINE — no cards, just flowing points */}
+      {/* SUSTAINABILITY LINE — unchanged */}
       <Section>
         <div className="text-center">
           <div className="mx-auto max-w-5xl text-[32px] sm:text-[44px] md:text-[60px] font-semibold tracking-tight leading-[1.05] bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-center bg-cover">
@@ -262,47 +306,45 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* IMPACT COUNTERS — nature-detail with LIGHTER blending */}
+      {/* IMPACT COUNTERS — PLANNED + fast count, NO blending here */}
       <Section bleed>
-        <FadeEdges top bottom size="h-16 md:h-28 lg:h-32">
-          <div className="relative w-full">
-            <div className="absolute inset-0 -z-10">
-              <Image
-                src="/assets/nature-detail.jpg"
-                alt=""
-                fill
-                className="object-cover opacity-40"
-                sizes="100vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80" />
-            </div>
+        <div ref={impactRef} className="relative w-full">
+          <div className="absolute inset-0 -z-10">
+            <Image
+              src="/assets/nature-detail.jpg"
+              alt=""
+              fill
+              className="object-cover opacity-30"
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/60" />
+          </div>
 
-            <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28">
-              <div className="grid gap-10 md:grid-cols-2">
-                <div>
-                  <div className="text-sm uppercase tracking-wide text-slate-600">
-                    Bottles Eliminated (500mL)
-                  </div>
-                  <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                    {bottlesEliminated.toLocaleString()}+
-                  </div>
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28">
+            <div className="grid gap-10 md:grid-cols-2">
+              <div>
+                <div className="text-sm uppercase tracking-wide text-slate-600">
+                  Planned bottles eliminated (500mL)
                 </div>
-                <div>
-                  <div className="text-sm uppercase tracking-wide text-slate-600">
-                    CO₂ Emissions Reduced
-                  </div>
-                  <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                    {co2Reduced.toLocaleString()} kg
-                  </div>
+                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
+                  {plannedBottles.toLocaleString()}+
                 </div>
               </div>
-              <div className="mt-6 text-slate-600">Dubai, UAE</div>
+              <div>
+                <div className="text-sm uppercase tracking-wide text-slate-600">
+                  Planned CO₂ emissions reduced
+                </div>
+                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
+                  {plannedCO2.toLocaleString()} kg
+                </div>
+              </div>
             </div>
+            <div className="mt-6 text-slate-600">Dubai, UAE</div>
           </div>
-        </FadeEdges>
+        </div>
       </Section>
 
-      {/* CERTIFICATIONS — minimalist badges */}
+      {/* CERTIFICATIONS */}
       <Section>
         <div className="text-slate-800/80 text-sm uppercase tracking-wide">Certified Standards</div>
         <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Supplier Certifications</h3>
@@ -316,7 +358,7 @@ export default function AboutPage() {
         </ul>
       </Section>
 
-      {/* PARTNERS — simple logo rail */}
+      {/* PARTNERS */}
       <Section>
         <div className="text-slate-800/80 text-sm uppercase tracking-wide">Our Partners</div>
         <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Trusted by leading groups</h3>
@@ -336,7 +378,7 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* CTA — mirrors hero buttons */}
+      {/* CTA */}
       <Section>
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-semibold">Join the refillable future</h2>
