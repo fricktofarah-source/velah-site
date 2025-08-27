@@ -7,6 +7,7 @@ import Subscription from "@/components/Subscription";
 import HowItWorks from "@/components/HowItWorks";
 import Counter from "@/components/Counter";
 import SubscriptionTeaser from "@/components/SubscriptionTeaser";
+import { posts } from "@/lib/posts"; // <-- added for the blog preview
 
 export default function HomePage() {
   return (
@@ -64,11 +65,10 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-
-          {/* No duplicate/invisible CTA block here */}
         </div>
       </section>
 
+      {/* --- BLOG (home section) --- */}
       <section id="blog" className="section">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-baseline justify-between">
@@ -79,7 +79,54 @@ export default function HomePage() {
               All posts →
             </Link>
           </div>
-          {/* If you render blog teasers on Home, keep them here */}
+
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...posts]
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .slice(0, 3)
+              .map((p) => {
+                const words = p.content.trim().split(/\s+/).length;
+                const mins = Math.max(2, Math.round(words / 200)); // ~200 wpm
+                const date = new Date(p.date).toLocaleDateString("en-US", {
+                  dateStyle: "medium",
+                });
+
+                return (
+                  <article
+                    key={p.slug}
+                    className="rounded-2xl border bg-white/70 backdrop-blur p-5 flex flex-col"
+                  >
+                    <div className="text-xs text-slate-500">
+                      {date} • {mins} min read
+                    </div>
+                    <h3 className="mt-2 font-semibold text-lg">
+                      <Link href={`/blog/${p.slug}`} className="hover-underline">
+                        {p.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-2 text-slate-600">{p.excerpt}</p>
+                    <div className="mt-4">
+                      <Link
+                        href={`/blog/${p.slug}`}
+                        className="btn btn-ghost h-9 rounded-full"
+                      >
+                        Read
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="sm:hidden mt-4">
+            <Link
+              href="/blog"
+              className="btn btn-primary h-11 w-full rounded-full"
+            >
+              All posts
+            </Link>
+          </div>
         </div>
       </section>
     </>

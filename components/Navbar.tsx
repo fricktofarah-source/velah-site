@@ -247,7 +247,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center justify-center md:justify-center gap-7 whitespace-nowrap justify-self-center md:col-start-2 min-w-0">
             <a href="#about" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("about"); }}>About</a>
             <a href="#sustainability" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>Sustainability</a>
-            <a href="#subscriptionteaser" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>Subscription</a>
+            <a href="#subscriptionteaser" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("subscriptionteaser"); }}>Subscription</a>
             <a href="#blog" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>Blog</a>
             <Link href="/hydration" className="nav-link hover:text-velah">My hydration</Link>
           </div>
