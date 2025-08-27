@@ -1,3 +1,4 @@
+// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -171,6 +172,33 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [searchOpen]);
 
+  // --- NEW: subtle hide-on-scroll, reveal on scroll-up (UI-only) ---
+  const [hidden, setHidden] = useState(false);
+  const [lastY, setLastY] = useState(0);
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+        const delta = y - lastY;
+        const threshold = 6;
+        if (y < 8) {
+          setHidden(false);
+        } else if (delta > threshold) {
+          setHidden(true);
+        } else if (delta < -threshold) {
+          setHidden(false);
+        }
+        setLastY(y);
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lastY]);
+
   // -------- Waitlist form --------
   function validateEmail(v: string) { return /\S+@\S+\.\S+/.test(v.trim()); }
 
@@ -194,14 +222,18 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
+      <nav
+        className={`sticky top-0 z-50 border-b bg-white/80 backdrop-blur transition-transform duration-300 ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         {/* Center the middle perfectly with 1fr | auto | 1fr */}
         <div
           className="w-full px-3 sm:px-4 lg:px-6 py-3 grid items-center gap-4 grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr]"
         >
           {/* LEFT: Logo */}
           <div className="justify-self-start flex items-center shrink-0">
-            <Link href="/" aria-label="Go to homepage" className="block">
+            <Link href="/" aria-label="Go to homepage" className="block focus-ring rounded-xl">
               <img
                 src="/assets/velah_ripple.png"
                 alt="Velah"
@@ -246,7 +278,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   aria-label="Search"
-                  className="grid place-items-center h-7 w-7 shrink-0 rounded-full hover:bg-slate-100"
+                  className="grid place-items-center h-7 w-7 shrink-0 rounded-full hover:bg-slate-100 focus-ring"
                   onClick={() => {
                     setSearchOpen(true);
                     setOpenSuggest(true);
@@ -272,9 +304,9 @@ export default function Navbar() {
               </form>
 
               {/* DROPDOWN — sibling of the pill (so overflow-hidden doesn’t clip it) */}
-              { (searchOpen && openSuggest) && ( (query.trim() ? filtered : defaults).length > 0 ) && (
+              {(searchOpen && openSuggest) && ((query.trim() ? filtered : defaults).length > 0) && (
                 <div
-                  className="absolute left-0 right-0 top-[110%] z-[45]
+                  className="absolute left-0 right-0 top=[110%] z-[45]
                              rounded-2xl border bg-white shadow-lg overflow-hidden"
                   role="listbox"
                   aria-label="Search suggestions"
@@ -308,13 +340,13 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Account / Sign in (text‑only) */}
+            {/* Account / Sign in (text-only) */}
             {isAuthed ? (
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap inline-flex items-center gap-1"
+                  className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap inline-flex items-center gap-1 focus-ring rounded-lg"
                 >
                   <span className="truncate max-w-[9rem]">{displayName ?? "Account"}</span>
                   <svg aria-hidden viewBox="0 0 20 20" className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}>
@@ -337,7 +369,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => { setAuthMode("signin"); setAuthOpen(true); }}
-                className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap"
+                className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap focus-ring rounded-lg"
               >
                 Sign in
               </button>
@@ -347,7 +379,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => { setOpen(true); setPhase("form"); setError(null); }}
-              className="relative z-[60] h-9 px-3 text-sm rounded-full bg-[var(--velah)] text-black hover:opacity-90 transition shrink-0"
+              className="relative z-[60] h-9 px-3 text-sm rounded-full bg-[var(--velah)] text-black hover:opacity-90 transition shrink-0 focus-ring"
             >
               Join waitlist
             </button>
@@ -355,7 +387,7 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               type="button"
-              className="md:hidden btn btn-ghost h-9 px-3 rounded-full"
+              className="md:hidden btn btn-ghost h-9 px-3 rounded-full focus-ring"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileOpen((v) => !v)}
             >

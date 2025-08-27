@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Velah",
   description: "Eco-luxury water in reusable glass gallons. Dubai & GCC.",
   manifest: "/manifest.json",
@@ -19,9 +19,22 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col bg-white text-slate-900">
+      <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
+        {/* Skip link for keyboard/screen readers */}
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only fixed top-2 left-2 z-[999] rounded-full bg-black text-white px-3 py-2 text-sm"
+        >
+          Skip to content
+        </a>
+
         <Navbar />
-        <main className="p-0 m-0">{children}</main>
+
+        {/* Offset content so it never sits under the sticky navbar (mobile-first) */}
+        <main id="content" className="flex-1 mt-16 sm:mt-20">
+          {children}
+        </main>
+
         <Footer />
       </body>
     </html>

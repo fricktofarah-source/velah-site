@@ -14,19 +14,11 @@ export default function Methodology() {
           These targets reflect initial service modeling and will evolve as routes, volumes, and return rates improve.
         </p>
         <ul className="list-disc pl-5 space-y-1">
-          <li>
-            <strong>Reuse rate</strong>: Share of total liters delivered in bottles that are collected and re-deployed.
-          </li>
-          <li>
-            <strong>Plastic reduction</strong>: Compared with typical single-use case purchases for similar households.
-          </li>
-          <li>
-            <strong>CO₂ per liter</strong>: Based on optimized routing and pooled returns; excludes customer travel to stores.
-          </li>
+          <li><strong>Reuse rate</strong>: Share of liters delivered in bottles that are collected and re-deployed.</li>
+          <li><strong>Plastic reduction</strong>: Compared with typical single-use case purchases for similar households.</li>
+          <li><strong>CO₂ per liter</strong>: Based on optimized routing and pooled returns; excludes customer travel to stores.</li>
         </ul>
-        <p className="text-xs text-slate-500">
-          Figures are indicative; final reporting will use measured return cycles and route telemetry.
-        </p>
+        <p className="text-xs text-slate-500">Figures are indicative; final reporting will use measured return cycles and route telemetry.</p>
       </div>
     </details>
   );

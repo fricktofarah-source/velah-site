@@ -1,7 +1,17 @@
+// app/about/page.tsx
 "use client";
 
+import type { Metadata } from "next";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Methodology from "../../components/Methodology";
+
+/* ---------------- page metadata ---------------- */
+export const metadata: Metadata = {
+  title: "About | Velah",
+  description:
+    "Eco-luxury hydration in reusable glass. The story behind Velah, our origin, and how the refillable loop works.",
+};
 
 /* ---------------- utils ---------------- */
 function cn(...xs: Array<string | false | undefined>) {
@@ -277,7 +287,7 @@ export default function AboutPage() {
           <h3 className="text-2xl md:text-3xl font-semibold">Origin</h3>
           <p className="mt-4 text-slate-700 md:text-lg">
             Velah began with a simple question: why accept plastic as the default? We set out to
-            bring back the clarity of glass and the calm of a considered ritual—delivered weekly,
+            bring back the clarity of glass and the calm of a considered ritual delivered weekly,
             designed to be refilled and reused.
           </p>
           <p className="mt-4 text-slate-700 md:text-lg">
@@ -294,7 +304,7 @@ export default function AboutPage() {
             Sustainability
           </div>
           <p className="mt-3 text-slate-600 md:text-lg">
-            A refillable loop that feels good to use—and good to the planet.
+            A refillable loop that feels good to use and good to the planet.
           </p>
         </div>
         <div className="mt-8 mx-auto max-w-4xl text-slate-700 md:text-lg">
@@ -399,6 +409,13 @@ export default function AboutPage() {
               Join waitlist
             </button>
           </div>
+        </div>
+      </Section>
+
+      {/* Methodology / assumptions (UI-only, reusable) */}
+      <Section className="pt-0">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <Methodology />
         </div>
       </Section>
     </>

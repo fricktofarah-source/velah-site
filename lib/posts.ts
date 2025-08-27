@@ -1,9 +1,11 @@
+// lib/posts.ts
 export type Post = {
   slug: string;
   title: string;
   excerpt: string;
   date: string; // ISO
   content: string;
+  updated?: string; // optional last-updated ISO
 };
 
 export const posts: Post[] = [

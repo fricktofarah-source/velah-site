@@ -1,3 +1,4 @@
+// app/hydration/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -205,12 +206,15 @@ export default function HydrationPage() {
 
             {/* Set goal */}
             <div className="mt-5">
-              <label className="text-sm text-slate-600">Daily goal (ml)</label>
+              <label className="text-sm text-slate-600" htmlFor="daily-goal">
+                Daily goal (ml)
+              </label>
               <div className="mt-2 flex items-center gap-2">
                 <input
+                  id="daily-goal"
                   type="number"
                   inputMode="numeric"
-                  className="border rounded-2xl px-3 py-2 w-36"
+                  className="border rounded-2xl px-3 py-2 w-36 focus-ring"
                   placeholder="e.g., 2000"
                   value={goalInput}
                   onChange={(e) => setGoalInput(e.target.value)}
@@ -231,10 +235,12 @@ export default function HydrationPage() {
                   </button>
                 ))}
                 <div className="flex items-center gap-2">
+                  <label className="sr-only" htmlFor="custom-add">Custom amount</label>
                   <input
+                    id="custom-add"
                     type="number"
                     inputMode="numeric"
-                    className="border rounded-2xl px-3 py-2 w-28"
+                    className="border rounded-2xl px-3 py-2 w-28 focus-ring"
                     placeholder="Custom"
                     value={customAdd}
                     onChange={(e) => setCustomAdd(e.target.value)}
@@ -256,10 +262,12 @@ export default function HydrationPage() {
             <div className="mt-6">
               <div className="text-sm text-slate-600 mb-2">Adjust total</div>
               <div className="flex items-center gap-2">
+                <label className="sr-only" htmlFor="set-total">Set total</label>
                 <input
+                  id="set-total"
                   type="number"
                   inputMode="numeric"
-                  className="border rounded-2xl px-3 py-2 w-32"
+                  className="border rounded-2xl px-3 py-2 w-32 focus-ring"
                   placeholder="Set total"
                   value={adjustInput}
                   onChange={(e) => setAdjustInput(e.target.value)}
@@ -317,7 +325,7 @@ function ProgressRing({
   numerator: number;
   denominator: number;
 }) {
-  const size = 300;
+  const size = 300; // viewBox size; actual rendered size is responsive via CSS
   const stroke = 16;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -325,7 +333,11 @@ function ProgressRing({
 
   return (
     <div className="relative flex items-center justify-center">
-      <svg width={size} height={size} className="drop-shadow-sm">
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="drop-shadow-sm w-64 sm:w-72 lg:w-[300px] h-auto"
+        aria-hidden
+      >
         <defs>
           <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#7FCBD8" />
@@ -353,8 +365,8 @@ function ProgressRing({
         />
       </svg>
 
-      <div className="absolute text-center">
-        <div className="text-5xl font-semibold">{percent}%</div>
+      <div className="absolute text-center" aria-live="polite">
+        <div className="text-5xl font-semibold tabular-nums">{percent}%</div>
         <div className="mt-1 text-slate-600">
           {fmt(numerator)} {denominator ? <>/ {fmt(denominator)}</> : null} ml
         </div>

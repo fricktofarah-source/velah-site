@@ -1,32 +1,58 @@
+// app/confirm/invalid/page.tsx
 export const dynamic = "force-static";
 
+export const metadata = {
+  title: "Confirmation link invalid | Velah",
+  description:
+    "This confirmation link is invalid or expired. Request a new confirmation email.",
+};
+
 export default function Page() {
+  const titleId = "invalid-title";
+  const descId = "invalid-desc";
+
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-2xl font-semibold">Link not valid</h1>
-      <p className="mt-2 text-slate-600">
-        This confirmation link is invalid or expired. You can request another email below.
-      </p>
+    <main className="section">
+      <div className="mx-auto max-w-md px-4 sm:px-6">
+        <div className="card p-6 sm:p-7">
+          <h1 id={titleId} className="text-2xl font-semibold tracking-tight">
+            Link not valid
+          </h1>
+          <p id={descId} className="mt-2 text-slate-600">
+            This confirmation link is invalid or expired. Request another email below.
+          </p>
 
-      {/* Plain HTML form posts directly to the API (works without JS) */}
-      <form
-        className="mt-6 flex gap-3"
-        method="post"
-        action="/api/resend-confirmation"
-      >
-        <input
-          type="email"
-          name="email"
-          required
-          placeholder="your@email.com"
-          className="flex-1 rounded-2xl border px-3 py-2"
-        />
-        <button className="rounded-full border px-5 py-2">Resend</button>
-      </form>
+          {/* Plain HTML form posts directly to the API (works without JS) */}
+          <form
+            className="mt-5 space-y-3"
+            method="post"
+            action="/api/resend-confirmation"
+            aria-labelledby={titleId}
+            aria-describedby={descId}
+          >
+            <label className="text-sm" htmlFor="email">
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="you@example.com"
+              className="w-full rounded-2xl border px-3 py-2 focus-ring"
+              autoComplete="email"
+            />
 
-      <a href="/" className="mt-6 inline-block rounded-full px-5 py-3 border">
-        Back to home
-      </a>
+            <button className="btn btn-primary h-10 w-full rounded-full" type="submit">
+              Resend confirmation
+            </button>
+          </form>
+
+          <a href="/" className="btn btn-ghost h-10 w-full rounded-full mt-4 text-center">
+            Back to home
+          </a>
+        </div>
+      </div>
     </main>
   );
 }

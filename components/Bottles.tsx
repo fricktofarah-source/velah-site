@@ -1,9 +1,10 @@
+// components/Bottles.tsx
 "use client";
 
 import Image from "next/image";
 
 type Bottle = {
-  key: "5g" | "1l";
+  key: "5g" | "1l" | "500ml";
   name: string;
   desc: string;
   img: string;
@@ -19,15 +20,23 @@ const BOTTLES: Bottle[] = [
   {
     key: "1l",
     name: "1 Litre",
-    desc: "Table‑ready glass for daily use. Dishwasher‑safe, stainless cap.",
+    desc: "Table-ready glass for daily use. Dishwasher-safe, stainless cap.",
     img: "/assets/velah_bottle_1l.png",
+  },
+  {
+    key: "500ml",
+    name: "500 mL",
+    desc: "Compact glass for on-the-go. Dishwasher-safe, stainless cap.",
+    img: "/assets/velah_bottle_500ml.png", // update path if your asset name differs
   },
 ];
 
 export default function Bottles() {
   function addToPlan(key: Bottle["key"]) {
     // Optional: preselect bottle for Subscription section to read
-    localStorage.setItem("velah:preselect", key);
+    try {
+      localStorage.setItem("velah:preselect", key);
+    } catch {}
     // Smooth scroll to subscription
     document.getElementById("subscription")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -43,7 +52,7 @@ export default function Bottles() {
             <h2 className="text-3xl font-semibold tracking-tight">Available bottles</h2>
           </div>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {BOTTLES.map((b) => (
               <article
                 key={b.key}
@@ -52,12 +61,11 @@ export default function Bottles() {
                 <div className="grid grid-cols-[auto_1fr] gap-6 items-center">
                   {/* Image column */}
                   <div className="relative h-48 w-40 sm:h-56 sm:w-48">
-                    {/* Use next/image for crispness */}
                     <Image
                       src={b.img}
                       alt={b.name}
                       fill
-                      sizes="(min-width: 768px) 12rem, 10rem"
+                      sizes="(min-width: 1024px) 12rem, (min-width: 768px) 12rem, 10rem"
                       className="object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   </div>
