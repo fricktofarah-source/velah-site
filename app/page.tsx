@@ -6,6 +6,7 @@ import Bottles from "@/components/Bottles";
 import Subscription from "@/components/Subscription";
 import HowItWorks from "@/components/HowItWorks";
 import Counter from "@/components/Counter";
+import SubscriptionTeaser from "@/components/SubscriptionTeaser";
 
 export default function HomePage() {
   return (
@@ -22,11 +23,7 @@ export default function HomePage() {
 
       <HowItWorks />
 
-      <section id="subscription" className="section">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <Subscription />
-        </div>
-      </section>
+      <SubscriptionTeaser />
 
       <section id="sustainability" className="section bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
