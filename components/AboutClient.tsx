@@ -37,7 +37,7 @@ function useReveal<T extends HTMLElement>() {
   return { ref, visible };
 }
 
-function useParallax(max = 60) {
+function useParallax(max = 56) {
   const [y, setY] = useState(0);
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -100,13 +100,13 @@ function Section({
   );
 }
 
-/* --------- fade wrapper (only used for about-origin now) --------- */
+/* --------- fade wrapper for tall visuals --------- */
 function FadeEdges({
   children,
   top = true,
   bottom = true,
   className,
-  size = "h-32 md:h-56 lg:h-64",
+  size = "h-24 md:h-40 lg:h-48",
 }: {
   children: React.ReactNode;
   top?: boolean;
@@ -147,9 +147,8 @@ function usePageReady() {
     if (document.readyState === "complete") done();
     else {
       window.addEventListener("load", done, { once: true });
-      setTimeout(done, 1500); // fallback
+      setTimeout(done, 1200); // fallback, a bit faster
     }
-    // lock scroll while loading
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -163,11 +162,34 @@ function usePageReady() {
   return ready;
 }
 
+/* ---------------- mini components ---------------- */
+function StoryBubble({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border bg-white/80 backdrop-blur shadow-soft p-4",
+        "max-w-xs text-[13px] leading-5"
+      )}
+      role="note"
+      aria-live="polite"
+    >
+      <div className="font-medium">{title}</div>
+      <p className="mt-1 text-slate-600">{body}</p>
+    </div>
+  );
+}
+
 /* ---------------- page (client) ---------------- */
 export default function AboutClient() {
   const ready = usePageReady();
-
   const parallaxY = useParallax(56);
+
   // counters become "planned" and animate when in view
   const { ref: impactRef, visible: impactVisible } = useReveal<HTMLDivElement>();
   const plannedBottles = useCountUp(impactVisible ? 947000 : 0, 700);
@@ -177,6 +199,16 @@ export default function AboutClient() {
     () => typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent),
     []
   );
+
+  // follow-on-scroll position for the hero story bubble (gentle, no layout shift)
+  const [bubbleY, setBubbleY] = useState(0);
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const onScroll = () => setBubbleY(Math.min(32, window.scrollY * 0.08));
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
@@ -196,7 +228,7 @@ export default function AboutClient() {
         </div>
       )}
 
-      {/* HERO — full-bleed, light wash */}
+      {/* HERO — full-bleed texture wash with subtle parallax */}
       <header className="relative isolate overflow-hidden">
         <Image
           src="/assets/water-texture.jpg"
@@ -223,6 +255,18 @@ export default function AboutClient() {
               Eco-luxury hydration. Glass over plastic. Ritual over routine. Purity without
               compromise.
             </p>
+
+            {/* Sticky story bubble */}
+            <div
+              className="mt-6 relative"
+              style={{ transform: `translateY(${bubbleY}px)` }}
+            >
+              <StoryBubble
+                title="Reusable by design"
+                body="We circulate bottles, not waste—glass that stays pristine, week after week."
+              />
+            </div>
+
             <div className="mt-8 flex items-center gap-3">
               <a
                 href="/hydration"
@@ -241,8 +285,8 @@ export default function AboutClient() {
         </div>
       </header>
 
-      {/* BIG NARRATIVE LINE */}
-      <Section bleed>
+      {/* BIG STATEMENT LINE */}
+      <Section bleed className="pt-10 md:pt-14">
         <div className="flex items-center justify-center">
           <h2
             className={cn(
@@ -256,10 +300,10 @@ export default function AboutClient() {
         </div>
       </Section>
 
-      {/* BOTTLE MOMENT — keep blending ONLY here */}
+      {/* BOTTLE MOMENT — single strong visual */}
       <Section bleed className="pt-0">
-        <FadeEdges top bottom size="h-32 md:h-56 lg:h-64">
-          <div className="relative w-full h-[90vh] flex items-center justify-center bg-white">
+        <FadeEdges top bottom size="h-24 md:h-40 lg:h-48">
+          <div className="relative w-full h-[76vh] md:h-[86vh] flex items-center justify-center bg-white">
             <Image
               src="/assets/about-origin.png"
               alt="Velah bottle in nature"
@@ -288,26 +332,33 @@ export default function AboutClient() {
         </div>
       </Section>
 
-      {/* SUSTAINABILITY LINE */}
+      {/* LOOP PILLARS — clean, tactile chips (not green-themed) */}
       <Section>
         <div className="text-center">
-          <div className="mx-auto max-w-5xl text-[32px] sm:text-[44px] md:text-[60px] font-semibold tracking-tight leading-[1.05] bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-center bg-cover">
-            Sustainability
+          <div className="mx-auto max-w-5xl text-[32px] sm:text-[44px] md:text-[60px] font-semibold tracking-tight leading-[1.05]">
+            A refillable loop that’s effortless
           </div>
           <p className="mt-3 text-slate-600 md:text-lg">
-            A refillable loop that feels good to use and good to the planet.
+            Minimal effort for you, maximal reuse for the planet.
           </p>
         </div>
-        <div className="mt-8 mx-auto max-w-4xl text-slate-700 md:text-lg">
-          <ul className="space-y-3">
-            <li>• Refill, not landfill — durable glass in continuous circulation.</li>
-            <li>• Materials that last — pristine taste, effortless cleaning.</li>
-            <li>• Smarter local routes — fresher water, lighter footprint.</li>
+        <div className="mt-8 mx-auto max-w-4xl">
+          <ul className="grid sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
+            {[
+              ["Refill", "Bottles sanitized & returned looking new."],
+              ["Ritual", "Weekly rhythm, skip or change anytime."],
+              ["Taste", "Glass + stainless keeps water pristine."],
+            ].map(([title, body]) => (
+              <li key={title} className="rounded-2xl border bg-white/80 backdrop-blur p-5">
+                <div className="font-medium">{title}</div>
+                <p className="mt-1 text-slate-600">{body}</p>
+              </li>
+            ))}
           </ul>
         </div>
       </Section>
 
-      {/* IMPACT COUNTERS — PLANNED + fast count */}
+      {/* IMPACT COUNTERS — planned values; fast count-up */}
       <Section bleed>
         <div ref={impactRef} className="relative w-full">
           <div className="absolute inset-0 -z-10">
@@ -321,18 +372,18 @@ export default function AboutClient() {
             <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/60" />
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 md:py-24">
             <div className="grid gap-10 md:grid-cols-2">
               <div>
-                <div className="text-sm uppercase tracking-wide text-slate-600">
-                  Planned bottles eliminated (500mL)
+                <div className="text-xs uppercase tracking-wide text-slate-600">
+                  Planned bottles eliminated (500 mL)
                 </div>
                 <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
                   {plannedBottles.toLocaleString()}+
                 </div>
               </div>
               <div>
-                <div className="text-sm uppercase tracking-wide text-slate-600">
+                <div className="text-xs uppercase tracking-wide text-slate-600">
                   Planned CO₂ emissions reduced
                 </div>
                 <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
@@ -345,23 +396,9 @@ export default function AboutClient() {
         </div>
       </Section>
 
-      {/* CERTIFICATIONS */}
-      <Section>
-        <div className="text-slate-800/80 text-sm uppercase tracking-wide">Certified Standards</div>
-        <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Supplier Certifications</h3>
-
-        <ul className="mt-6 flex flex-wrap items-center gap-4 md:gap-6">
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">NSF</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">ISO</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">CE</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WRAS</li>
-          <li className="px-4 py-2 rounded-full border border-slate-200 bg-white/70 backdrop-blur">WQA</li>
-        </ul>
-      </Section>
-
       {/* PARTNERS */}
       <Section>
-        <div className="text-slate-800/80 text-sm uppercase tracking-wide">Our Partners</div>
+        <div className="text-slate-800/80 text-xs uppercase tracking-wide">Our Partners</div>
         <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Trusted by leading groups</h3>
 
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 opacity-90">
@@ -403,7 +440,7 @@ export default function AboutClient() {
         </div>
       </Section>
 
-      {/* Methodology / assumptions (UI-only, reusable) */}
+      {/* Methodology / assumptions */}
       <Section className="pt-0">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Methodology />
