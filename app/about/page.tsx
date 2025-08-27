@@ -2,13 +2,13 @@
 import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 
-// avoid RSC event-handler errors: AboutClient is a client component
+// Client component (holds all interactivity/handlers)
 const AboutClient = dynamic(() => import("../../components/AboutClient"), { ssr: false });
 
 export const metadata: Metadata = {
   title: "About | Velah",
   description:
-    "Eco-luxury hydration in reusable glass. The story behind Velah and our refillable loop.",
+    "A seamless, story-driven look at Velah—eco-luxury hydration in reusable glass.",
 };
 
 export const viewport: Viewport = {

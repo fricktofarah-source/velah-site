@@ -1,91 +1,79 @@
 // components/AboutClient.tsx
 "use client";
 
-import Image from "next/image";
-import Methodology from "./Methodology";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-/* ---------------- utils ---------------- */
-function cn(...xs: Array<string | false | undefined>) {
-  return xs.filter(Boolean).join(" ");
-}
+/** -----------------------------------------------------------
+ *  GOAL
+ *  - “Cloud over a waterfall” feeling: weightless, fluid, calm.
+ *  - No stock photos. Pure gradients, blur, and SVG noise.
+ *  - Story-led sections with sticky reveals (no auto-advance).
+ *  - Subtle parallax & cursor glow. Respects reduced motion.
+ *  - Minimal aesthetic; immersive without being “greenwashed”.
+ * ---------------------------------------------------------- */
 
+// Utilities
 const prefersReducedMotion =
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
-/* ---------------- hooks ---------------- */
-function useReveal<T extends HTMLElement>() {
+function cn(...xs: Array<string | false | null | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
+
+// Hooks
+function useReveal<T extends HTMLElement>(threshold = 0.18) {
   const ref = useRef<T | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setVisible(true);
-      return;
-    }
+    if (prefersReducedMotion) { setVisible(true); return; }
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      (ents) => ents.forEach((e) => e.isIntersecting && setVisible(true)),
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 }
+      ents => ents.forEach(e => e.isIntersecting && setVisible(true)),
+      { threshold }
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [threshold]);
 
   return { ref, visible };
 }
 
-function useParallax(max = 56) {
+function useParallax(scale = 1) {
   const [y, setY] = useState(0);
   useEffect(() => {
     if (prefersReducedMotion) return;
-    const onScroll = () => setY(Math.min(max, (window.scrollY || 0) * 0.25));
+    const onScroll = () => setY((window.scrollY || 0) * 0.12 * scale);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [max]);
+  }, [scale]);
   return y;
 }
 
-/** Count-up that restarts when target changes (quick) */
-function useCountUp(target: number, durationMs = 700) {
-  const [value, setValue] = useState(0);
+function useMouseLight() {
+  const [pos, setPos] = useState({ x: -9999, y: -9999 });
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setValue(target);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / durationMs);
-      const eased = (1 - Math.cos(p * Math.PI)) / 2; // ease-in-out
-      setValue(Math.round(target * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, durationMs]);
-  return value;
+    const onMove = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+  return pos;
 }
 
-/* --------------- layout helpers --------------- */
+// Tiny components
 function Section({
   children,
   className,
   bleed = false,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  bleed?: boolean;
-}) {
+}: { children: React.ReactNode; className?: string; bleed?: boolean; }) {
   const { ref, visible } = useReveal<HTMLDivElement>();
-  const base =
-    "transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] " +
-    (visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6");
-
+  const base = cn(
+    "transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]",
+    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+  );
   if (bleed) {
     return (
       <section className={cn("py-20 md:py-28", className)}>
@@ -94,117 +82,256 @@ function Section({
     );
   }
   return (
-    <section className={cn("mx-auto max-w-6xl px-4 sm:px-6 py-20 md:py-28", className)}>
+    <section className={cn("max-w-6xl mx-auto px-4 sm:px-6 py-20 md:py-28", className)}>
       <div ref={ref} className={base}>{children}</div>
     </section>
   );
 }
 
-/* --------- fade wrapper for tall visuals --------- */
-function FadeEdges({
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="px-3 py-1 rounded-full border text-xs text-slate-600 bg-white/70 backdrop-blur">
+      {children}
+    </span>
+  );
+}
+
+/** BACKGROUND FX
+ *  Layered gradient sheets + SVG noise mask + cursor glow.
+ *  No images; everything procedural.
+ */
+function AmbientBackdrop() {
+  const y1 = useParallax(1);
+  const y2 = useParallax(1.6);
+  const { x, y } = useMouseLight();
+
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      {/* soft vertical “falls” */}
+      <div
+        className="absolute -inset-20 blur-2xl"
+        style={{
+          background:
+            "conic-gradient(from 180deg at 50% 20%, rgba(128,209,222,0.30), rgba(255,255,255,0.0) 30%, rgba(128,209,222,0.25) 60%, rgba(255,255,255,0.0) 90%)",
+          transform: `translateY(${prefersReducedMotion ? 0 : y1}px)`,
+        }}
+      />
+      <div
+        className="absolute -inset-24 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(60% 80% at 50% 0%, rgba(127,203,216,0.25), rgba(255,255,255,0))",
+          transform: `translateY(${prefersReducedMotion ? 0 : -y2}px)`,
+        }}
+      />
+      {/* subtle noise veil */}
+      <div
+        className="absolute inset-0 opacity-[0.06] mix-blend-multiply"
+        style={{
+          backgroundImage:
+            `url("data:image/svg+xml;utf8,${encodeURIComponent(
+              `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0.35'/></feComponentTransfer></filter><rect width='120' height='120' filter='url(%23n)'/></svg>`
+            )}")`,
+        }}
+      />
+      {/* cursor glow */}
+      <div
+        className="absolute size-[40vmax] rounded-full"
+        style={{
+          left: x - window.innerWidth * 0.2,
+          top: y - window.innerHeight * 0.2,
+          background: "radial-gradient(closest-side, rgba(127,203,216,0.18), transparent 60%)",
+          transition: "transform 200ms linear",
+        }}
+      />
+    </div>
+  );
+}
+
+/** PINNED STORY
+ *  A sticky container that lets cards fade/slide as you scroll.
+ *  No snapping; no layout jumps; just whisper-smooth reveals.
+ */
+function PinnedStory() {
+  const steps = [
+    {
+      k: "refill",
+      title: "Refill over replace",
+      body: "A weekly rhythm that keeps glass in motion—freshly sanitized, looking new, tasting clean.",
+    },
+    {
+      k: "ritual",
+      title: "Ritual over routine",
+      body: "Counter-ready bottles that elevate the everyday. Stainless caps; zero plastic taste.",
+    },
+    {
+      k: "respect",
+      title: "Respect for pace",
+      body: "Confirm, change, or skip with a tap. The loop flows around your week, not the other way around.",
+    },
+  ] as const;
+
+  // Observe each row separately
+  const [active, setActive] = useState(0);
+  const refs = Array.from({ length: steps.length }, () => useRef<HTMLDivElement | null>(null));
+
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (ents) => {
+        ents.forEach((e) => {
+          const idx = Number((e.target as HTMLElement).dataset.index || 0);
+          if (e.isIntersecting) setActive((prev) => (idx > prev ? idx : prev));
+        });
+      },
+      { threshold: 0.4, rootMargin: "-10% 0px -10% 0px" }
+    );
+    refs.forEach(r => r.current && io.observe(r.current));
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8 items-start">
+      {/* Sticky text column */}
+      <div className="lg:sticky lg:top-24">
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+          Hydration that feels weightless
+        </h2>
+        <p className="mt-3 text-slate-600">
+          We designed Velah to disappear into your week—quietly reliable, beautifully simple.
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Pill>Glass & stainless</Pill>
+          <Pill>Reusable loop</Pill>
+          <Pill>Skip anytime</Pill>
+        </div>
+      </div>
+
+      {/* Flowing cards */}
+      <div className="space-y-4">
+        {steps.map((s, i) => {
+          const on = active >= i;
+          return (
+            <div
+              key={s.k}
+              ref={refs[i]}
+              data-index={i}
+              className={cn(
+                "rounded-3xl border p-5 sm:p-6 bg-white/70 backdrop-blur shadow-soft",
+                "transition-all duration-700",
+                on ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              )}
+            >
+              <div className="text-xs uppercase tracking-wide text-slate-600">{String(i + 1).padStart(2, "0")}</div>
+              <div className="mt-1 text-xl font-medium">{s.title}</div>
+              <p className="mt-2 text-slate-700">{s.body}</p>
+
+              {/* Ambient progress line */}
+              <div className="mt-4 h-1 rounded bg-slate-200 overflow-hidden">
+                <div
+                  className="h-full bg-[var(--velah,black)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]"
+                  style={{ width: `${on ? 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** COUNTERS (planned/illustrative) */
+function Impact() {
+  const { ref, visible } = useReveal<HTMLDivElement>(0.3);
+  const [a, b] = useCountPair(visible, [947000, 78411]);
+  return (
+    <div ref={ref} className="rounded-3xl border bg-white/70 backdrop-blur p-6 sm:p-8">
+      <div className="grid sm:grid-cols-2 gap-6">
+        <div>
+          <div className="text-xs uppercase tracking-wide text-slate-600">Planned bottles eliminated</div>
+          <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">{a.toLocaleString()}+</div>
+          <p className="mt-2 text-slate-600">By keeping glass in circulation.</p>
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-slate-600">Planned CO₂ reduced</div>
+          <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">{b.toLocaleString()} kg</div>
+          <p className="mt-2 text-slate-600">Optimized routes; fewer single-use shipments.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+function useCountPair(run: boolean, targets: [number, number]) {
+  const [v1, setV1] = useState(0);
+  const [v2, setV2] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    if (prefersReducedMotion) { setV1(targets[0]); setV2(targets[1]); return; }
+    const start = performance.now();
+    let raf = 0;
+    const dur = 800;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const e = (1 - Math.cos(Math.PI * p)) / 2;
+      setV1(Math.round(targets[0] * e));
+      setV2(Math.round(targets[1] * e));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [run, targets]);
+  return [v1, v2] as const;
+}
+
+/** CTA button (magnetic-ish hover) */
+function FloatButton({
   children,
-  top = true,
-  bottom = true,
-  className,
-  size = "h-24 md:h-40 lg:h-48",
+  onClick,
+  className = "",
 }: {
   children: React.ReactNode;
-  top?: boolean;
-  bottom?: boolean;
+  onClick?: () => void;
   className?: string;
-  size?: string;
 }) {
+  const [dx, setDx] = useState(0);
+  const [dy, setDy] = useState(0);
   return (
-    <div className={cn("relative", className)}>
-      {children}
-      {top && (
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 top-0",
-            "bg-gradient-to-b from-white to-transparent",
-            size
-          )}
-        />
-      )}
-      {bottom && (
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0",
-            "bg-gradient-to-t from-white to-transparent",
-            size
-          )}
-        />
-      )}
-    </div>
-  );
-}
-
-/* --------- simple preloader (locks scroll until ready) --------- */
-function usePageReady() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const done = () => setReady(true);
-    if (document.readyState === "complete") done();
-    else {
-      window.addEventListener("load", done, { once: true });
-      setTimeout(done, 1200); // fallback, a bit faster
-    }
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("load", done);
-    };
-  }, []);
-  useEffect(() => {
-    if (ready) document.body.style.overflow = "";
-  }, [ready]);
-  return ready;
-}
-
-/* ---------------- mini components ---------------- */
-function StoryBubble({
-  title,
-  body,
-}: {
-  title: string;
-  body: string;
-}) {
-  return (
-    <div
+    <button
+      onMouseMove={(e) => {
+        if (prefersReducedMotion) return;
+        const r = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        setDx((e.clientX - cx) * 0.06);
+        setDy((e.clientY - cy) * 0.06);
+      }}
+      onMouseLeave={() => { setDx(0); setDy(0); }}
+      onClick={onClick}
       className={cn(
-        "rounded-2xl border bg-white/80 backdrop-blur shadow-soft p-4",
-        "max-w-xs text-[13px] leading-5"
+        "inline-flex items-center justify-center rounded-full h-11 px-6 border border-black/10",
+        "bg-white/80 backdrop-blur shadow-soft transition-transform",
+        className
       )}
-      role="note"
-      aria-live="polite"
+      style={{ transform: `translate(${dx}px, ${dy}px)` }}
     >
-      <div className="font-medium">{title}</div>
-      <p className="mt-1 text-slate-600">{body}</p>
-    </div>
+      {children}
+    </button>
   );
 }
 
-/* ---------------- page (client) ---------------- */
+// PAGE
 export default function AboutClient() {
-  const ready = usePageReady();
-  const parallaxY = useParallax(56);
-
-  // counters become "planned" and animate when in view
-  const { ref: impactRef, visible: impactVisible } = useReveal<HTMLDivElement>();
-  const plannedBottles = useCountUp(impactVisible ? 947000 : 0, 700);
-  const plannedCO2 = useCountUp(impactVisible ? 78411 : 0, 700);
-
-  const isiOS = useMemo(
-    () => typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent),
-    []
-  );
-
-  // follow-on-scroll position for the hero story bubble (gentle, no layout shift)
-  const [bubbleY, setBubbleY] = useState(0);
+  // Scroll progress (thin top bar)
+  const [prog, setProg] = useState(0);
   useEffect(() => {
-    if (prefersReducedMotion) return;
-    const onScroll = () => setBubbleY(Math.min(32, window.scrollY * 0.08));
+    const onScroll = () => {
+      const b = document.body;
+      const e = document.documentElement;
+      const scrolled = (e.scrollTop || b.scrollTop);
+      const height = (e.scrollHeight - e.clientHeight) || 1;
+      setProg(scrolled / height);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -212,240 +339,148 @@ export default function AboutClient() {
 
   return (
     <>
-      {/* PRELOADER */}
-      {!ready && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center">
-          <div className="animate-pulse text-xl tracking-wide">Velah</div>
-          <div className="mt-3 h-1 w-32 overflow-hidden rounded bg-slate-200">
-            <div className="h-full w-1/2 animate-[loading_0.9s_ease-in-out_infinite_alternate] bg-slate-400" />
-          </div>
-          <style jsx global>{`
-            @keyframes loading {
-              from { transform: translateX(-10%); }
-              to { transform: translateX(60%); }
-            }
-          `}</style>
-        </div>
-      )}
+      <AmbientBackdrop />
 
-      {/* HERO — full-bleed texture wash with subtle parallax */}
-      <header className="relative isolate overflow-hidden">
-        <Image
-          src="/assets/water-texture.jpg"
-          alt="Water background texture"
-          fill
-          priority
-          className="object-cover object-center opacity-70"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/40" />
+      {/* Top progress */}
+      <div
+        aria-hidden
+        className="fixed left-0 top-0 h-[3px] bg-[var(--velah,black)] z-40 transition-[width]"
+        style={{ width: `${Math.round(prog * 100)}%` }}
+      />
 
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 md:pt-28 pb-28 md:pb-36">
-          <div
-            className="max-w-3xl"
-            style={{ transform: `translateY(${prefersReducedMotion ? 0 : parallaxY}px)` }}
-          >
-            <h1 className="text-[40px] md:text-[56px] leading-[1.05] font-semibold tracking-tight text-slate-900">
-              The story behind{" "}
-              <span className="bg-clip-text text-transparent bg-[url('/assets/leaf-texture.jpg')] bg-cover bg-center">
-                Velah
-              </span>
-            </h1>
-            <p className="mt-5 text-slate-700 md:text-lg md:leading-8">
-              Eco-luxury hydration. Glass over plastic. Ritual over routine. Purity without
-              compromise.
-            </p>
-
-            {/* Sticky story bubble */}
-            <div
-              className="mt-6 relative"
-              style={{ transform: `translateY(${bubbleY}px)` }}
-            >
-              <StoryBubble
-                title="Reusable by design"
-                body="We circulate bottles, not waste—glass that stays pristine, week after week."
-              />
-            </div>
-
-            <div className="mt-8 flex items-center gap-3">
-              <a
-                href="/hydration"
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/90 backdrop-blur text-slate-900 hover:bg-white"
-              >
-                Explore your hydration
-              </a>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/60 backdrop-blur text-slate-900 hover:bg-white"
-              >
-                Join waitlist
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* BIG STATEMENT LINE */}
-      <Section bleed className="pt-10 md:pt-14">
-        <div className="flex items-center justify-center">
-          <h2
-            className={cn(
-              "text-center font-semibold tracking-tight",
-              "text-[36px] sm:text-[48px] md:text-[70px] leading-[1.04]",
-              "bg-clip-text text-transparent bg-[url('/assets/glass-in-stream.jpg')] bg-cover bg-center"
-            )}
-          >
-            GLASS NOT PLASTIC
-          </h2>
-        </div>
-      </Section>
-
-      {/* BOTTLE MOMENT — single strong visual */}
-      <Section bleed className="pt-0">
-        <FadeEdges top bottom size="h-24 md:h-40 lg:h-48">
-          <div className="relative w-full h-[76vh] md:h-[86vh] flex items-center justify-center bg-white">
-            <Image
-              src="/assets/about-origin.png"
-              alt="Velah bottle in nature"
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority
-            />
-          </div>
-        </FadeEdges>
-      </Section>
-
-      {/* ORIGIN COPY */}
-      <Section>
-        <div className="mx-auto max-w-3xl">
-          <h3 className="text-2xl md:text-3xl font-semibold">Origin</h3>
-          <p className="mt-4 text-slate-700 md:text-lg">
-            Velah began with a simple question: why accept plastic as the default? We set out to
-            bring back the clarity of glass and the calm of a considered ritual delivered weekly,
-            designed to be refilled and reused.
+      {/* HERO */}
+      <section className="relative overflow-hidden pt-24 md:pt-32 pb-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <h1 className="text-[40px] md:text-[56px] leading-[1.05] font-semibold tracking-tight text-slate-900">
+            Hydration, made weightless
+          </h1>
+          <p className="mt-4 text-slate-700 md:text-lg max-w-2xl">
+            Velah is a refillable loop built for calm. Minimal effort, pristine taste, and a weekly
+            rhythm that simply flows.
           </p>
-          <p className="mt-4 text-slate-700 md:text-lg">
-            From Dubai, we’re building a closed-loop system that reduces waste and elevates everyday
-            hydration into something quietly special.
-          </p>
-        </div>
-      </Section>
-
-      {/* LOOP PILLARS — clean, tactile chips (not green-themed) */}
-      <Section>
-        <div className="text-center">
-          <div className="mx-auto max-w-5xl text-[32px] sm:text-[44px] md:text-[60px] font-semibold tracking-tight leading-[1.05]">
-            A refillable loop that’s effortless
-          </div>
-          <p className="mt-3 text-slate-600 md:text-lg">
-            Minimal effort for you, maximal reuse for the planet.
-          </p>
-        </div>
-        <div className="mt-8 mx-auto max-w-4xl">
-          <ul className="grid sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
-            {[
-              ["Refill", "Bottles sanitized & returned looking new."],
-              ["Ritual", "Weekly rhythm, skip or change anytime."],
-              ["Taste", "Glass + stainless keeps water pristine."],
-            ].map(([title, body]) => (
-              <li key={title} className="rounded-2xl border bg-white/80 backdrop-blur p-5">
-                <div className="font-medium">{title}</div>
-                <p className="mt-1 text-slate-600">{body}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </Section>
-
-      {/* IMPACT COUNTERS — planned values; fast count-up */}
-      <Section bleed>
-        <div ref={impactRef} className="relative w-full">
-          <div className="absolute inset-0 -z-10">
-            <Image
-              src="/assets/nature-detail.jpg"
-              alt=""
-              fill
-              className="object-cover opacity-30"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/60" />
-          </div>
-
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 md:py-24">
-            <div className="grid gap-10 md:grid-cols-2">
-              <div>
-                <div className="text-xs uppercase tracking-wide text-slate-600">
-                  Planned bottles eliminated (500 mL)
-                </div>
-                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                  {plannedBottles.toLocaleString()}+
-                </div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-wide text-slate-600">
-                  Planned CO₂ emissions reduced
-                </div>
-                <div className="mt-2 text-5xl md:text-6xl font-semibold tabular-nums">
-                  {plannedCO2.toLocaleString()} kg
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 text-slate-600">Dubai, UAE</div>
-          </div>
-        </div>
-      </Section>
-
-      {/* PARTNERS */}
-      <Section>
-        <div className="text-slate-800/80 text-xs uppercase tracking-wide">Our Partners</div>
-        <h3 className="mt-2 text-2xl md:text-3xl font-semibold">Trusted by leading groups</h3>
-
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 opacity-90">
-          {[
-            "Partner One","Partner Two","Partner Three","Partner Four",
-            "Partner Five","Partner Six","Partner Seven","Partner Eight",
-          ].map((name) => (
-            <div
-              key={name}
-              className="aspect-[3/2] flex items-center justify-center bg-white/70 backdrop-blur border border-slate-200"
-            >
-              <span className="text-slate-600">{name}</span>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <Section>
-        <div className="text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold">Join the refillable future</h2>
-          <p className="mt-3 text-slate-600 md:text-lg">
-            Select your plan in minutes. Change or skip any week.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="/hydration"
-              className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/90 backdrop-blur text-slate-900 hover:bg-white"
-            >
-              Start your hydration
-            </a>
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}
-              className="inline-flex h-11 items-center justify-center rounded-full px-6 border border-black/10 bg-white/60 backdrop-blur text-slate-900 hover:bg-white"
-            >
+          <div className="mt-6 flex flex-wrap gap-3">
+            <FloatButton onClick={() => (window.location.href = "/hydration")}>Explore hydration</FloatButton>
+            <FloatButton onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}>
               Join waitlist
-            </button>
+            </FloatButton>
+          </div>
+        </div>
+
+        {/* Gentle foreground sheets */}
+        <div className="absolute inset-x-0 bottom-0 h-48 md:h-64 [mask-image:linear-gradient(to_bottom,transparent,black_30%,black)]">
+          <div className="absolute inset-0 blur-2xl bg-[radial-gradient(60%_60%_at_50%_0%,rgba(127,203,216,0.25),transparent_70%)]" />
+        </div>
+      </section>
+
+      {/* PINNED STORY */}
+      <Section className="pt-6">
+        <PinnedStory />
+      </Section>
+
+      {/* INTERACTIVE RIPPLE FIELD */}
+      <Section bleed>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl border bg-white/70 backdrop-blur p-6 sm:p-8 overflow-hidden relative group">
+            <h3 className="text-2xl font-semibold">Feel the flow</h3>
+            <p className="mt-2 text-slate-600 max-w-2xl">
+              Move your cursor (or tap) to see how the loop responds—lightweight and responsive by design.
+            </p>
+            <RippleField />
+            <div className="mt-4 text-xs text-slate-500">No plastic taste. No heavy effort.</div>
           </div>
         </div>
       </Section>
 
-      {/* Methodology / assumptions */}
-      <Section className="pt-0">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <Methodology />
+      {/* IMPACT */}
+      <Section>
+        <Impact />
+      </Section>
+
+      {/* CLOSER */}
+      <Section>
+        <div className="text-center">
+          <div className="text-2xl md:text-3xl font-semibold tracking-tight">
+            Quiet luxury. Clear taste. A loop that just works.
+          </div>
+          <p className="mt-3 text-slate-600">Glass and stainless, delivered on rhythm—change or skip any week.</p>
+          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+            <FloatButton onClick={() => (window.location.href = "/subscription")}>See subscription</FloatButton>
+            <FloatButton onClick={() => (window.location.href = "/about#story")}>Our story</FloatButton>
+          </div>
         </div>
       </Section>
     </>
   );
+}
+
+/** Ripple canvas (DOM-only, no <canvas> needed) */
+function RippleField() {
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [p, setP] = useState({ x: 50, y: 50 });
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    setP({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+  };
+  const onTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    setP({ x: ((t.clientX - r.left) / r.width) * 100, y: ((t.clientY - r.top) / r.height) * 100 });
+  };
+
+  return (
+    <div
+      ref={boxRef}
+      onMouseMove={prefersReducedMotion ? undefined : onMove}
+      onTouchMove={prefersReducedMotion ? undefined : onTouch}
+      className="mt-5 h-56 sm:h-64 rounded-2xl border overflow-hidden relative"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.9)), radial-gradient(60% 100% at 50% 0%, rgba(127,203,216,0.20), transparent 70%)",
+      }}
+    >
+      <div
+        className="absolute inset-0 transition-[background] duration-150"
+        style={{
+          background: `radial-gradient(300px 220px at ${p.x}% ${p.y}%, rgba(127,203,216,0.25), transparent 60%)`,
+        }}
+      />
+      {/* flowing lines */}
+      <div className="absolute inset-0 opacity-50 mix-blend-multiply">
+        <svg viewBox="0 0 800 240" className="w-full h-full">
+          <defs>
+            <linearGradient id="lg" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stopColor="rgba(127,203,216,0.35)" />
+              <stop offset="1" stopColor="rgba(127,203,216,0.05)" />
+            </linearGradient>
+          </defs>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <path
+              key={i}
+              d={wavePath(i)}
+              fill="none"
+              stroke="url(#lg)"
+              strokeWidth={1.5}
+              opacity={0.7 - i * 0.06}
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+function wavePath(i: number) {
+  // deterministic “liquid” path
+  const amp = 10 + i * 2.2;
+  const y = 30 + i * 22;
+  const seg = 8;
+  const w = 800 / seg;
+  let d = `M 0 ${y}`;
+  for (let s = 1; s <= seg; s++) {
+    const x = w * s;
+    const cp1x = w * (s - 0.5);
+    const cp2x = w * (s - 0.5);
+    const dir = s % 2 === 0 ? -1 : 1;
+    d += ` C ${cp1x} ${y + amp * dir}, ${cp2x} ${y - amp * dir}, ${x} ${y}`;
+  }
+  return d;
 }
