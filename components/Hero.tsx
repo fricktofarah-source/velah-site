@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image"; // <-- add this
 
 export default function Hero() {
   return (
@@ -11,10 +12,7 @@ export default function Hero() {
       aria-label="Velah — eco-luxury water in reusable glass"
     >
       {/* Subtle immersive background (keeps minimal look) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-      >
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgba(127,203,216,0.10),transparent_65%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/60 to-white" />
       </div>
@@ -58,7 +56,6 @@ export default function Hero() {
                 type="button"
                 className="btn btn-primary h-10 focus-ring"
                 onClick={() => {
-                  // Preserve your existing event contract for Navbar modal
                   window.dispatchEvent(new Event("velah:open-waitlist"));
                 }}
               >
@@ -75,7 +72,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Visual — minimalist “product silhouette” block */}
+          {/* Visual */}
           <motion.div
             className="relative h-[280px] sm:h-[360px] md:h-[420px] rounded-2xl border bg-white/70 backdrop-blur shadow-soft overflow-hidden"
             initial={{ opacity: 0, y: 8 }}
@@ -83,15 +80,19 @@ export default function Hero() {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.5, delay: 0.12 }}
           >
-            {/* Subtle water shimmer */}
             <div
               aria-hidden
               className="absolute inset-0 bg-[radial-gradient(40%_60%_at_70%_30%,rgba(127,203,216,0.14),transparent_70%)]"
             />
-            {/* Placeholder for your bottle render/image — keeps minimal aesthetic */}
-            <div className="absolute inset-0 grid place-items-center">
-              <div className="h-40 sm:h-48 w-40 sm:w-48 rounded-[40%_40%_46%_46%/55%_55%_45%_45%] border border-slate-200 bg-white/60 backdrop-blur" />
-            </div>
+            <Image
+              src="/assets/Velah_bottles_sample_design.png"
+              alt="Velah bottles — reusable glass with stainless caps"
+              width={300}
+              height={420}
+              sizes="(min-width: 768px) 420px, 300px"
+              className="object-contain mx-auto"
+              priority
+            />
           </motion.div>
         </div>
       </div>
