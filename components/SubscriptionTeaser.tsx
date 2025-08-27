@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function SubscriptionTeaser() {
   return (
-    <section className="section max-w-7xl mx-auto px-4 sm:px-6">
+    <section id="subscriptionteaser" className="section max-w-7xl mx-auto px-4 sm:px-6">
       <div className="card p-6 sm:p-8 grid md:grid-cols-2 gap-6 items-center">
         <div>
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Subscription, made simple</h2>

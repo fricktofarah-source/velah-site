@@ -1,15 +1,10 @@
 // components/HowItWorks.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
-type Step = {
-  id: number;
-  title: string;
-  body: string;
-  icon: React.ReactNode;
-};
+type Step = { id: number; title: string; body: string; icon: React.ReactNode };
 
 const STEPS: Step[] = [
   { id: 1, title: "Choose", body: "Tell us about your week. We suggest a mix of 5G + 1L + 500 mL top-ups. Edit any quantities and skip any week.", icon: <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4h10v2H7zM4 9h16v2H4zM7 14h10v2H7zM10 19h4v2h-4z"/></svg> },
@@ -20,43 +15,13 @@ const STEPS: Step[] = [
 
 export default function HowItWorks() {
   const [active, setActive] = useState(1);
-  const [pausedHover, setPausedHover] = useState(false);
-  const [inView, setInView] = useState(true);
-  const rootRef = useRef<HTMLElement | null>(null);
-
-  // Pause auto-advance when not in view
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (ents) => {
-        for (const e of ents) {
-          if (e.target === el) setInView(e.isIntersecting && e.intersectionRatio >= 0.2);
-        }
-      },
-      { threshold: [0, 0.2, 0.5, 1] }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  // Auto-advance every 6s only when visible and not hovered
-  useEffect(() => {
-    if (!inView || pausedHover) return;
-    const id = setInterval(() => setActive((s) => (s % STEPS.length) + 1), 6000);
-    return () => clearInterval(id);
-  }, [inView, pausedHover]);
-
   const step = STEPS.find((s) => s.id === active)!;
 
   return (
     <section
-      ref={rootRef}
       id="how"
       className="section max-w-6xl mx-auto px-4 sm:px-6"
       aria-labelledby="how-title"
-      onMouseEnter={() => setPausedHover(true)}
-      onMouseLeave={() => setPausedHover(false)}
     >
       <header className="flex items-end justify-between gap-4">
         <div>
@@ -100,6 +65,15 @@ export default function HowItWorks() {
               {active === 3 && (<><span className="chip">Glass taste</span><span className="chip">Stainless cap</span><span className="chip">Counter-ready</span></>)}
               {active === 4 && (<><span className="chip">Easy returns</span><span className="chip">Sanitized & reused</span><span className="chip">Deposit refunded</span></>)}
             </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                className="hover-underline text-sm"
+                onClick={() => setActive((active % STEPS.length) + 1)}
+              >
+                Next →
+              </button>
+            </div>
           </div>
         </div>
 
@@ -118,17 +92,13 @@ export default function HowItWorks() {
             {active === 3 && <MockEnjoy />}
             {active === 4 && <MockReturn />}
           </div>
-
-          <div className="mt-5 h-1 w-full rounded bg-slate-200 overflow-hidden">
+          <div className="mt-5 h-1 w-full rounded bg-slate-2 00 overflow-hidden">
             <div
               className="h-full bg-[var(--velah)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]"
               style={{ width: `${(active / STEPS.length) * 100}%` }}
             />
           </div>
-          <div className="mt-4 flex justify-between text-xs text-slate-500">
-            <span>Step {active} of {STEPS.length}</span>
-            <button className="hover-underline" onClick={() => setActive((active % STEPS.length) + 1)}>Next →</button>
-          </div>
+          <div className="mt-4 text-xs text-slate-500">Step {active} of {STEPS.length}</div>
         </div>
       </div>
 
@@ -139,7 +109,7 @@ export default function HowItWorks() {
   );
 }
 
-/* ---------- tiny visuals (unchanged) ---------- */
+/* tiny visuals */
 function Box({ children }: { children: React.ReactNode }) {
   return <div className="rounded-xl border bg-white/70 backdrop-blur p-3">{children}</div>;
 }
