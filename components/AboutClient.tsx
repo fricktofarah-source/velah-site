@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 
 /* ---------------- helpers ---------------- */
 const prefersReducedMotion =
@@ -107,7 +107,7 @@ export default function AboutClient() {
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 color: "transparent",
-                backgroundImage: "url('/assets/statement-text-fill.jpg')",
+                backgroundImage: "url('/assets/statement-text-fill.png')",
                 backgroundSize: "cover",
                 backgroundPosition: "50% 55%",
               }}
@@ -122,25 +122,23 @@ export default function AboutClient() {
       </FullBleed>
 
       {/* 2) HERO MEDIA */}
-      <FullBleed height="h-[60vh] sm:h-[70vh]" src="/assets/velah-nature-1.jpg" alt="Velah bottles in airy light" objectPosition="50% 42%">
+      <FullBleed height="h-[60vh] sm:h-[70vh]" src="/assets/velah-nature-1.png" alt="Velah bottles in airy light" objectPosition="50% 42%">
         <BlendTopBottom />
       </FullBleed>
 
       {/* 3) ART SECTION */}
       <SectionPad>
         <DropletIllustration />
-        <div className="mt-6 grid grid-cols-2 gap-6 text-slate-700 text-sm sm:text-base max-w-3xl mx-auto">
-          <div className="text-right pr-3 opacity-80">
-            Elevating water<br />Purified. Mineralized. Sustainable.
-          </div>
-          <div className="text-left pl-3 opacity-80">
-            Alkaline &amp; balanced<br />Built for the world
-          </div>
+        <div className="mt-6 mx-auto max-w-3xl grid gap-4 text-slate-700 text-base text-center">
+          <div>Elevating water</div>
+          <div>Purified. Mineralized. Sustainable.</div>
+          <div>Alkaline &amp; balanced</div>
+          <div>Built for the world</div>
         </div>
       </SectionPad>
 
       {/* 4) DIVIDER */}
-      <FullBleed height="h-[36vh]" src="/assets/divider-haze.jpg" alt="Hazy divider">
+      <FullBleed height="h-[36vh]" src="/assets/divider-haze.png" alt="Hazy divider">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="px-6 text-center text-xl sm:text-2xl tracking-[0.2em] text-slate-900/85">
             NO SHIPPING · NO COMPROMISE · NO PLASTIC · NO SHIPPING · NO COMPROMISE · NO PLASTIC
@@ -150,7 +148,7 @@ export default function AboutClient() {
       </FullBleed>
 
       {/* 5) NARRATIVE */}
-      <FullBleed height="h-[70vh] sm:h-[75vh]" src="/assets/narrative-waterfall.jpg" alt="Soft distant waterfall" objectPosition="50% 45%">
+      <FullBleed height="h-[70vh] sm:h-[75vh]" src="/assets/narrative-waterfall.png" alt="Soft distant waterfall" objectPosition="50% 45%">
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <div className="max-w-3xl text-center">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 drop-shadow-[0_1px_8px_rgba(255,255,255,0.85)]">
@@ -166,7 +164,7 @@ export default function AboutClient() {
       </FullBleed>
 
       {/* 6) TIMELINE */}
-      <FullBleed src="/assets/timeline-bay.jpg" alt="Calm bay texture" objectPosition="50% 35%">
+      <FullBleed src="/assets/timeline-bay.png" alt="Calm bay texture" objectPosition="50% 35%">
         <div className="absolute inset-0 bg-white/65" />
         <SectionPad>
           <h3 className="text-center text-3xl sm:text-4xl font-semibold tracking-tight">How the loop flows</h3>
@@ -178,7 +176,7 @@ export default function AboutClient() {
       <ImpactBand />
 
       {/* 8) PARTNERS */}
-      <FullBleed src="/assets/partners-paper.jpg" alt="Subtle paper" objectPosition="50% 50%">
+      <FullBleed src="/assets/partners-paper.png" alt="Subtle paper" objectPosition="50% 50%">
         <div className="absolute inset-0 bg-white/80" />
         <SectionPad>
           <h3 className="text-center text-3xl sm:text-4xl font-semibold tracking-tight">Trusted by partners</h3>
@@ -239,46 +237,44 @@ function SectionPad({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FullBleed({
-  children,
-  height = "h-[52vh] sm:h-[64vh]",
-  src,
-  alt,
-  objectPosition = "50% 50%",
-  className = "",
-  innerRef,
-}: {
+const FullBleed = forwardRef<HTMLDivElement, {
   children?: React.ReactNode;
   height?: string;
   src?: string;
   alt?: string;
   objectPosition?: string;
   className?: string;
-  innerRef?: React.Ref<HTMLDivElement>;
-}) {
-  const { ref, shown } = useRevealOnce<HTMLDivElement>();
-  return (
-    <section
-      ref={innerRef || ref}
-      className={`relative w-screen ${height} overflow-hidden transition-all duration-700 ${
-        shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      } ${className}`}
-    >
-      {src && (
-        <Image
-          src={src}
-          alt={alt || ""}
-          fill
-          sizes="100vw"
-          priority={false}
-          className="object-cover"
-          style={{ objectPosition }}
-        />
-      )}
-      {children}
-    </section>
-  );
-}
+}>(
+  (
+    { children, height = "h-[52vh] sm:h-[64vh]", src, alt, objectPosition = "50% 50%", className = "" },
+    ref
+  ) => {
+    const { shown } = useRevealOnce<HTMLDivElement>();
+    return (
+      <section
+        ref={ref}
+        className={`relative w-screen ${height} overflow-hidden transition-all duration-700 ${
+          shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        } ${className}`}
+      >
+        {src && (
+          <Image
+            src={src}
+            alt={alt || ""}
+            fill
+            sizes="100vw"
+            priority={false}
+            className="object-cover"
+            style={{ objectPosition }}
+          />
+        )}
+        {children}
+      </section>
+    );
+  }
+);
+
+FullBleed.displayName = "FullBleed";
 
 function SoftVeil() {
   return (
@@ -312,10 +308,9 @@ function DropletIllustration() {
       </defs>
       {Array.from({ length: 28 }).map((_, i) => {
         const t = i / 27;
-        const off = i * 2.4;
         const w = 180 + i * 4.5;
-        const topY = 20 + off * 0.3;
-        const botY = 300 + off * 0.18;
+        const topY = 20 + i * 0.7;
+        const botY = 300 + i * 0.4;
         return (
           <path
             key={i}
@@ -340,16 +335,19 @@ function Timeline() {
     { t: "Continuous Quality Control", d: "Regular lab testing and strict checks for purity and consistency." },
     { t: "Redefining Water Standards", d: "Refillable by default. Minimal waste, maximal taste." },
   ];
+
   return (
     <div className="relative mx-auto max-w-3xl py-10">
       <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-slate-300" />
       <ul className="space-y-10">
         {steps.map((s) => (
           <li key={s.t} className="relative">
-            <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-500" />
-            <div className="pt-6 px-4 text-center">
-              <h4 className="text-xl font-medium">{s.t}</h4>
-              <p className="mt-2 text-slate-700">{s.d}</p>
+            <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-500 top-0" />
+            <div className="pt-6">
+              <div className="mx-auto max-w-xl rounded-full bg-white/80 backdrop-blur px-6 py-5 border border-white/60 shadow">
+                <h4 className="text-center text-lg sm:text-xl font-medium">{s.t}</h4>
+                <p className="mt-1 text-center text-slate-700">{s.d}</p>
+              </div>
             </div>
           </li>
         ))}
@@ -364,13 +362,13 @@ function ImpactBand() {
   const co2 = useCountUpOnce(shown, 78411, 900);
 
   return (
-    <FullBleed innerRef={ref} src="/assets/impact-oasis.jpg" alt="Oasis" objectPosition="50% 50%" height="h-[62vh] sm:h-[68vh]">
+    <FullBleed ref={ref} src="/assets/impact-oasis.png" alt="Oasis" objectPosition="50% 50%" height="h-[62vh] sm:h-[68vh]">
       <div className="absolute inset-0 bg-white/38" />
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-        <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 drop-shadow-[0_1px_10px_rgba(255,255,255,0.8)]">
+        <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 drop-shadow">
           Sustainability Impact in the UAE
         </h3>
-        <p className="mt-1 max-w-3xl text-slate-800 drop-shadow-[0_1px_8px_rgba(255,255,255,0.75)]">
+        <p className="mt-1 max-w-3xl text-slate-800 drop-shadow">
           Each Velah bottle replaces a single-use alternative and cuts emissions at the source.
         </p>
         <div className="mt-6 grid grid-cols-2 gap-10">
@@ -381,9 +379,9 @@ function ImpactBand() {
             </div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-700">CO₂ Emissions Reduced</div>
+            <div className="text-xs uppercase tracking-wide text-slate-700">CO₂ Reduced (kg)</div>
             <div className="mt-1 text-4xl md:text-5xl font-semibold tabular-nums text-slate-900">
-              {co2.toLocaleString()} kg
+              {co2.toLocaleString()}+
             </div>
           </div>
         </div>
