@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 const QUOTES = [
   {
@@ -30,7 +29,7 @@ export default function About() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  // advance quotes on a timer (10s), pause on hover
+  // 10s rotate; pause on hover
   useEffect(() => {
     if (paused) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % QUOTES.length), 10000);
@@ -40,22 +39,11 @@ export default function About() {
   const q = QUOTES[index];
 
   return (
-    <section
-      id="about"
-      className="section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-      aria-labelledby="about-title"
-    >
+    <section id="about" className="section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-labelledby="about-title">
       <div className="grid md:grid-cols-2 gap-10 sm:gap-12 md:gap-12 items-center">
-        {/* Left: brand story */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 id="about-title" className="text-4xl md:text-5xl font-semibold tracking-tight">
-            About Velah
-          </h2>
+        {/* Left copy (unchanged) */}
+        <div>
+          <h2 id="about-title" className="text-4xl md:text-5xl font-semibold tracking-tight">About Velah</h2>
 
           <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">
             Velah is water without noise. We deliver in reusable glass, sealed with stainless,
@@ -79,53 +67,55 @@ export default function About() {
               </span>
             </Link>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Right: rotating quote bubble (re-mounts each time for a clean pop) */}
-        <motion.div
+        {/* Right: speech bubble that rotates */}
+        <div
           className="relative"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5, delay: 0.05 }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
         >
           <div
-            key={index} /* re-mount to trigger a fresh pop each time */
+            key={index} // re-mount to pop on change
             className="
-              velah-bubble animate-velah-bubble-pop
-              card-glass card-press
-              p-6 sm:p-7 md:p-8 relative md:max-w-[560px] min-h-[180px]
+              relative
+              rounded-2xl border border-slate-200 bg-white/80 backdrop-blur
+              shadow-md p-6 sm:p-7 md:p-8
+              animate-pop-in
+              after:content-[''] after:absolute after:-bottom-3 after:left-10
+              after:h-4 after:w-4 after:rotate-45 after:bg-white/80 after:border after:border-slate-200
             "
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
             aria-live="polite"
           >
             <div className="text-slate-900 text-lg sm:text-xl leading-relaxed">
               “{q.text}”
             </div>
             <div className="mt-3 text-sm text-slate-500">{q.by}</div>
+            {q.sub && <div className="mt-3 text-sm text-slate-600/90">{q.sub}</div>}
 
-            {q.sub && (
-              <div className="mt-3 text-sm text-slate-600/90">
-                {q.sub}
-              </div>
-            )}
-
-            {/* little selectors */}
+            {/* selectors — small, not massive */}
             <div className="mt-5 flex items-center gap-2">
-              {QUOTES.map((_, i) => (
-                <button
-                  key={i}
-                  aria-label={`Show quote ${i + 1}`}
-                  onClick={() => setIndex(i)}
-                  className={`h-2.5 w-2.5 rounded-full transition tap ${
-                    i === index ? "bg-slate-900" : "bg-slate-300 hover:bg-slate-400"
-                  }`}
-                />
-              ))}
+              {QUOTES.map((_, i) => {
+                const active = i === index;
+                return (
+                  <button
+                    key={i}
+                    aria-label={`Show quote ${i + 1}`}
+                    onClick={() => setIndex(i)}
+                    className="h-6 w-6 grid place-items-center rounded-full hover:bg-slate-100 focus-ring"
+                  >
+                    <span
+                      className={[
+                        "block rounded-full transition",
+                        active ? "h-2.5 w-2.5 bg-slate-900" : "h-2 w-2 bg-slate-300 group-hover:bg-slate-400",
+                      ].join(" ")}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,9 @@
+// components/Subscription.tsx
 "use client";
 import { useMemo, useState, useEffect, type Dispatch, type SetStateAction } from "react";
 
-type MixItem = { size: "1L" | "5G"; qty: number };
+type MixSize = "500mL" | "1L" | "5G";
+type MixItem = { size: MixSize; qty: number };
 type Suggestion = {
   weeklyLiters: number;
   mix: MixItem[];
@@ -10,6 +12,44 @@ type Suggestion = {
 
 const GLASS_ML = 250;          // avg glass in ml
 const FIVE_GAL_LITERS = 18.9;  // 5 gallon in liters
+const L_TO_ML = 1000;
+
+/** Greedy + threshold rule:
+ *  - ≥20 L -> use floor(need/5G), then 1L, then 500mL (ceil on smallest to cover remainder)
+ *  - 10–19.9 L -> start with 1×5G, then 1L, then 500mL
+ *  - <10 L -> 1L then 500mL
+ */
+function suggestMix(weeklyLiters: number): MixItem[] {
+  let need = Math.max(0, Math.round(weeklyLiters * L_TO_ML)); // in mL
+  const mix: Record<MixSize, number> = { "5G": 0, "1L": 0, "500mL": 0 };
+
+  const fiveGml = Math.round(FIVE_GAL_LITERS * L_TO_ML); // 18900 mL
+
+  if (weeklyLiters >= 20) {
+    mix["5G"] = Math.floor(need / fiveGml);
+    need -= mix["5G"] * fiveGml;
+  } else if (weeklyLiters >= 10) {
+    mix["5G"] = 1;
+    need = Math.max(0, need - fiveGml);
+  }
+
+  // use 1L greedily next
+  if (need > 0) {
+    mix["1L"] = Math.floor(need / 1000);
+    need -= mix["1L"] * 1000;
+  }
+
+  // finish with 500 mL (ceil to cover remainder)
+  if (need > 0) {
+    mix["500mL"] = Math.ceil(need / 500);
+    need = 0;
+  }
+
+  // pack into list, dropping zeros
+  return (Object.entries(mix) as [MixSize, number][])
+    .filter(([, q]) => q > 0)
+    .map(([size, qty]) => ({ size, qty }));
+}
 
 export default function Subscription() {
   // Inputs
@@ -19,90 +59,96 @@ export default function Subscription() {
   const [sparkling, setSparkling] = useState(false);
 
   // Pricing (AED) — placeholders
-  const price = { "1L": 7, "5G": 28, deposit1L: 8, deposit5G: 40 };
+  const price = {
+    "500mL": 4,   // placeholder
+    "1L": 7,
+    "5G": 28,
+    deposit500mL: 4, // placeholder
+    deposit1L: 8,
+    deposit5G: 40,
+  };
 
-  // AI suggestion (unchanged logic)
+  // AI suggestion
   const suggestion: Suggestion = useMemo(() => {
     let dailyLiters = people * glassesPerPerson * (GLASS_ML / 1000);
     if (cooking) dailyLiters += people * 0.3;
     if (sparkling) dailyLiters += people * 0.2;
 
     const weeklyLiters = Math.ceil(dailyLiters * 7 * 10) / 10;
-    const mix: MixItem[] = [];
 
-    if (weeklyLiters >= 20) {
-      const fiveG = Math.max(1, Math.round(weeklyLiters / FIVE_GAL_LITERS));
-      mix.push({ size: "5G", qty: fiveG });
-      const remaining = Math.max(0, Math.ceil(weeklyLiters - fiveG * FIVE_GAL_LITERS));
-      if (remaining > 0) mix.push({ size: "1L", qty: Math.ceil(remaining) });
-    } else if (weeklyLiters >= 10) {
-      const fiveG = 1;
-      mix.push({ size: "5G", qty: fiveG });
-      const remaining = Math.max(0, Math.ceil(weeklyLiters - FIVE_GAL_LITERS));
-      if (remaining > 0) mix.push({ size: "1L", qty: Math.ceil(remaining) });
-    } else {
-      mix.push({ size: "1L", qty: Math.ceil(weeklyLiters) });
-    }
+    const mix = suggestMix(weeklyLiters);
 
     const text =
       weeklyLiters >= 20
-        ? "High usage household. Mostly 5 gallon with 1L top ups."
+        ? "High usage household. Mostly 5 gallon with 1L and 500 mL top-ups."
         : weeklyLiters >= 10
-        ? "Balanced usage. One 5 gallon plus a few 1L bottles feels right."
-        : "Light usage. 1L bottles keep things flexible and fresh.";
+        ? "Balanced usage. One 5 gallon plus some 1L/500 mL feels right."
+        : "Light usage. 1L with 500 mL top-ups keeps things flexible.";
 
     return { weeklyLiters, mix, text };
   }, [people, glassesPerPerson, cooking, sparkling]);
 
   // Edit mode
   const [mode, setMode] = useState<"ai" | "custom">("ai");
-  const [oneL, setOneL] = useState(0);
   const [fiveG, setFiveG] = useState(0);
+  const [oneL, setOneL] = useState(0);
+  const [fiveHund, setFiveHund] = useState(0); // 500 mL count
 
-  // When switching to custom, initialize counters from AI suggestion (unchanged)
+  // When switching to custom, initialize counters from AI suggestion
   useEffect(() => {
     if (mode === "custom") {
       const s1 = suggestion.mix.find((m) => m.size === "1L")?.qty ?? 0;
       const s5 = suggestion.mix.find((m) => m.size === "5G")?.qty ?? 0;
+      const sH = suggestion.mix.find((m) => m.size === "500mL")?.qty ?? 0;
       setOneL(s1);
       setFiveG(s5);
+      setFiveHund(sH);
     }
   }, [mode, suggestion]);
 
   // Optional: read a preselected bottle from Bottles ("velah:preselect")
-  // Supports keys: "5g", "1l", "500ml" (500ml maps to 1L for now)
+  // Supports keys: "5g", "1l", "500ml"
   useEffect(() => {
     try {
       const raw = localStorage.getItem("velah:preselect") as "5g" | "1l" | "500ml" | null;
       if (!raw) return;
       localStorage.removeItem("velah:preselect");
-      // move to custom so user sees explicit quantities
       setMode("custom");
-      // after custom initializes from suggestion, ensure at least 1 of the selected
       setTimeout(() => {
         if (raw === "5g") setFiveG((v) => Math.max(1, v));
-        else setOneL((v) => Math.max(1, v)); // treat 1l/500ml similarly in this estimator
+        else if (raw === "500ml") setFiveHund((v) => Math.max(1, v));
+        else setOneL((v) => Math.max(1, v));
       }, 0);
     } catch {}
   }, []);
 
-  // Mix used for pricing (unchanged)
   const mixForPricing: MixItem[] = useMemo(() => {
     if (mode === "ai") return suggestion.mix;
     const rows: MixItem[] = [];
     if (fiveG > 0) rows.push({ size: "5G", qty: fiveG });
     if (oneL > 0) rows.push({ size: "1L", qty: oneL });
+    if (fiveHund > 0) rows.push({ size: "500mL", qty: fiveHund });
     if (rows.length === 0) rows.push({ size: "1L", qty: 0 }); // keep UI stable
     return rows;
-  }, [mode, suggestion.mix, oneL, fiveG]);
+  }, [mode, suggestion.mix, oneL, fiveG, fiveHund]);
 
   const weeklyCost = useMemo(
-    () => mixForPricing.reduce((sum, m) => sum + (m.size === "5G" ? price["5G"] * m.qty : price["1L"] * m.qty), 0),
+    () =>
+      mixForPricing.reduce((sum, m) => {
+        if (m.size === "5G") return sum + price["5G"] * m.qty;
+        if (m.size === "1L") return sum + price["1L"] * m.qty;
+        return sum + price["500mL"] * m.qty;
+      }, 0),
     [mixForPricing]
   );
 
   const depositTotal = useMemo(
-    () => mixForPricing.reduce((sum, m) => sum + (m.size === "5G" ? price.deposit5G * m.qty : price.deposit1L * m.qty), 0),
+    () =>
+      mixForPricing.reduce((sum, m) => {
+        if (m.size === "5G") return sum + price.deposit5G * m.qty;
+        if (m.size === "1L") return sum + price.deposit1L * m.qty;
+        return sum + price.deposit500mL * m.qty;
+      }, 0),
     [mixForPricing]
   );
 
@@ -110,9 +156,10 @@ export default function Subscription() {
     window.dispatchEvent(new CustomEvent("velah:open-waitlist"));
   }
 
-  // helpers (unchanged)
+  // helpers
   const clamp = (n: number) => Math.max(0, Math.min(99, Math.floor(n || 0)));
-  const step = (setter: Dispatch<SetStateAction<number>>, dir: 1 | -1) => setter((prev: number) => clamp(prev + dir));
+  const step = (setter: Dispatch<SetStateAction<number>>, dir: 1 | -1) =>
+    setter((prev: number) => clamp(prev + dir));
 
   return (
     <div className="grid gap-8 md:grid-cols-2 items-start">
@@ -177,13 +224,13 @@ export default function Subscription() {
               className={`h-8 px-3 rounded-full text-sm ${mode === "ai" ? "bg-black text-white" : "btn btn-ghost"}`}
               onClick={() => setMode("ai")}
             >
-              Use AI
+              AI
             </button>
             <button
               className={`h-8 px-3 rounded-full text-sm ${mode === "custom" ? "bg-black text-white" : "btn btn-ghost"}`}
               onClick={() => setMode("custom")}
             >
-              Edit quantities
+              Edit
             </button>
           </div>
         </div>
@@ -203,7 +250,7 @@ export default function Subscription() {
                   <div className="mt-1 font-semibold">
                     {suggestion.mix.map((m, i) => (
                       <span key={i} className="inline-block mr-2">
-                        {m.qty}× {m.size}
+                        {m.qty}× {m.size === "500mL" ? "500 mL" : m.size}
                       </span>
                     ))}
                   </div>
@@ -220,66 +267,31 @@ export default function Subscription() {
             <p className="mt-2 text-slate-600">Set exactly how many bottles you want this week.</p>
 
             {/* Editable counters */}
-            <div className="mt-4 grid sm:grid-cols-2 gap-3">
-              <div className="rounded-2xl border p-4">
-                <div className="text-sm text-slate-500">5 gallon (18.9L)</div>
-                <div className="mt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full border hover:bg-slate-50"
-                    onClick={() => step(setFiveG, -1)}
-                    aria-label="Decrease 5 gallon"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={0}
-                    max={99}
-                    className="w-16 text-center border rounded-2xl px-2 py-1"
-                    value={fiveG}
-                    onChange={(e) => setFiveG(clamp(Number(e.target.value)))}
-                  />
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full border hover:bg-slate-50"
-                    onClick={() => step(setFiveG, +1)}
-                    aria-label="Increase 5 gallon"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border p-4">
-                <div className="text-sm text-slate-500">1 liter</div>
-                <div className="mt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full border hover:bg-slate-50"
-                    onClick={() => step(setOneL, -1)}
-                    aria-label="Decrease 1 liter"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={0}
-                    max={99}
-                    className="w-16 text-center border rounded-2xl px-2 py-1"
-                    value={oneL}
-                    onChange={(e) => setOneL(clamp(Number(e.target.value)))}
-                  />
-                  <button
-                    type="button"
-                    className="h-9 w-9 rounded-full border hover:bg-slate-50"
-                    onClick={() => step(setOneL, +1)}
-                    aria-label="Increase 1 liter"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+            <div className="mt-4 grid sm:grid-cols-3 gap-3">
+              {/* 5G */}
+              <CounterRow
+                label="5 gallon (18.9L)"
+                value={fiveG}
+                onDec={() => step(setFiveG, -1)}
+                onInc={() => step(setFiveG, +1)}
+                onInput={(n) => setFiveG(clamp(n))}
+              />
+              {/* 1L */}
+              <CounterRow
+                label="1 liter"
+                value={oneL}
+                onDec={() => step(setOneL, -1)}
+                onInc={() => step(setOneL, +1)}
+                onInput={(n) => setOneL(clamp(n))}
+              />
+              {/* 500 mL */}
+              <CounterRow
+                label="500 mL"
+                value={fiveHund}
+                onDec={() => step(setFiveHund, -1)}
+                onInc={() => step(setFiveHund, +1)}
+                onInput={(n) => setFiveHund(clamp(n))}
+              />
             </div>
 
             {/* Totals */}
@@ -288,9 +300,13 @@ export default function Subscription() {
                 <div className="p-4 border-b sm:border-b-0 sm:border-r">
                   <div className="text-slate-500">Your mix</div>
                   <div className="mt-1 font-semibold">
-                    {fiveG}× 5G{fiveG > 0 && oneL > 0 ? " • " : ""}
-                    {oneL > 0 ? `${oneL}× 1L` : ""}
-                    {fiveG === 0 && oneL === 0 ? "0 bottles" : ""}
+                    {[
+                      fiveG ? `${fiveG}× 5G` : "",
+                      oneL ? `${oneL}× 1L` : "",
+                      fiveHund ? `${fiveHund}× 500 mL` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" • ") || "0 bottles"}
                   </div>
                 </div>
                 <div className="p-4 border-b sm:border-b-0 sm:border-r">
@@ -326,6 +342,43 @@ export default function Subscription() {
         <div className="mt-4 text-xs text-slate-500">
           Prices are placeholders for demo. Actual pricing and deposit are confirmed at checkout.
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------ small subcomponent for counters ------------ */
+function CounterRow({
+  label,
+  value,
+  onDec,
+  onInc,
+  onInput,
+}: {
+  label: string;
+  value: number;
+  onDec: () => void;
+  onInc: () => void;
+  onInput: (n: number) => void;
+}) {
+  return (
+    <div className="rounded-2xl border p-4">
+      <div className="text-sm text-slate-500">{label}</div>
+      <div className="mt-2 flex items-center gap-3">
+        <button type="button" className="h-9 w-9 rounded-full border hover:bg-slate-50" onClick={onDec} aria-label={`Decrease ${label}`}>
+          −
+        </button>
+        <input
+          type="number"
+          min={0}
+          max={99}
+          className="w-16 text-center border rounded-2xl px-2 py-1"
+          value={value}
+          onChange={(e) => onInput(Number(e.target.value))}
+        />
+        <button type="button" className="h-9 w-9 rounded-full border hover:bg-slate-50" onClick={onInc} aria-label={`Increase ${label}`}>
+          +
+        </button>
       </div>
     </div>
   );

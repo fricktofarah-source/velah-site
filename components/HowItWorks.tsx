@@ -1,57 +1,253 @@
+// components/HowItWorks.tsx
 "use client";
-import { motion } from "framer-motion";
 
-const steps = [
-  { title: "Choose your bottles", text: "5G for home, 1L for daily use." },
-  { title: "AI-tailored plan", text: "Quantity adjusts to your habits." },
-  { title: "Delivery & returns", text: "Glass delivered, empties picked up." },
-  { title: "Refill + repeat", text: "Cleaned, refilled, back to you." },
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+type Step = {
+  id: number;
+  title: string;
+  body: string;
+  icon: React.ReactNode;
+};
+
+const STEPS: Step[] = [
+  {
+    id: 1,
+    title: "Choose",
+    body:
+      "Tell us about your week. We suggest a mix of 5G + 1L. Edit any quantities and skip any week.",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path fill="currentColor" d="M7 4h10v2H7zM4 9h16v2H4zM7 14h10v2H7zM10 19h4v2h-4z" />
+      </svg>
+    ),
+  },
+  {
+    id: 2,
+    title: "Delivery",
+    body:
+      "Weekly routes across the city. We text before arrival; you can confirm, change, or skip.",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path fill="currentColor" d="M3 7h11v10H3zM14 10h3l4 4v3h-7zM7 20a2 2 0 1 0 0-4a2 2 0 0 0 0 4m10 0a2 2 0 1 0 0-4a2 2 0 0 0 0 4" />
+      </svg>
+    ),
+  },
+  {
+    id: 3,
+    title: "Enjoy",
+    body:
+      "Glass bottles on your counter, stainless caps, clean taste. Keep what you need, no more.",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path fill="currentColor" d="M12 2a5 5 0 0 1 5 5v2H7V7a5 5 0 0 1 5-5m-2 20v-8h4v8z" />
+      </svg>
+    ),
+  },
+  {
+    id: 4,
+    title: "Return",
+    body:
+      "We collect empties on your next delivery. Deposits refunded when bottles come home.",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+        <path fill="currentColor" d="M12 6V3l5 5l-5 5V9a5 5 0 1 0 5 5h2a7 7 0 1 1-7-7" />
+      </svg>
+    ),
+  },
 ];
 
-function DropletIcon() {
+export default function HowItWorks() {
+  const [active, setActive] = useState(1);
+  const [paused, setPaused] = useState(false);
+
+  // Auto-advance every 6s (pause on hover)
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setActive((s) => (s % STEPS.length) + 1), 6000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  const step = STEPS.find((s) => s.id === active)!;
+
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 2C12 2 5 10 5 14.5C5 18.09 8.134 21 12 21C15.866 21 19 18.09 19 14.5C19 10 12 2 12 2Z" fill="currentColor"/>
-    </svg>
+    <section
+      id="how"
+      className="section max-w-6xl mx-auto px-4 sm:px-6"
+      aria-labelledby="how-title"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <header className="flex items-end justify-between gap-4">
+        <div>
+          <h2 id="how-title" className="text-3xl font-semibold tracking-tight">How Velah works</h2>
+          <p className="text-slate-600 mt-1">A clean refillable loop, made simple.</p>
+        </div>
+        <Link href="/subscription" className="btn btn-ghost h-10 rounded-full hidden sm:inline-flex">
+          See subscription
+        </Link>
+      </header>
+
+      {/* Stepper */}
+      <div className="mt-6 grid lg:grid-cols-[1.1fr_.9fr] gap-6">
+        {/* Left: Tabs + content */}
+        <div className="card p-4 sm:p-5">
+          <div className="flex flex-wrap gap-2">
+            {STEPS.map((s) => {
+              const activeTab = s.id === active;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setActive(s.id)}
+                  className={[
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
+                    activeTab ? "bg-black text-white border-black" : "hover:bg-slate-50",
+                  ].join(" ")}
+                  aria-current={activeTab ? "step" : undefined}
+                >
+                  <span className="opacity-80">{s.icon}</span>
+                  <span>{s.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div key={active} className="mt-4 animate-pop-in">
+            <p className="text-slate-700">{step.body}</p>
+
+            {/* Micro-interactions per step */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+              {active === 1 && (
+                <>
+                  <span className="chip">AI suggestion</span>
+                  <span className="chip">Edit any week</span>
+                  <span className="chip">Skip anytime</span>
+                </>
+              )}
+              {active === 2 && (
+                <>
+                  <span className="chip">Route notifications</span>
+                  <span className="chip">Confirm or change</span>
+                  <span className="chip">Doorstep drop</span>
+                </>
+              )}
+              {active === 3 && (
+                <>
+                  <span className="chip">Glass taste</span>
+                  <span className="chip">Stainless cap</span>
+                  <span className="chip">Counter-ready</span>
+                </>
+              )}
+              {active === 4 && (
+                <>
+                  <span className="chip">Easy returns</span>
+                  <span className="chip">Sanitized & reused</span>
+                  <span className="chip">Deposit refunded</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Visual card that changes with step */}
+        <div className="card-glass p-5 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(60%_40%_at_50%_0%,rgba(127,203,216,0.10),transparent_65%)]" />
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 grid place-items-center rounded-full border bg-white/80 backdrop-blur">
+              {step.icon}
+            </div>
+            <div className="font-medium">{step.title}</div>
+          </div>
+          <div key={active} className="mt-4 animate-pop-in text-slate-700">
+            {active === 1 && <MockPlan />}
+            {active === 2 && <MockDelivery />}
+            {active === 3 && <MockEnjoy />}
+            {active === 4 && <MockReturn />}
+          </div>
+          {/* Progress bar */}
+          <div className="mt-5 h-1 w-full rounded bg-slate-200 overflow-hidden">
+            <div
+              className="h-full bg-[var(--velah)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]"
+              style={{ width: `${(active / STEPS.length) * 100}%` }}
+            />
+          </div>
+          <div className="mt-4 flex justify-between text-xs text-slate-500">
+            <span>Step {active} of {STEPS.length}</span>
+            <button
+              className="hover-underline"
+              onClick={() => setActive((active % STEPS.length) + 1)}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile CTA */}
+      <div className="sm:hidden mt-4">
+        <Link href="/subscription" className="btn btn-primary h-11 w-full rounded-full">
+          Explore subscription
+        </Link>
+      </div>
+    </section>
   );
 }
 
-export default function HowItWorks() {
-  return (
-    <section className="section">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-baseline justify-between mb-6">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">How Velah works</h2>
-        </div>
+/* ---------- tiny visuals per step (pure UI) ---------- */
+function Box({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl border bg-white/70 backdrop-blur p-3">{children}</div>;
+}
 
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.5 }}
-          className="overflow-x-auto hide-scrollbar snap-x snap-mandatory"
-        >
-          <div className="flex gap-4 sm:gap-6 pr-4">
-            {steps.map((s, i) => (
-              <motion.div
-                key={s.title}
-                className="snap-start min-w-[80%] sm:min-w-[360px] card-glass card-press p-4 sm:p-6"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ duration: 0.4, delay: i * 0.04 }}
-              >
-                <div className="flex items-center gap-2 text-slate-700">
-                  <DropletIcon />
-                  <span className="text-xs font-medium">Step {i + 1}</span>
-                </div>
-                <h3 className="mt-2 text-lg sm:text-xl font-semibold">{s.title}</h3>
-                <p className="mt-1 text-slate-600 text-sm">{s.text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
+function MockPlan() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <Box>
+        <div className="text-xs text-slate-500">5 Gallon</div>
+        <div className="font-semibold">× 1</div>
+      </Box>
+      <Box>
+        <div className="text-xs text-slate-500">1 Litre</div>
+        <div className="font-semibold">× 4</div>
+      </Box>
+      <Box>
+        <div className="text-xs text-slate-500">Weekly total</div>
+        <div className="font-semibold">AED 56</div>
+      </Box>
+      <Box>
+        <div className="text-xs text-slate-500">Deposit</div>
+        <div className="font-semibold">AED 72</div>
+      </Box>
+    </div>
+  );
+}
+
+function MockDelivery() {
+  return (
+    <div className="grid gap-3">
+      <Box><div>📦 Scheduled: Wed 10–1</div></Box>
+      <Box><div>🛎 Confirmed: “Leave by door”</div></Box>
+      <Box><div>🚚 Out for delivery</div></Box>
+    </div>
+  );
+}
+
+function MockEnjoy() {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      <Box><div className="text-center">🥛 1L</div></Box>
+      <Box><div className="text-center">🥛 1L</div></Box>
+      <Box><div className="text-center">🧊 5G</div></Box>
+    </div>
+  );
+}
+
+function MockReturn() {
+  return (
+    <div className="grid gap-3">
+      <Box><div>🔁 Empties picked up</div></Box>
+      <Box><div>🧼 Sanitized & refilled</div></Box>
+      <Box><div>💳 Deposit refunded</div></Box>
+    </div>
   );
 }
