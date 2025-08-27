@@ -2,13 +2,13 @@
 import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 
-// Client component (holds all interactivity/handlers)
+// Client component holds all interactivity (tiny, respectful)
 const AboutClient = dynamic(() => import("../../components/AboutClient"), { ssr: false });
 
 export const metadata: Metadata = {
   title: "About | Velah",
   description:
-    "A seamless, story-driven look at Velah—eco-luxury hydration in reusable glass.",
+    "Velah is a refillable hydration loop in reusable glass — a calm, seamless, story-led experience.",
 };
 
 export const viewport: Viewport = {
