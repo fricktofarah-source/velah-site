@@ -47,7 +47,23 @@ a, button, [role='button'] { cursor: pointer; }
   .glass-nav { @apply sticky top-0 z-50 border-b border-slate-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60; }
 
   /* Prose defaults without needing extra plugin */
-  .prose-default { @apply prose prose-slate max-w-none; }
+  /* Prose defaults (no typography plugin needed) */
+@layer components {
+  .prose-default { @apply max-w-none leading-relaxed text-slate-800; }
+  .prose-default h1 { @apply text-3xl font-semibold tracking-tight mt-8 mb-3 text-slate-900; }
+  .prose-default h2 { @apply text-2xl font-semibold tracking-tight mt-6 mb-3 text-slate-900; }
+  .prose-default h3 { @apply text-xl font-semibold tracking-tight mt-5 mb-2 text-slate-900; }
+  .prose-default p  { @apply my-4; }
+  .prose-default a  { @apply underline decoration-slate-300 underline-offset-4 hover:decoration-[var(--velah)]; }
+  .prose-default ul { @apply list-disc pl-5 my-4; }
+  .prose-default ol { @apply list-decimal pl-5 my-4; }
+  .prose-default blockquote { @apply border-l-4 border-slate-200 pl-4 italic text-slate-600 my-4; }
+  .prose-default img { @apply my-4 rounded-xl; }
+  .prose-default code { @apply px-1 py-0.5 rounded bg-slate-100; }
+  .prose-default pre  { @apply my-4 rounded-xl bg-slate-900 text-slate-100 p-4 overflow-auto; }
+  .prose-default table { @apply w-full text-sm my-4; }
+  .prose-default th, .prose-default td { @apply border border-slate-200 px-3 py-2; }
+}
 
   /* Accessible tap targets for small icons/buttons */
   .tap { @apply min-h-[44px] min-w-[44px]; }
