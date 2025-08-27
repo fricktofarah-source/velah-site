@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import Subscription from "@/components/Subscription";
 import Link from "next/link";
+import JoinWaitlistButton from "@/components/JoinWaitlistButton";
 
 export const metadata: Metadata = {
   title: "Subscription | Velah",
@@ -80,12 +81,9 @@ export default function SubscriptionPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl font-semibold">Ready to start?</h2>
           <p className="text-slate-600 mt-2">Join the waitlist and we’ll notify you when your area opens.</p>
-          <button
-            className="btn btn-primary h-11 rounded-full mt-4"
-            onClick={() => window.dispatchEvent(new CustomEvent("velah:open-waitlist"))}
-          >
-            Join the waitlist
-          </button>
+          <div className="mt-4 flex justify-center">
+            <JoinWaitlistButton />
+          </div>
         </div>
       </section>
     </main>
