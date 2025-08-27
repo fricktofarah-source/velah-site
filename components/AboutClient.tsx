@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, forwardRef } from "react";
+import React, { useEffect, useRef, useState, forwardRef } from "react";
 
 /* ---------------- helpers ---------------- */
 const prefersReducedMotion =
@@ -121,12 +121,15 @@ export default function AboutClient() {
         </div>
       </FullBleed>
 
-      {/* 2) HERO MEDIA */}
-      <FullBleed height="h-[60vh] sm:h-[70vh]" src="/assets/velah-nature-1.png" alt="Velah bottles in airy light" objectPosition="50% 42%">
-        <BlendTopBottom />
-      </FullBleed>
+      {/* 2) HERO MEDIA (no veil to avoid washing out) */}
+      <FullBleed
+        height="h-[60vh] sm:h-[70vh]"
+        src="/assets/velah-nature-1.png"
+        alt="Velah bottles in airy light"
+        objectPosition="50% 42%"
+      />
 
-      {/* 3) ART SECTION */}
+      {/* 3) ART SECTION (truly centered copy) */}
       <SectionPad>
         <DropletIllustration />
         <div className="mt-6 mx-auto max-w-3xl grid gap-4 text-slate-700 text-base text-center">
@@ -137,18 +140,23 @@ export default function AboutClient() {
         </div>
       </SectionPad>
 
-      {/* 4) DIVIDER */}
+      {/* 4) DIVIDER (very subtle blend) */}
       <FullBleed height="h-[36vh]" src="/assets/divider-haze.png" alt="Hazy divider">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="px-6 text-center text-xl sm:text-2xl tracking-[0.2em] text-slate-900/85">
             NO SHIPPING · NO COMPROMISE · NO PLASTIC · NO SHIPPING · NO COMPROMISE · NO PLASTIC
           </div>
         </div>
-        <BlendTopBottom />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]" />
       </FullBleed>
 
-      {/* 5) NARRATIVE */}
-      <FullBleed height="h-[70vh] sm:h-[75vh]" src="/assets/narrative-waterfall.png" alt="Soft distant waterfall" objectPosition="50% 45%">
+      {/* 5) NARRATIVE (softer top veil) */}
+      <FullBleed
+        height="h-[70vh] sm:h-[75vh]"
+        src="/assets/narrative-waterfall.png"
+        alt="Soft distant waterfall"
+        objectPosition="50% 45%"
+      >
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <div className="max-w-3xl text-center">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 drop-shadow-[0_1px_8px_rgba(255,255,255,0.85)]">
@@ -160,24 +168,24 @@ export default function AboutClient() {
             </p>
           </div>
         </div>
-        <BlendTopBottom />
+        <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-white/10 to-transparent" />
       </FullBleed>
 
-      {/* 6) TIMELINE */}
+      {/* 6) TIMELINE (lighter scrim) */}
       <FullBleed src="/assets/timeline-bay.png" alt="Calm bay texture" objectPosition="50% 35%">
-        <div className="absolute inset-0 bg-white/65" />
+        <div className="absolute inset-0 bg-white/12" />
         <SectionPad>
           <h3 className="text-center text-3xl sm:text-4xl font-semibold tracking-tight">How the loop flows</h3>
           <Timeline />
         </SectionPad>
       </FullBleed>
 
-      {/* 7) IMPACT */}
+      {/* 7) IMPACT (lighter scrim) */}
       <ImpactBand />
 
-      {/* 8) PARTNERS */}
+      {/* 8) PARTNERS (lighter backdrop) */}
       <FullBleed src="/assets/partners-paper.png" alt="Subtle paper" objectPosition="50% 50%">
-        <div className="absolute inset-0 bg-white/80" />
+        <div className="absolute inset-0 bg-white/30" />
         <SectionPad>
           <h3 className="text-center text-3xl sm:text-4xl font-semibold tracking-tight">Trusted by partners</h3>
           <p className="mt-3 text-center text-slate-700 max-w-2xl mx-auto">
@@ -237,6 +245,18 @@ function SectionPad({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Merge a forwarded ref with our visibility ref so both receive the same node */
+function assignRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
+  return (node: T) => {
+    refs.forEach((r) => {
+      if (!r) return;
+      if (typeof r === "function") r(node);
+      else try { (r as any).current = node; } catch {}
+    });
+  };
+}
+
+/** Full-bleed, blended image section with reveal-once + forwarded ref support */
 const FullBleed = forwardRef<HTMLDivElement, {
   children?: React.ReactNode;
   height?: string;
@@ -249,11 +269,11 @@ const FullBleed = forwardRef<HTMLDivElement, {
     { children, height = "h-[52vh] sm:h-[64vh]", src, alt, objectPosition = "50% 50%", className = "" },
     ref
   ) => {
-    const { shown } = useRevealOnce<HTMLDivElement>();
+    const { ref: visRef, shown } = useRevealOnce<HTMLDivElement>();
     return (
       <section
-        ref={ref}
-        className={`relative w-screen ${height} overflow-hidden transition-all duration-700 ${
+        ref={assignRefs<HTMLDivElement>(ref, visRef)}
+        className={`relative w-full ${height} overflow-hidden transition-all duration-700 ${
           shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
         } ${className}`}
       >
@@ -291,7 +311,7 @@ function SoftVeil() {
 
 function BlendTopBottom() {
   return (
-    <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-white/70 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]" />
+    <div className="absolute inset-0 bg-gradient-to-b from-white/6 via-transparent to-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]" />
   );
 }
 
@@ -338,13 +358,17 @@ function Timeline() {
 
   return (
     <div className="relative mx-auto max-w-3xl py-10">
+      {/* center track */}
       <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-slate-300" />
+
       <ul className="space-y-10">
         {steps.map((s) => (
           <li key={s.t} className="relative">
+            {/* marker */}
             <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-500 top-0" />
+            {/* content pill */}
             <div className="pt-6">
-              <div className="mx-auto max-w-xl rounded-full bg-white/80 backdrop-blur px-6 py-5 border border-white/60 shadow">
+              <div className="mx-auto max-w-xl rounded-full bg-white/80 backdrop-blur px-6 py-5 border border-white/60 shadow-[0_2px_20px_rgba(0,0,0,0.03)]">
                 <h4 className="text-center text-lg sm:text-xl font-medium">{s.t}</h4>
                 <p className="mt-1 text-center text-slate-700">{s.d}</p>
               </div>
@@ -362,8 +386,14 @@ function ImpactBand() {
   const co2 = useCountUpOnce(shown, 78411, 900);
 
   return (
-    <FullBleed ref={ref} src="/assets/impact-oasis.png" alt="Oasis" objectPosition="50% 50%" height="h-[62vh] sm:h-[68vh]">
-      <div className="absolute inset-0 bg-white/38" />
+    <FullBleed
+      ref={ref}
+      src="/assets/impact-oasis.png"
+      alt="Oasis"
+      objectPosition="50% 50%"
+      height="h-[62vh] sm:h-[68vh]"
+    >
+      <div className="absolute inset-0 bg-white/12" />
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
         <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 drop-shadow">
           Sustainability Impact in the UAE
