@@ -7,14 +7,16 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
+import { useLanguage } from "./LanguageProvider";
 
 export default function Navbar() {
+  const { language, setLanguage, t } = useLanguage();
   // Waitlist modal
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
   const [email, setEmail] = useState("");
-  const [zone, setZone] = useState("Dubai Marina");
-  const [error, setError] = useState<string | null>(null);
+  const [zone, setZone] = useState(t.nav.waitlistModal.areaPlaceholder);
+  const [errorKey, setErrorKey] = useState<"invalid-email" | null>(null);
 
   // Auth
   const [authOpen, setAuthOpen] = useState(false);
@@ -37,27 +39,14 @@ export default function Navbar() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const [language, setLanguage] = useState<"EN" | "AR">("EN");
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langWrapRef = useRef<HTMLDivElement | null>(null);
 
   // Refs
   const emailRef = useRef<HTMLInputElement | null>(null);
 
   // -------- Suggestions data --------
-  const baseList = [
-    { kind: "section", id: "about", label: "About Velah" },
-    { kind: "section", id: "bottles", label: "Available bottles" },
-    { kind: "section", id: "how", label: "How Velah works" },
-    { kind: "section", id: "subscription", label: "Subscription plans" },
-    { kind: "section", id: "sustainability", label: "Sustainability" },
-    { kind: "section", id: "voices", label: "Testimonials" },
-    { kind: "section", id: "blog", label: "From the blog" },
-    { kind: "page", href: "/subscription", label: "Subscription overview" },
-    { kind: "page", href: "/about", label: "Learn about Velah" },
-    { kind: "page", href: "/hydration", label: "My hydration" },
-    { kind: "post", slug: "why-glass-better-water", label: "Why glass makes water taste better" },
-    { kind: "post", slug: "our-dubai-routes", label: "Our Dubai delivery routes" },
-    { kind: "post", slug: "how-deposit-works", label: "How the glass deposit works" },
-  ] as const;
+  const baseList = t.nav.suggestions;
 
   const defaults = baseList.slice(0, 5);
   const filtered = baseList.filter((s) =>
@@ -113,10 +102,6 @@ export default function Navbar() {
     }
   }
 
-  function toggleLanguage() {
-    setLanguage((prev) => (prev === "EN" ? "AR" : "EN"));
-  }
-
   // -------- Effects --------
 
   // Close mobile menu on md+
@@ -129,21 +114,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem("velah:lang");
-      if (stored === "EN" || stored === "AR") setLanguage(stored);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("velah:lang", language);
-    } catch {
-      /* ignore */
-    }
-  }, [language]);
+    setZone(t.nav.waitlistModal.areaPlaceholder);
+  }, [t.nav.waitlistModal.areaPlaceholder]);
 
   // Auth session + listener
   useEffect(() => {
@@ -173,7 +145,7 @@ export default function Navbar() {
     const onOpen = () => {
       setOpen(true);
       setPhase("form");
-      setError(null);
+      setErrorKey(null);
     };
     window.addEventListener("velah:open-waitlist", onOpen);
     return () => window.removeEventListener("velah:open-waitlist", onOpen);
@@ -204,6 +176,17 @@ export default function Navbar() {
     if (searchOpen) document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [searchOpen]);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!langWrapRef.current) return;
+      if (!langWrapRef.current.contains(e.target as Node)) {
+        setLangMenuOpen(false);
+      }
+    }
+    if (langMenuOpen) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [langMenuOpen]);
 
   // --- NEW: subtle hide-on-scroll, reveal on scroll-up (UI-only) ---
   const [hidden, setHidden] = useState(false);
@@ -242,13 +225,20 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const navLinks = t.nav.navLinks;
+  const waitlistCopy = t.nav.waitlistModal;
+  const languageOptions = t.nav.languages;
+  const currentLanguageLabel =
+    languageOptions.find((option) => option.code === language)?.label ?? language;
+
   // -------- Waitlist form --------
   function validateEmail(v: string) { return /\S+@\S+\.\S+/.test(v.trim()); }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
-    setError(null); setPhase("sending");
+    if (!validateEmail(email)) { setErrorKey("invalid-email"); return; }
+    setErrorKey(null);
+    setPhase("sending");
     try {
       await fetch("/api/join-waitlist", {
         method: "POST",
@@ -291,11 +281,21 @@ export default function Navbar() {
 
           {/* MIDDLE: Centered nav */}
           <div className="hidden md:flex items-center justify-center md:justify-center gap-7 whitespace-nowrap justify-self-center md:col-start-2 min-w-0">
-            <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("about"); }}>About</a>
-            <a href="#sustainability" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>Sustainability</a>
-            <a href="#subscription" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>Subscription</a>
-            <a href="#blog" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>Blog</a>
-            <Link href="/hydration" className="nav-link">My hydration</Link>
+            <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("about"); }}>
+              {navLinks.about}
+            </a>
+            <a href="#sustainability" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>
+              {navLinks.sustainability}
+            </a>
+            <a href="#subscription" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>
+              {navLinks.subscription}
+            </a>
+            <a href="#blog" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>
+              {navLinks.blog}
+            </a>
+            <Link href="/hydration" className="nav-link">
+              {navLinks.hydration}
+            </Link>
           </div>
 
           {/* RIGHT: Controls (search grows; still doesn’t move the center) */}
@@ -323,7 +323,7 @@ export default function Navbar() {
                 {/* Icon centered */}
                 <button
                   type="button"
-                  aria-label="Search"
+                  aria-label={t.nav.searchPlaceholder}
                   className="grid place-items-center h-7 w-7 shrink-0 rounded-full hover:bg-slate-100 focus-ring"
                   onClick={() => {
                     setSearchOpen(true);
@@ -340,7 +340,7 @@ export default function Navbar() {
                 <input
                   ref={searchInputRef}
                   type="search"
-                  placeholder="Search"
+                  placeholder={t.nav.searchPlaceholder}
                   className={`ml-2 bg-transparent outline-none text-sm min-w-0 ${searchOpen ? "flex-1 w-auto" : "w-0"} transition-all duration-300`}
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setOpenSuggest(true); setActiveIdx(-1); }}
@@ -385,14 +385,49 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 bg-white/90 px-3 h-9 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-ring"
-              aria-label={`Switch language (current ${language})`}
-            >
-              <span>{language}</span>
-            </button>
+            <div ref={langWrapRef} className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setLangMenuOpen((prev) => !prev)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 hover:bg-slate-100 focus-ring"
+                aria-label={`${t.nav.languageAria}: ${currentLanguageLabel}`}
+              >
+                <svg aria-hidden viewBox="0 0 24 24" className="h-4.5 w-4.5 text-slate-600">
+                  <g fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3.9 9.5h16.2M3.9 14.5h16.2" />
+                    <path d="M12 3c2.1 3 3.3 6 3.3 9s-1.2 6-3.3 9c-2.1-3-3.3-6-3.3-9s1.2-6 3.3-9Z" />
+                  </g>
+                </svg>
+              </button>
+              {langMenuOpen && (
+                <div className="absolute right-0 mt-2 w-40 rounded-xl border bg-white shadow-lg p-1 z-[70]">
+                  {languageOptions.map((option) => (
+                    <button
+                      key={option.code}
+                      type="button"
+                      className={`w-full px-3 py-2 text-left rounded-lg text-sm hover:bg-slate-50 flex items-center justify-between ${
+                        option.code === language ? "bg-slate-100 font-semibold" : ""
+                      }`}
+                      onClick={() => {
+                        setLanguage(option.code);
+                        setLangMenuOpen(false);
+                      }}
+                    >
+                      <span>{option.label}</span>
+                      {option.code === language ? (
+                        <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-slate-600">
+                          <path
+                            fill="currentColor"
+                            d="M7.5 13.5l-3-3l1.4-1.4l1.6 1.58l4.6-4.6l1.4 1.42Z"
+                          />
+                        </svg>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Account / Sign in (text-only) */}
             {isAuthed ? (
@@ -402,7 +437,9 @@ export default function Navbar() {
                   onClick={() => setMenuOpen((v) => !v)}
                 className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap inline-flex items-center gap-1 focus-ring rounded-lg"
                 >
-                  <span className="truncate max-w-[9rem]">{displayName ?? "Account"}</span>
+                  <span className="truncate max-w-[9rem]">
+                    {displayName ?? (language === "AR" ? "الحساب" : "Account")}
+                  </span>
                   <svg aria-hidden viewBox="0 0 20 20" className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}>
                     <path fill="currentColor" d="M5.5 7.5l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.5" fillRule="evenodd" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -414,7 +451,7 @@ export default function Navbar() {
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-sm"
                       onClick={async () => { await supabase.auth.signOut(); setMenuOpen(false); }}
                     >
-                      Sign out
+                      {t.nav.signOut}
                     </button>
                   </div>
                 )}
@@ -425,17 +462,17 @@ export default function Navbar() {
                 onClick={() => { setAuthMode("signin"); setAuthOpen(true); }}
                 className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap focus-ring rounded-lg"
               >
-                Sign in
+                {t.nav.signIn}
               </button>
             )}
 
             {/* CTA */}
             <button
               type="button"
-              onClick={() => { setOpen(true); setPhase("form"); setError(null); }}
+              onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); }}
               className="btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
             >
-              Join waitlist
+              {t.nav.joinWaitlist}
             </button>
 
             {/* Mobile hamburger */}
@@ -460,16 +497,42 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 z-[50] bg-black/0" onClick={() => setMobileOpen(false)}>
           <div className="absolute left-0 right-0 top-[80px] mx-4 rounded-2xl border bg-white shadow-soft animate-pop-in" onClick={(e) => e.stopPropagation()}>
             <nav className="p-2">
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("about")}>About</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("sustainability")}>Sustainability</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("subscription")}>Subscription</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("blog")}>Blog</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => router.push("/hydration")}>My hydration</button>
+              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("about")}>{navLinks.about}</button>
+              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("sustainability")}>{navLinks.sustainability}</button>
+              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("subscription")}>{navLinks.subscription}</button>
+              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("blog")}>{navLinks.blog}</button>
+              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => router.push("/hydration")}>{navLinks.hydration}</button>
               <div className="h-2" />
+              <div className="px-4 py-2 border-t border-slate-200 mb-2">
+                <div className="text-xs uppercase tracking-[0.15em] text-slate-500 mb-2">
+                  {t.nav.languageAria}
+                </div>
+                <div className="flex flex-col gap-1">
+                  {languageOptions.map((option) => (
+                    <button
+                      key={option.code}
+                      type="button"
+                      className={`w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-slate-50 ${
+                        option.code === language ? "bg-slate-100 border-slate-300 font-semibold" : "border-transparent"
+                      }`}
+                      onClick={() => {
+                        setLanguage(option.code);
+                        setMobileOpen(false);
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {isAuthed ? (
-                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={async () => { await supabase.auth.signOut(); setMobileOpen(false); }}>Sign out</button>
+                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={async () => { await supabase.auth.signOut(); setMobileOpen(false); }}>
+                  {t.nav.signOut}
+                </button>
               ) : (
-                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={() => { setAuthMode("signin"); setAuthOpen(true); setMobileOpen(false); }}>Sign in</button>
+                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={() => { setAuthMode("signin"); setAuthOpen(true); setMobileOpen(false); }}>
+                  {t.nav.signIn}
+                </button>
               )}
             </nav>
           </div>
@@ -481,7 +544,7 @@ export default function Navbar() {
         <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 p-4 animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div className="card w-full max-w-lg overflow-hidden animate-pop-in">
             <div className="p-4 border-b flex items-center justify-between">
-              <div className="font-semibold">Join the Velah waitlist</div>
+              <div className="font-semibold">{waitlistCopy.title}</div>
               <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>✕</button>
             </div>
 
@@ -490,31 +553,37 @@ export default function Navbar() {
               <div className={`p-4 space-y-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                 <form onSubmit={submit} className="space-y-3" noValidate>
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <label htmlFor="email" className="text-sm">Email</label>
+                    <label htmlFor="email" className="text-sm">{waitlistCopy.emailLabel}</label>
                     <input
                       id="email"
                       ref={emailRef}
                       type="email"
-                      className={`border rounded-2xl px-3 py-2 ${error ? "border-red-400 focus:outline-red-500" : ""}`}
+                      className={`border rounded-2xl px-3 py-2 ${errorKey ? "border-red-400 focus:outline-red-500" : ""}`}
                       value={email}
-                      onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
+                      onChange={(e) => { setEmail(e.target.value); if (errorKey) setErrorKey(null); }}
                       placeholder="you@company.com"
-                      aria-invalid={!!error}
-                      aria-describedby={error ? "email-error" : undefined}
+                      aria-invalid={errorKey ? true : false}
+                      aria-describedby={errorKey ? "email-error" : undefined}
                     />
-                    <label htmlFor="zone" className="text-sm">Area (Dubai)</label>
-                    <input id="zone" className="border rounded-2xl px-3 py-2" value={zone} onChange={(e) => setZone(e.target.value)} />
+                    <label htmlFor="zone" className="text-sm">{waitlistCopy.areaLabel}</label>
+                    <input
+                      id="zone"
+                      className="border rounded-2xl px-3 py-2"
+                      value={zone}
+                      placeholder={waitlistCopy.areaPlaceholder}
+                      onChange={(e) => setZone(e.target.value)}
+                    />
                   </div>
 
-                  {error && (
+                  {errorKey && (
                     <div id="email-error" className="text-sm text-red-600 mt-1 animate-soft-shake" role="alert" aria-live="polite">
-                      {error}
+                      {waitlistCopy.invalidEmail}
                     </div>
                   )}
 
                   <div className="flex items-center gap-2">
-                    <button type="submit" className="btn btn-primary h-10">Join</button>
-                    <div className="text-xs text-slate-500">Glass gallons • stainless caps • refundable deposit.</div>
+                    <button type="submit" className="btn btn-primary h-10">{waitlistCopy.joinCta}</button>
+                    <div className="text-xs text-slate-500">{waitlistCopy.tagline}</div>
                   </div>
                 </form>
               </div>
@@ -522,18 +591,18 @@ export default function Navbar() {
               {/* SENDING */}
               <div className={`p-6 flex items-center justify-center gap-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                 <div className="loader" aria-hidden />
-                <div className="text-sm text-slate-600">Adding you to the list…</div>
+                <div className="text-sm text-slate-600">{waitlistCopy.sending}</div>
               </div>
 
               {/* DONE */}
               <div className={`p-6 flex flex-col items-center justify-center gap-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                 <div className="success-check" aria-hidden />
-                <div className="text-emerald-700 text-sm">You’re on the list. We’ll email you soon.</div>
+                <div className="text-emerald-700 text-sm">{waitlistCopy.success}</div>
                 {!isAuthed ? (
                   <div className="flex gap-2">
-                    <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>Close</button>
+                    <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>{waitlistCopy.close}</button>
                     <button type="button" className="btn btn-primary h-9" onClick={() => { setOpen(false); setAuthMode("signup"); setAuthOpen(true); }}>
-                      Sign up
+                      {waitlistCopy.signup}
                     </button>
                   </div>
                 ) : null}

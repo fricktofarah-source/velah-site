@@ -2,35 +2,13 @@
 
 import Link from "next/link";
 import Counter from "./Counter";
-
-const stats = [
-  {
-    value: 90,
-    suffix: "%",
-    label: "Target bottle reuse rate",
-    description: "Measured across 5G, 1L, and 500 mL formats.",
-  },
-  {
-    value: 60,
-    suffix: "%",
-    label: "Less single-use plastic",
-    description: "Compared with a typical household buying cases.",
-  },
-  {
-    value: 30,
-    suffix: "%",
-    label: "Lower CO₂ per litre",
-    description: "Optimised routing and pooled returns across districts.",
-  },
-  {
-    value: 18,
-    suffix: "×",
-    label: "Glass cycles per year",
-    description: "Average reuse target for bottles in circulation.",
-  },
-];
+import { useLanguage } from "./LanguageProvider";
 
 export default function ImpactStats() {
+  const { t } = useLanguage();
+  const copy = t.impact;
+  const stats = copy.stats;
+
   return (
     <section
       id="sustainability"
@@ -41,18 +19,17 @@ export default function ImpactStats() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-medium">
-              Impact
+              {copy.badge}
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
-              Designed to close the loop.
+              {copy.heading}
             </h2>
             <p className="mt-2 text-slate-600 max-w-2xl">
-              Every bottle stays in circulation, each route is pooled, and deposits return when glass comes home.
-              It is a calmer way to serve premium water while cutting waste.
+              {copy.body}
             </p>
           </div>
           <Link href="/sustainability" className="btn btn-primary h-11 rounded-full px-6">
-            Explore sustainability
+            {copy.cta}
           </Link>
         </div>
 

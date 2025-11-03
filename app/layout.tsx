@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { LanguageProvider } from "@/components/LanguageProvider";
 
 export const metadata: Metadata = {
   title: "Velah",
@@ -23,22 +24,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
-        {/* Skip link for keyboard/screen readers */}
-        <a
-          href="#content"
-          className="sr-only focus:not-sr-only fixed top-2 left-2 z-[999] rounded-full bg-black text-white px-3 py-2 text-sm"
-        >
-          Skip to content
-        </a>
+        <LanguageProvider>
+          {/* Skip link for keyboard/screen readers */}
+          <a
+            href="#content"
+            className="sr-only focus:not-sr-only fixed top-2 left-2 z-[999] rounded-full bg-black text-white px-3 py-2 text-sm"
+          >
+            Skip to content
+          </a>
 
-        <Navbar />
+          <Navbar />
 
-        {/* Offset content so it never sits under the sticky navbar (mobile-first) */}
-        <main id="content" className="flex-1 pt-16 sm:pt-20">
-          {children}
-        </main>
+          {/* Offset content so it never sits under the sticky navbar (mobile-first) */}
+          <main id="content" className="flex-1 pt-16 sm:pt-20">
+            {children}
+          </main>
 
-        <Footer />
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

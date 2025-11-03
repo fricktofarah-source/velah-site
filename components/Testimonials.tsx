@@ -1,30 +1,12 @@
 'use client';
 
-const testimonials = [
-  {
-    initials: "LR",
-    name: "Leena Rahman",
-    role: "Executive Chef, Atelier 91",
-    quote:
-      "We stopped stocking plastic bottles in the kitchen. Velah’s glass lands chilled, and the mineral balance keeps our coffee program consistent.",
-  },
-  {
-    initials: "AM",
-    name: "Arjun Mehta",
-    role: "Head of Wellbeing, South Ridge Offices",
-    quote:
-      "The weekly swap is the simplest wellness upgrade we’ve rolled out. Teams fill reusable bottles and we track less fatigue by mid-afternoon.",
-  },
-  {
-    initials: "SA",
-    name: "Sara Al Maktoum",
-    role: "Founder, Mysa Studio",
-    quote:
-      "Clients notice the glass decanters as soon as they arrive. Velah removed the logistics headache and aligned with our sustainability targets.",
-  },
-];
+import { useLanguage } from "./LanguageProvider";
 
 export default function Testimonials() {
+  const { t } = useLanguage();
+  const copy = t.testimonials;
+  const testimonials = copy.entries;
+
   return (
     <section
       className="section section-decor scroll-mt-24 sm:scroll-mt-32 overflow-hidden"
@@ -35,13 +17,13 @@ export default function Testimonials() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-medium">
-              Voices
+              {copy.badge}
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
-              People building with Velah.
+              {copy.heading}
             </h2>
             <p className="mt-2 text-slate-600 max-w-lg">
-              From Michelin kitchens to wellness studios, Velah keeps water calm, circular, and always ready for the next pour.
+              {copy.body}
             </p>
           </div>
         </div>

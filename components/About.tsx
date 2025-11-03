@@ -3,40 +3,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-const QUOTES = [
-  {
-    by: "Founder",
-    text:
-      "We built Velah so water at home could be quiet, pure, and thoughtful. Glass keeps taste honest. The service removes friction so the ritual stays simple.",
-    sub: "Fresh bottles delivered. Empties collected.",
-  },
-  {
-    by: "Customer",
-    text:
-      "Switching to glass changed more than taste. The bottles look good on the counter and weekly swaps mean we never think about running out.",
-    sub: "Consistent routes. Easy confirmations.",
-  },
-  {
-    by: "Team",
-    text:
-      "Every bottle is sanitized and recirculated. Deposits make the loop work, and scheduling makes it feel effortless at the door.",
-    sub: "Clean process from pickup to delivery.",
-  },
-];
+import { useLanguage } from "./LanguageProvider";
 
 export default function About() {
+  const { language, t } = useLanguage();
+  const aboutCopy = t.about;
+  const quotes = aboutCopy.quotes;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
   // 10s rotate; pause on hover
   useEffect(() => {
     if (paused) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % QUOTES.length), 10000);
-    return () => clearInterval(t);
-  }, [paused]);
+    const timer = setInterval(() => setIndex((i) => (i + 1) % quotes.length), 10000);
+    return () => clearInterval(timer);
+  }, [paused, quotes.length]);
 
-  const q = QUOTES[index];
+  useEffect(() => {
+    setIndex(0);
+  }, [language]);
+
+  const q = quotes[index];
 
   return (
     <section
@@ -47,27 +34,22 @@ export default function About() {
     >
       <div className="section-shell section-shell--wide">
         <div className="grid md:grid-cols-2 gap-10 sm:gap-12 md:gap-12 items-center">
-          {/* Left copy (unchanged) */}
           <div>
-            <h2 id="about-title" className="text-4xl md:text-5xl font-semibold tracking-tight">About Velah</h2>
+            <h2 id="about-title" className="text-4xl md:text-5xl font-semibold tracking-tight">{aboutCopy.heading}</h2>
 
-            <p className="mt-5 text-lg text-slate-700 leading-relaxed max-w-xl">
-              Velah is water without noise. We deliver in reusable glass, sealed with stainless,
-              and picked up on weekly routes so bottles keep circulating.
-            </p>
-            <p className="mt-4 text-lg text-slate-700 leading-relaxed max-w-xl">
-              The idea is simple. Pure taste at home, less waste in the city. A service that
-              feels as considered as the product. You confirm deliveries when you need them,
-              and we handle the rest at your door.
-            </p>
-            <p className="mt-4 text-lg text-slate-700 leading-relaxed max-w-xl">
-              Velah is a small ritual in glass. Clean, calm, and made to last.
-            </p>
+            {aboutCopy.paragraphs.map((paragraph, idx) => (
+              <p
+                key={idx}
+                className={`text-lg text-slate-700 leading-relaxed max-w-xl ${idx === 0 ? "mt-5" : "mt-4"}`}
+              >
+                {paragraph}
+              </p>
+            ))}
 
             <div className="mt-6">
               <Link href="/about" className="inline-block group focus-ring rounded-xl">
                 <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
-                  <span>Read more</span>
+                  <span>{aboutCopy.readMore}</span>
                   <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                   <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
                 </span>
@@ -101,12 +83,12 @@ export default function About() {
 
               {/* selectors — small, not massive */}
               <div className="mt-5 flex items-center gap-2">
-                {QUOTES.map((_, i) => {
+                {quotes.map((_, i) => {
                   const active = i === index;
                   return (
                     <button
                       key={i}
-                      aria-label={`Show quote ${i + 1}`}
+                      aria-label={language === "AR" ? `عرض الاقتباس ${i + 1}` : `Show quote ${i + 1}`}
                       onClick={() => setIndex(i)}
                       className="h-6 w-6 grid place-items-center rounded-full hover:bg-slate-100 focus-ring"
                     >

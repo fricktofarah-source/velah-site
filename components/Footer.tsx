@@ -1,8 +1,13 @@
+"use client";
+
 // components/Footer.tsx
 import Image from "next/image";
 import Link from "next/link";
+import { useLanguage } from "./LanguageProvider";
 
 export default function Footer() {
+  const { t } = useLanguage();
+  const copy = t.footer;
   const year = new Date().getFullYear();
 
   return (
@@ -24,57 +29,41 @@ export default function Footer() {
             <span className="font-semibold tracking-tight">Velah</span>
           </div>
           <p className="text-sm text-slate-600">
-            Eco-luxury water in reusable glass gallons. Dubai & GCC.
+            {copy.description}
           </p>
         </div>
 
         {/* Company */}
         <div>
-          <div className="font-semibold mb-3">Company</div>
+          <div className="font-semibold mb-3">{copy.companyTitle}</div>
           <ul className="space-y-2 text-sm text-slate-700">
-            <li>
-              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/about">
-                About
-              </Link>
-            </li>
-            <li>
-              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/blog">
-                Blog
-              </Link>
-            </li>
-            <li>
-              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/subscription">
-                Subscription
-              </Link>
-            </li>
+            {copy.companyLinks.map((link) => (
+              <li key={link.href}>
+                <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href={link.href}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         {/* Support */}
         <div>
-          <div className="font-semibold mb-3">Support</div>
+          <div className="font-semibold mb-3">{copy.supportTitle}</div>
           <ul className="space-y-2 text-sm text-slate-700">
-            <li>
-              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
-                FAQs
-              </a>
-            </li>
-            <li>
-              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
-                Contact
-              </a>
-            </li>
-            <li>
-              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
-                Privacy
-              </a>
-            </li>
+            {copy.supportLinks.map((link) => (
+              <li key={link.label}>
+                <a className="link-underline focus-ring rounded-md px-1 -mx-1" href={link.href}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
         {/* Follow */}
         <div>
-          <div className="font-semibold mb-3">Follow</div>
+          <div className="font-semibold mb-3">{copy.followTitle}</div>
           <div className="flex gap-3">
             <a
               href="#"
@@ -118,8 +107,8 @@ export default function Footer() {
 
       <div className="border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>© {year} Velah. All rights reserved.</span>
-          <span>Made with glass, not plastic.</span>
+          <span>{copy.copyright(year)}</span>
+          <span>{copy.tagline}</span>
         </div>
       </div>
     </footer>

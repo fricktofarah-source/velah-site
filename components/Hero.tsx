@@ -4,26 +4,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "./LanguageProvider";
 
 type Slide = { src: string; alt: string; position?: string };
 
-const SLIDES: Slide[] = [
-  {
-    src: "/assets/Dubai_landscape.png",
-    alt: "Velah delivery route overlooking the Dubai skyline at sunrise",
-    position: "50% 18%",
-  },
-  {
-    src: "/assets/velah-nature-1.png",
-    alt: "Velah glass bottles beside fresh fruit and herbs",
-  },
-  {
-    src: "/assets/Velah_bottle_transparent.png",
-    alt: "Placeholder: Velah glass bottle against a light background",
-  },
-];
-
 export default function Hero() {
+  const { language, t } = useLanguage();
+  const heroCopy = t.hero;
+  const slides: Slide[] = heroCopy.slides;
   const revealClass = useMemo(
     () =>
       "transition-opacity duration-[700ms] ease-[cubic-bezier(.22,1,.36,1)] opacity-0 translate-y-6 animate-[heroReveal_0.7s_ease_0.1s_forwards]",
@@ -34,10 +22,14 @@ export default function Hero() {
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setActive((prev) => (prev + 1) % SLIDES.length);
+      setActive((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [slides.length]);
+
+  useEffect(() => {
+    setActive(0);
+  }, [language, slides.length]);
 
   return (
     <section
@@ -62,7 +54,7 @@ export default function Hero() {
             style={{ transform: `translateX(-${active * 100}%)` }}
             aria-live="polite"
           >
-            {SLIDES.map((slide, idx) => (
+            {slides.map((slide, idx) => (
               <div key={`${slide.src}-${idx}`} className="relative h-full w-full shrink-0 min-w-full bg-black">
                 <Image
                   src={slide.src}
@@ -81,7 +73,7 @@ export default function Hero() {
               Velah
             </div>
             <div className="flex items-center gap-2 pointer-events-auto">
-              {SLIDES.map((_, idx) => {
+              {slides.map((_, idx) => {
                 const isActive = idx === active;
                 return (
                   <button
@@ -105,13 +97,13 @@ export default function Hero() {
         <div className={`${revealClass} mx-auto flex max-w-3xl flex-col items-center gap-5 text-center`}>
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">
-              Velah hydration
+              {heroCopy.badge}
             </div>
             <h1 className="mt-3 text-3xl sm:text-[2.75rem] font-semibold tracking-tight text-slate-900">
-              Pure glass water on calm weekly routes across Dubai.
+              {heroCopy.heading}
             </h1>
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              Chilled bottles arrive ready for your counter, empties return with every swap, and stainless caps keep every pour clean.
+              {heroCopy.body}
             </p>
           </div>
 
@@ -123,10 +115,10 @@ export default function Hero() {
                 window.dispatchEvent(new Event("velah:open-waitlist"));
               }}
             >
-              Join the waitlist
+              {heroCopy.primaryCta}
             </button>
             <Link href="/#about" className="link-underline text-sm font-medium">
-              Learn about the loop
+              {heroCopy.secondaryCta}
             </Link>
           </div>
         </div>
