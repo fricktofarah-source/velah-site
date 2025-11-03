@@ -37,16 +37,22 @@ export default function Navbar() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [language, setLanguage] = useState<"EN" | "AR">("EN");
 
   // Refs
   const emailRef = useRef<HTMLInputElement | null>(null);
 
   // -------- Suggestions data --------
   const baseList = [
-    { kind: "section", id: "subscription", label: "Subscription plans" },
     { kind: "section", id: "about", label: "About Velah" },
+    { kind: "section", id: "bottles", label: "Available bottles" },
+    { kind: "section", id: "how", label: "How Velah works" },
+    { kind: "section", id: "subscription", label: "Subscription plans" },
     { kind: "section", id: "sustainability", label: "Sustainability" },
+    { kind: "section", id: "voices", label: "Testimonials" },
     { kind: "section", id: "blog", label: "From the blog" },
+    { kind: "page", href: "/subscription", label: "Subscription overview" },
+    { kind: "page", href: "/about", label: "Learn about Velah" },
     { kind: "page", href: "/hydration", label: "My hydration" },
     { kind: "post", slug: "why-glass-better-water", label: "Why glass makes water taste better" },
     { kind: "post", slug: "our-dubai-routes", label: "Our Dubai delivery routes" },
@@ -107,6 +113,10 @@ export default function Navbar() {
     }
   }
 
+  function toggleLanguage() {
+    setLanguage((prev) => (prev === "EN" ? "AR" : "EN"));
+  }
+
   // -------- Effects --------
 
   // Close mobile menu on md+
@@ -117,6 +127,23 @@ export default function Navbar() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("velah:lang");
+      if (stored === "EN" || stored === "AR") setLanguage(stored);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("velah:lang", language);
+    } catch {
+      /* ignore */
+    }
+  }, [language]);
 
   // Auth session + listener
   useEffect(() => {
@@ -358,6 +385,14 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 bg-white/90 px-3 h-9 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-ring"
+              aria-label={`Switch language (current ${language})`}
+            >
+              <span>{language}</span>
+            </button>
 
             {/* Account / Sign in (text-only) */}
             {isAuthed ? (
