@@ -1,11 +1,11 @@
 // components/HowItWorks.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "./LanguageProvider";
 
-const STEP_ICONS: Record<number, JSX.Element> = {
+const STEP_ICONS: Record<number, React.ReactElement> = {
   1: <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4h10v2H7zM4 9h16v2H4zM7 14h10v2H7zM10 19h4v2h-4z"/></svg>,
   2: <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M3 7h11v10H3zM14 10h3l4 4v3h-7zM7 20a2 2 0 1 0 0-4a2 2 0 0 0 0 4m10 0a2 2 0 1 0 0-4a2 2 0 0 0 0 4"/></svg>,
   3: <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 2a5 5 0 0 1 5 5v2H7V7a5 5 0 0 1 5-5m-2 20v-8h4v8z"/></svg>,
