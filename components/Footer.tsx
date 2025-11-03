@@ -1,4 +1,5 @@
 // components/Footer.tsx
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
@@ -11,11 +12,14 @@ export default function Footer() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             {/* keep img to match how you use it in Navbar */}
-            <img
+            <Image
               src="/assets/velah_ripple.png"
               alt="Velah"
+              width={64}
+              height={32}
               className="h-8 w-auto"
               draggable={false}
+              priority={false}
             />
             <span className="font-semibold tracking-tight">Velah</span>
           </div>
@@ -29,17 +33,17 @@ export default function Footer() {
           <div className="font-semibold mb-3">Company</div>
           <ul className="space-y-2 text-sm text-slate-700">
             <li>
-              <Link className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="/about">
+              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/about">
                 About
               </Link>
             </li>
             <li>
-              <Link className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="/blog">
+              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/blog">
                 Blog
               </Link>
             </li>
             <li>
-              <Link className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="/subscription">
+              <Link className="link-underline focus-ring rounded-md px-1 -mx-1" href="/subscription">
                 Subscription
               </Link>
             </li>
@@ -51,17 +55,17 @@ export default function Footer() {
           <div className="font-semibold mb-3">Support</div>
           <ul className="space-y-2 text-sm text-slate-700">
             <li>
-              <a className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="#">
+              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
                 FAQs
               </a>
             </li>
             <li>
-              <a className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="#">
+              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
                 Contact
               </a>
             </li>
             <li>
-              <a className="hover:text-velah focus-ring rounded-md px-1 -mx-1" href="#">
+              <a className="link-underline focus-ring rounded-md px-1 -mx-1" href="#">
                 Privacy
               </a>
             </li>

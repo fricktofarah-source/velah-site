@@ -1,6 +1,7 @@
 // components/Navbar.tsx
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -57,7 +58,9 @@ export default function Navbar() {
     s.label.toLowerCase().includes(query.toLowerCase())
   );
 
-  function selectSuggestion(s: any) {
+  type Suggestion = (typeof baseList)[number];
+
+  function selectSuggestion(s: Suggestion) {
     setQuery("");
     setOpenSuggest(false);
     setSearchOpen(false);
@@ -82,7 +85,6 @@ export default function Navbar() {
       setActiveIdx((i) => Math.min(i + 1, list.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      const list = query.trim() ? filtered : defaults;
       setActiveIdx((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
@@ -121,15 +123,19 @@ export default function Navbar() {
     supabase.auth.getSession().then(({ data }) => {
       const session = data.session;
       setIsAuthed(!!session);
-      const email = session?.user?.email ?? null;
-      const fullName = (session?.user?.user_metadata as any)?.full_name ?? null;
-      setDisplayName(fullName || (email ? email.split("@")[0] : null));
+      const emailFromSession = session?.user?.email ?? null;
+      const metadata = session?.user?.user_metadata as { full_name?: string } | undefined;
+      const fullName =
+        typeof metadata?.full_name === "string" ? metadata.full_name : null;
+      setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthed(!!session);
-      const email = session?.user?.email ?? null;
-      const fullName = (session?.user?.user_metadata as any)?.full_name ?? null;
-      setDisplayName(fullName || (email ? email.split("@")[0] : null));
+      const emailFromSession = session?.user?.email ?? null;
+      const metadata = session?.user?.user_metadata as { full_name?: string } | undefined;
+      const fullName =
+        typeof metadata?.full_name === "string" ? metadata.full_name : null;
+      setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
       setMenuOpen(false);
     });
     return () => sub.subscription.unsubscribe();
@@ -174,7 +180,12 @@ export default function Navbar() {
 
   // --- NEW: subtle hide-on-scroll, reveal on scroll-up (UI-only) ---
   const [hidden, setHidden] = useState(false);
-  const [lastY, setLastY] = useState(0);
+  const lastYRef = useRef(0);
+  const hiddenRef = useRef(hidden);
+  useEffect(() => {
+    // Keep hidden state mirror in a ref so scroll handler avoids stale closures
+    hiddenRef.current = hidden;
+  }, [hidden]);
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -182,22 +193,27 @@ export default function Navbar() {
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY || 0;
-        const delta = y - lastY;
+        const delta = y - lastYRef.current;
         const threshold = 6;
+        let nextHidden = hiddenRef.current;
         if (y < 8) {
-          setHidden(false);
+          nextHidden = false;
         } else if (delta > threshold) {
-          setHidden(true);
+          nextHidden = true;
         } else if (delta < -threshold) {
-          setHidden(false);
+          nextHidden = false;
         }
-        setLastY(y);
+        if (nextHidden !== hiddenRef.current) {
+          hiddenRef.current = nextHidden;
+          setHidden(nextHidden);
+        }
+        lastYRef.current = y;
         ticking = false;
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastY]);
+  }, []);
 
   // -------- Waitlist form --------
   function validateEmail(v: string) { return /\S+@\S+\.\S+/.test(v.trim()); }
@@ -234,22 +250,25 @@ export default function Navbar() {
           {/* LEFT: Logo */}
           <div className="justify-self-start flex items-center shrink-0">
             <Link href="/" aria-label="Go to homepage" className="block focus-ring rounded-xl">
-              <img
+              <Image
                 src="/assets/velah_ripple.png"
                 alt="Velah"
+                width={120}
+                height={80}
                 className="block h-16 sm:h-20 w-auto select-none origin-center transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04]"
                 draggable={false}
+                priority
               />
             </Link>
           </div>
 
           {/* MIDDLE: Centered nav */}
           <div className="hidden md:flex items-center justify-center md:justify-center gap-7 whitespace-nowrap justify-self-center md:col-start-2 min-w-0">
-            <a href="#about" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("about"); }}>About</a>
-            <a href="#sustainability" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>Sustainability</a>
-            <a href="#subscriptionteaser" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("subscriptionteaser"); }}>Subscription</a>
-            <a href="#blog" className="nav-link hover:text-velah" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>Blog</a>
-            <Link href="/hydration" className="nav-link hover:text-velah">My hydration</Link>
+            <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("about"); }}>About</a>
+            <a href="#sustainability" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>Sustainability</a>
+            <a href="#subscription" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>Subscription</a>
+            <a href="#blog" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>Blog</a>
+            <Link href="/hydration" className="nav-link">My hydration</Link>
           </div>
 
           {/* RIGHT: Controls (search grows; still doesn’t move the center) */}
@@ -346,7 +365,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap inline-flex items-center gap-1 focus-ring rounded-lg"
+                className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap inline-flex items-center gap-1 focus-ring rounded-lg"
                 >
                   <span className="truncate max-w-[9rem]">{displayName ?? "Account"}</span>
                   <svg aria-hidden viewBox="0 0 20 20" className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}>
@@ -369,7 +388,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => { setAuthMode("signin"); setAuthOpen(true); }}
-                className="relative z-[60] nav-link hover:text-velah px-0 h-auto whitespace-nowrap focus-ring rounded-lg"
+                className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap focus-ring rounded-lg"
               >
                 Sign in
               </button>
@@ -379,7 +398,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => { setOpen(true); setPhase("form"); setError(null); }}
-              className="relative z-[60] h-9 px-3 text-sm rounded-full bg-[var(--velah)] text-black hover:opacity-90 transition shrink-0 focus-ring"
+              className="btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
             >
               Join waitlist
             </button>
@@ -387,7 +406,7 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               type="button"
-              className="md:hidden btn btn-ghost h-9 px-3 rounded-full focus-ring"
+              className="md:hidden btn btn-ghost btn-no-arrow h-9 px-3 rounded-full focus-ring"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileOpen((v) => !v)}
             >
@@ -428,7 +447,7 @@ export default function Navbar() {
           <div className="card w-full max-w-lg overflow-hidden animate-pop-in">
             <div className="p-4 border-b flex items-center justify-between">
               <div className="font-semibold">Join the Velah waitlist</div>
-              <button type="button" className="btn btn-ghost h-9" onClick={() => setOpen(false)}>✕</button>
+              <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>✕</button>
             </div>
 
             <div className="relative min-h-[210px]">
@@ -477,7 +496,7 @@ export default function Navbar() {
                 <div className="text-emerald-700 text-sm">You’re on the list. We’ll email you soon.</div>
                 {!isAuthed ? (
                   <div className="flex gap-2">
-                    <button type="button" className="btn btn-ghost h-9" onClick={() => setOpen(false)}>Close</button>
+                    <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>Close</button>
                     <button type="button" className="btn btn-primary h-9" onClick={() => { setOpen(false); setAuthMode("signup"); setAuthOpen(true); }}>
                       Sign up
                     </button>

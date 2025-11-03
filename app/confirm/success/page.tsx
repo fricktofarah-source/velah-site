@@ -1,4 +1,6 @@
 // app/confirm/success/page.tsx
+import Link from "next/link";
+
 export const dynamic = "force-static";
 
 export const metadata = {
@@ -19,19 +21,19 @@ export default function Page() {
           </div>
 
           <h1 id={titleId} className="text-2xl font-semibold tracking-tight">
-            You’re confirmed 🎉
+            You’re confirmed
           </h1>
           <p id={descId} className="mt-2 text-slate-600">
             Thanks for confirming your email. You’re officially on the Velah waitlist.
           </p>
 
           <div className="mt-6 grid gap-3">
-            <a href="/subscription" className="btn btn-primary h-10 w-full rounded-full">
+            <Link href="/subscription" className="btn btn-primary h-10 w-full rounded-full">
               Explore subscription
-            </a>
-            <a href="/" className="btn btn-ghost h-10 w-full rounded-full">
+            </Link>
+            <Link href="/" className="link-underline inline-flex justify-center text-sm font-medium">
               Back to home
-            </a>
+            </Link>
           </div>
         </div>
       </div>

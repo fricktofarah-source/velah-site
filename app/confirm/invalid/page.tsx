@@ -1,4 +1,6 @@
 // app/confirm/invalid/page.tsx
+import Link from "next/link";
+
 export const dynamic = "force-static";
 
 export const metadata = {
@@ -48,9 +50,9 @@ export default function Page() {
             </button>
           </form>
 
-          <a href="/" className="btn btn-ghost h-10 w-full rounded-full mt-4 text-center">
+          <Link href="/" className="link-underline inline-flex justify-center mt-4 text-sm font-medium">
             Back to home
-          </a>
+          </Link>
         </div>
       </div>
     </main>

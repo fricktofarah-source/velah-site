@@ -76,7 +76,7 @@ export default function AboutClient() {
           Hydration, made weightless
         </h1>
         <p className="mt-4 text-center text-slate-700 md:text-lg max-w-3xl mx-auto">
-          Velah is a refillable hydration loop in reusable glass. Clean taste, simple rhythm—no fuss.
+          Velah is a refillable hydration loop in reusable glass. Clean taste, simple rhythm, no fuss.
         </p>
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           <a
@@ -141,7 +141,7 @@ export default function AboutClient() {
       </SectionPad>
 
       {/* 4) DIVIDER (very subtle blend) */}
-      <FullBleed height="h-[36vh]" src="/assets/divider-haze.png" alt="Hazy divider">
+      <FullBleed height="h-[36vh]" src="/assets/timeline-bay.png" alt="Textured divider">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="px-6 text-center text-xl sm:text-2xl tracking-[0.2em] text-slate-900/85">
             NO SHIPPING · NO COMPROMISE · NO PLASTIC · NO SHIPPING · NO COMPROMISE · NO PLASTIC
@@ -164,7 +164,7 @@ export default function AboutClient() {
             </h3>
             <p className="mt-3 md:text-lg text-slate-800 drop-shadow-[0_1px_8px_rgba(255,255,255,0.75)]">
               Pick your mix of 5G, 1L and 500 mL. Edit freely or skip any week. Empties out, fresh
-              bottles in—simple, every time.
+              bottles in. Simple, every time.
             </p>
           </div>
         </div>
@@ -250,8 +250,16 @@ function assignRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
   return (node: T) => {
     refs.forEach((r) => {
       if (!r) return;
-      if (typeof r === "function") r(node);
-      else try { (r as any).current = node; } catch {}
+      if (typeof r === "function") {
+        r(node);
+      } else if (typeof r === "object" && "current" in r) {
+        // Forward ref objects are mutable; treat readonly gracefully
+        try {
+          (r as React.MutableRefObject<T | null>).current = node;
+        } catch {
+          // no-op
+        }
+      }
     });
   };
 }
@@ -306,12 +314,6 @@ function SoftVeil() {
           "radial-gradient(60% 40% at 50% 0%, rgba(127,203,216,0.10), transparent 60%)",
       }}
     />
-  );
-}
-
-function BlendTopBottom() {
-  return (
-    <div className="absolute inset-0 bg-gradient-to-b from-white/6 via-transparent to-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]" />
   );
 }
 

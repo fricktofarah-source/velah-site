@@ -58,8 +58,8 @@ export async function POST(req: Request) {
 
   try {
     if (isJson) {
-      const body = await req.json().catch(() => ({} as any));
-      if (typeof body?.email === "string") email = body.email.trim();
+      const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+      if (body && typeof body.email === "string") email = body.email.trim();
     } else if (isForm) {
       const form = await req.formData();
       const v = form.get("email");
@@ -67,8 +67,8 @@ export async function POST(req: Request) {
     } else {
       // fallback try both (some clients omit CT)
       try {
-        const body = await req.json();
-        if (typeof body?.email === "string") email = body.email.trim();
+        const fallbackBody = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+        if (fallbackBody && typeof fallbackBody.email === "string") email = fallbackBody.email.trim();
       } catch {
         const form = await req.formData().catch(() => null);
         const v = form?.get("email");
@@ -166,7 +166,7 @@ export async function POST(req: Request) {
         "",
         `This link will expire in ${EXP_HOURS} hours.`,
         "",
-        "— Velah Team",
+        "Velah Team",
         "This is an automated message. Please do not reply.",
       ].join("\n"),
       html: `

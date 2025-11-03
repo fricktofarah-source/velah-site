@@ -14,6 +14,15 @@ const GLASS_ML = 250;          // avg glass in ml
 const FIVE_GAL_LITERS = 18.9;  // 5 gallon in liters
 const L_TO_ML = 1000;
 
+const PRICE = {
+  "500mL": 4,   // placeholder
+  "1L": 7,
+  "5G": 28,
+  deposit500mL: 4, // placeholder
+  deposit1L: 8,
+  deposit5G: 40,
+} as const;
+
 /** Greedy + threshold rule:
  *  - ≥20 L -> use floor(need/5G), then 1L, then 500mL (ceil on smallest to cover remainder)
  *  - 10–19.9 L -> start with 1×5G, then 1L, then 500mL
@@ -59,14 +68,6 @@ export default function Subscription() {
   const [sparkling, setSparkling] = useState(false);
 
   // Pricing (AED) — placeholders
-  const price = {
-    "500mL": 4,   // placeholder
-    "1L": 7,
-    "5G": 28,
-    deposit500mL: 4, // placeholder
-    deposit1L: 8,
-    deposit5G: 40,
-  };
 
   // AI suggestion
   const suggestion: Suggestion = useMemo(() => {
@@ -135,9 +136,9 @@ export default function Subscription() {
   const weeklyCost = useMemo(
     () =>
       mixForPricing.reduce((sum, m) => {
-        if (m.size === "5G") return sum + price["5G"] * m.qty;
-        if (m.size === "1L") return sum + price["1L"] * m.qty;
-        return sum + price["500mL"] * m.qty;
+        if (m.size === "5G") return sum + PRICE["5G"] * m.qty;
+        if (m.size === "1L") return sum + PRICE["1L"] * m.qty;
+        return sum + PRICE["500mL"] * m.qty;
       }, 0),
     [mixForPricing]
   );
@@ -145,9 +146,9 @@ export default function Subscription() {
   const depositTotal = useMemo(
     () =>
       mixForPricing.reduce((sum, m) => {
-        if (m.size === "5G") return sum + price.deposit5G * m.qty;
-        if (m.size === "1L") return sum + price.deposit1L * m.qty;
-        return sum + price.deposit500mL * m.qty;
+        if (m.size === "5G") return sum + PRICE.deposit5G * m.qty;
+        if (m.size === "1L") return sum + PRICE.deposit1L * m.qty;
+        return sum + PRICE.deposit500mL * m.qty;
       }, 0),
     [mixForPricing]
   );
@@ -168,10 +169,10 @@ export default function Subscription() {
         {/* Slim step header */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tell us about your week</h3>
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-            <span className="px-2 py-0.5 rounded-full border">1 · Choose</span>
-            <span className="px-2 py-0.5 rounded-full border">2 · Plan</span>
-            <span className="px-2 py-0.5 rounded-full border">3 · Join</span>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-semibold uppercase tracking-[0.2em]">
+            <span>1 · Choose</span>
+            <span>2 · Plan</span>
+            <span>3 · Join</span>
           </div>
         </div>
 
@@ -221,13 +222,23 @@ export default function Subscription() {
           {/* Mode switch */}
           <div className="flex items-center gap-2">
             <button
-              className={`h-8 px-3 rounded-full text-sm ${mode === "ai" ? "bg-black text-white" : "btn btn-ghost"}`}
+              className={[
+                "btn btn-no-arrow h-8 px-3 text-sm border",
+                mode === "ai"
+                  ? "bg-[var(--velah)] text-slate-900 border-[var(--velah)] hover:bg-[#68bac8]"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              ].join(" ")}
               onClick={() => setMode("ai")}
             >
               AI
             </button>
             <button
-              className={`h-8 px-3 rounded-full text-sm ${mode === "custom" ? "bg-black text-white" : "btn btn-ghost"}`}
+              className={[
+                "btn btn-no-arrow h-8 px-3 text-sm border",
+                mode === "custom"
+                  ? "bg-[var(--velah)] text-slate-900 border-[var(--velah)] hover:bg-[#68bac8]"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              ].join(" ")}
               onClick={() => setMode("custom")}
             >
               Edit
@@ -322,7 +333,7 @@ export default function Subscription() {
 
             {/* Reset to AI */}
             <div className="mt-3">
-              <button type="button" className="btn btn-ghost h-9 px-3 rounded-full" onClick={() => setMode("ai")}>
+              <button type="button" className="btn btn-ghost btn-no-arrow h-9 px-3 rounded-full" onClick={() => setMode("ai")}>
                 Reset to AI suggestion
               </button>
             </div>
@@ -334,7 +345,7 @@ export default function Subscription() {
           <button onClick={openWaitlist} className="btn btn-primary h-11 px-5 rounded-full">
             Join the waitlist
           </button>
-          <a href="/about" className="btn btn-ghost h-11 px-5 rounded-full">
+          <a href="/about" className="link-underline text-sm font-medium">
             Learn more
           </a>
         </div>

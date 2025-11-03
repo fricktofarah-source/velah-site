@@ -80,7 +80,7 @@ export default function AuthModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: em, password: pw, name, joinList }),
         });
-        const data = await res.json().catch(() => ({} as any));
+        const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
         if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t create the account.");
         setPhase("done");
       } else {
@@ -91,9 +91,10 @@ export default function AuthModal({
         if (signInErr) throw signInErr;
         setPhase("done");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setPhase("form");
-      setError(normalizeErr(err?.message));
+      const message = err instanceof Error ? err.message : String(err);
+      setError(normalizeErr(message));
     }
   }
 
@@ -118,7 +119,7 @@ export default function AuthModal({
           <div id={titleId} className="font-semibold">
             {mode === "signup" ? "Create your account" : "Sign in"}
           </div>
-          <button className="btn btn-ghost h-9 focus-ring" onClick={onClose} aria-label="Close">
+          <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
@@ -280,7 +281,7 @@ export default function AuthModal({
                   ? "Account created. Check your email if verification is required."
                   : "Signed in successfully."}
               </div>
-              <button className="btn btn-ghost h-9 focus-ring" onClick={onClose}>
+              <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose}>
                 Close
               </button>
             </div>

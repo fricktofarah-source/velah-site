@@ -20,7 +20,7 @@ export default function BlogIndex() {
         <header className="mb-6 sm:mb-8">
           <h1 className="text-3xl font-semibold tracking-tight">Blog</h1>
           <p className="mt-2 text-slate-600 max-w-2xl">
-            Updates from the Velah team—product notes, circular-system learnings,
+            Updates from the Velah team: product notes, circular system learnings,
             and delivery operations in Dubai.
           </p>
         </header>
@@ -30,7 +30,7 @@ export default function BlogIndex() {
             <Link
               key={p.slug}
               href={`/blog/${p.slug}`}
-              className="card p-6 card-hover block"
+              className="card card-hover p-6 flex flex-col"
               aria-label={p.title}
             >
               <h3 className="text-xl font-semibold">{p.title}</h3>

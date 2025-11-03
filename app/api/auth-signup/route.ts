@@ -11,26 +11,58 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 const REDIRECT_TO = process.env.AUTH_EMAIL_REDIRECT_TO || "https://drinkvelah.com/auth/callback";
 
+type SignupPayload = {
+    email?: string | null;
+    password?: string | null;
+    name?: string | null;
+    joinList?: boolean | string | null;
+};
+
+function coerceString(value: unknown) {
+    if (typeof value === "string") return value;
+    return typeof value === "number" ? String(value) : "";
+}
+
+function coerceBoolean(value: boolean | string | null | undefined) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        return normalized === "true" || normalized === "on" || normalized === "1";
+    }
+    return false;
+}
+
 export async function POST(req: Request) {
     try {
         const ct = req.headers.get("content-type") || "";
         const isJson = ct.includes("application/json");
-        let payload: any = {};
-        if (isJson) payload = await req.json();
-        else {
+        let payload: SignupPayload = {};
+        if (isJson) {
+            const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+            if (body && typeof body === "object") {
+                payload = {
+                    email: typeof body.email === "string" ? body.email : null,
+                    password: typeof body.password === "string" ? body.password : null,
+                    name: typeof body.name === "string" ? body.name : null,
+                    joinList: typeof body.joinList === "boolean" || typeof body.joinList === "string" ? body.joinList : null,
+                };
+            }
+        } else {
             const form = await req.formData().catch(() => null);
             if (form) {
-                payload.email = form.get("email");
-                payload.password = form.get("password");
-                payload.name = form.get("name");
-                payload.joinList = form.get("joinList") === "on" || form.get("joinList") === "true";
+                payload = {
+                    email: form.get("email")?.toString() ?? null,
+                    password: form.get("password")?.toString() ?? null,
+                    name: form.get("name")?.toString() ?? null,
+                    joinList: form.get("joinList")?.toString() ?? null,
+                };
             }
         }
 
-        const email = String(payload.email || "").trim().toLowerCase();
-        const password = String(payload.password || "");
-        const name = String(payload.name || "").trim();
-        const joinList = Boolean(payload.joinList);
+        const email = coerceString(payload.email).trim().toLowerCase();
+        const password = coerceString(payload.password);
+        const name = coerceString(payload.name).trim();
+        const joinList = coerceBoolean(payload.joinList ?? false);
 
         if (!/\S+@\S+\.\S+/.test(email)) {
             return NextResponse.json({ ok: false, error: "Invalid email." }, { status: 400 });
@@ -107,7 +139,7 @@ export async function POST(req: Request) {
                 "",
                 "If you didn’t request this, you can ignore this message.",
                 "",
-                "— Velah Team",
+                "Velah Team",
                 "This is an automated message. Please do not reply.",
             ].join("\n"),
             html: `

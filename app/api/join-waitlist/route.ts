@@ -9,7 +9,6 @@ import { Resend } from "resend";
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const CONFIRM_BASE = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
 
 export async function POST(req: Request) {
   try {
@@ -67,7 +66,6 @@ export async function POST(req: Request) {
 
     // Normal path: send confirmation email via Resend (if you still want double opt-in here)
     const resend = new Resend(RESEND_API_KEY);
-    const confirmUrl = `${CONFIRM_BASE}/confirm/success`; // adjust if you have a tokenized link
     await resend.emails.send({
       from: "Velah <no-reply@drinkvelah.com>",
       to: email,
@@ -79,7 +77,7 @@ export async function POST(req: Request) {
         "",
         "If you didn’t request this, you can ignore this message.",
         "",
-        "— Velah Team",
+        "Velah Team",
         "This is an automated message. Please do not reply.",
       ].join("\n"),
       html: `

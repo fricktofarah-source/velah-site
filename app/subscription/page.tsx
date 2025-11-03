@@ -18,7 +18,7 @@ export default function SubscriptionPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Your weekly subscription</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Start with our suggestion, then fine-tune quantities. You’re always in control—confirm, change, or skip.
+            Start with our suggestion, then fine-tune quantities. You’re always in control. Confirm, change, or skip whenever you like.
           </p>
         </div>
       </section>
@@ -57,9 +57,9 @@ export default function SubscriptionPage() {
           <div className="mt-4 divide-y rounded-2xl border bg-white/70 backdrop-blur">
             {[
               ["How do deposits work?", "A small deposit per bottle keeps the loop working. It’s fully refunded when bottles return."],
-              ["Can I change weeks?", "Yes. You’ll get a reminder—confirm, edit quantities, or skip with one tap."],
+              ["Can I change weeks?", "Yes. You’ll get a reminder to confirm, edit quantities, or skip with one tap."],
               ["What sizes can I mix?", "5 gallon, 1 liter, and 500 mL. Mix as you like for home, gym, and on-the-go."],
-              ["Where do you deliver?", "We’re rolling out across Dubai first—more areas coming soon."],
+              ["Where do you deliver?", "We’re rolling out across Dubai first and opening more areas soon."],
             ].map(([q, a]) => (
               <details key={q} className="p-5">
                 <summary className="cursor-pointer font-medium">{q}</summary>

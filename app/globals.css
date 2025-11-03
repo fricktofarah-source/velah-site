@@ -27,18 +27,44 @@ a, button, [role='button'] { cursor: pointer; }
   .card { @apply rounded-2xl border border-slate-200 bg-white shadow-soft; }
   .card-glass { @apply rounded-2xl border border-white/20 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50; }
   .card-press { @apply motion-safe:transition-transform motion-safe:duration-200 hover:-translate-y-0.5; }
+  .card-hover {
+    @apply motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:shadow-soft;
+  }
 
   /* Buttons */
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium motion-safe:transition-colors motion-safe:duration-200; }
-  .btn-primary { @apply bg-black text-white hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black; }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium motion-safe:transition-colors motion-safe:duration-200 whitespace-nowrap;
+  }
+  .btn-primary {
+    @apply text-slate-900 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900/20;
+    background-color: var(--velah);
+    transition: background-color 0.25s cubic-bezier(.22,1,.36,1);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-primary:hover { background-color: #68bac8; }
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 75%);
+    transform: translateX(-105%);
+    transition: transform 0.45s cubic-bezier(.22,1,.36,1);
+    pointer-events: none;
+  }
+  .btn-primary:hover::before,
+  .btn-primary:focus-visible::before {
+    transform: translateX(0);
+  }
   .btn-ghost { @apply bg-transparent hover:bg-slate-100; }
-  .btn-link { @apply underline underline-offset-4 decoration-slate-300 hover:decoration-[var(--velah)]; }
+  .btn-link { @apply link-underline text-sm font-medium; }
 
   /* Links */
-  .nav-link { @apply inline-flex items-center gap-1 underline underline-offset-4 decoration-slate-300 hover:decoration-[var(--velah)] motion-safe:transition-colors; }
+  .nav-link { @apply link-underline inline-flex items-center gap-1 text-sm font-medium hover:text-[var(--velah)]; }
 
   /* Chips (spec/labels) */
-  .chip { @apply inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600; }
+  .chip { @apply inline-flex items-center gap-1 text-xs font-medium text-slate-500; }
 
   /* Sections (mobile-first rhythm) */
   .section { @apply py-16 sm:py-20; }
@@ -71,6 +97,50 @@ a, button, [role='button'] { cursor: pointer; }
 
 /* --- Handy utilities --- */
 @layer utilities {
+  .link-underline { 
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+  }
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.15rem;
+    width: 0%;
+    height: 1.5px;
+    background-color: currentColor;
+    transition: width 0.25s cubic-bezier(.22,1,.36,1);
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    width: 100%;
+  }
+  .link-underline-tight {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+  }
+  .link-underline-tight::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.15rem;
+    width: 0%;
+    height: 1.5px;
+    background-color: currentColor;
+    transition: width 0.25s cubic-bezier(.22,1,.36,1);
+  }
+  .link-underline-tight:hover::after,
+  .link-underline-tight:focus-visible::after {
+    width: 100%;
+  }
+  .hover-parent:hover .link-underline-tight::after,
+  .hover-parent:focus-visible .link-underline-tight::after {
+    width: 100%;
+  }
   .hover-raise { @apply motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-0.5; }
   .hover-underline { @apply underline decoration-slate-300 underline-offset-4 hover:decoration-[var(--velah)] motion-safe:transition-colors; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -122,3 +192,77 @@ a, button, [role='button'] { cursor: pointer; }
   border-right: 2px solid #10b981; border-bottom: 2px solid #10b981;
   transform: rotate(45deg);
 }
+
+/* Marquee band */
+.marquee-band {
+  background-color: var(--velah);
+  color: #0f172a;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+.marquee-band__inner {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  padding: 1.4rem 1.5rem;
+}
+@media (min-width: 768px) {
+  .marquee-band__inner {
+    padding-inline: 3.5rem;
+  }
+}
+.marquee-band__track {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  white-space: nowrap;
+  width: max-content;
+  font-size: clamp(0.85rem, 0.9vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  animation: marquee-band-scroll 40s linear infinite;
+  will-change: transform;
+}
+.marquee-band__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.marquee-band__bullet {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+.marquee-band__inner:hover .marquee-band__track {
+  animation-play-state: paused;
+}
+@keyframes marquee-band-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-band__track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
+/* Section surfaces & separators */
+.section-decor {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+.section-decor > * {
+  position: relative;
+  z-index: 1;
+}
+.section-shell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 76rem);
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 3.5rem);
+}
+.section-shell.section-shell--wide { width: min(100%, 80rem); }
+.section-shell.section-shell--tight { width: min(100%, 68rem); }

@@ -3,79 +3,47 @@ import Link from "next/link";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Bottles from "@/components/Bottles";
-import Subscription from "@/components/Subscription";
 import HowItWorks from "@/components/HowItWorks";
-import Counter from "@/components/Counter";
-import SubscriptionTeaser from "@/components/SubscriptionTeaser";
-import { posts } from "@/lib/posts"; // <-- added for the blog preview
+import MarqueeBand from "@/components/MarqueeBand";
+import Experience from "@/components/Experience";
+import SubscriptionPeek from "@/components/SubscriptionPeek";
+import ImpactStats from "@/components/ImpactStats";
+import Testimonials from "@/components/Testimonials";
+import { posts } from "@/lib/posts";
 
 export default function HomePage() {
   return (
     <>
       <Hero />
 
-      <section id="about" className="section">
-        <About />
-      </section>
+      <About />
 
-      <section id="bottles" className="section">
-        <Bottles />
-      </section>
+      <Bottles />
 
       <HowItWorks />
 
-      <SubscriptionTeaser />
+      <MarqueeBand />
 
-      <section id="sustainability" className="section bg-slate-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-              Sustainability
-            </h2>
-            <Link href="/sustainability" className="nav-link hover:text-velah">
-              Read more →
-            </Link>
-          </div>
+      <Experience />
 
-          <p className="mt-3 text-slate-600 max-w-3xl">
-            Refillable glass, durable materials, and optimized routes to cut
-            waste at the source. Our aim is to reduce plastic and emissions
-            without compromising taste or convenience.
-          </p>
+      <SubscriptionPeek />
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="rounded-3xl border bg-white/80 backdrop-blur p-5 text-center">
-              <Counter to={90} suffix="%+" />
-              <div className="text-slate-600 text-sm mt-1">
-                Target bottle reuse rate
-              </div>
-            </div>
+      <ImpactStats />
 
-            <div className="rounded-3xl border bg-white/80 backdrop-blur p-5 text-center">
-              <Counter to={60} prefix="−" suffix="%" />
-              <div className="text-slate-600 text-sm mt-1">
-                Less single-use plastic vs. cases
-              </div>
-            </div>
-
-            <div className="rounded-3xl border bg-white/80 backdrop-blur p-5 text-center">
-              <Counter to={30} prefix="−" suffix="%" />
-              <div className="text-slate-600 text-sm mt-1">
-                CO₂ per liter (optimized routes)
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
       {/* --- BLOG (home section) --- */}
-      <section id="blog" className="section">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <section
+        id="blog"
+        className="section section-decor scroll-mt-24 sm:scroll-mt-32"
+        data-tone="dawn"
+      >
+        <div className="section-shell">
           <div className="flex items-baseline justify-between">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
               From the blog
             </h2>
-            <Link href="/blog" className="nav-link hover:text-velah">
+            <Link href="/blog" className="nav-link">
               All posts →
             </Link>
           </div>
@@ -94,23 +62,24 @@ export default function HomePage() {
                 return (
                   <article
                     key={p.slug}
-                    className="rounded-2xl border bg-white/70 backdrop-blur p-5 flex flex-col"
+                    className="card card-hover p-5 flex flex-col"
                   >
                     <div className="text-xs text-slate-500">
                       {date} • {mins} min read
                     </div>
                     <h3 className="mt-2 font-semibold text-lg">
-                      <Link href={`/blog/${p.slug}`} className="hover-underline">
+                      <Link href={`/blog/${p.slug}`} className="link-underline">
                         {p.title}
                       </Link>
                     </h3>
-                    <p className="mt-2 text-slate-600">{p.excerpt}</p>
-                    <div className="mt-4">
+                    <p className="mt-2 text-slate-600 flex-1">{p.excerpt}</p>
+                    <div className="mt-auto pt-4">
                       <Link
                         href={`/blog/${p.slug}`}
-                        className="btn btn-ghost h-9 rounded-full"
+                        className="hover-parent inline-flex items-center gap-2 text-sm font-medium text-slate-900"
                       >
-                        Read
+                        <span className="link-underline-tight">Read more</span>
+                        <span aria-hidden>→</span>
                       </Link>
                     </div>
                   </article>
