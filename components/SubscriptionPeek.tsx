@@ -58,6 +58,7 @@ export default function SubscriptionPeek() {
                 onClick={() => setActiveId(bundle.id)}
                 className={[
                   "btn btn-ghost h-9 px-4 rounded-full text-sm transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)]",
+                  "flex-1 min-w-[120px] sm:flex-none",
                   isActive ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-slate-700 hover:bg-slate-100",
                 ].join(" ")}
               >

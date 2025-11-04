@@ -205,6 +205,7 @@ a, button, [role='button'] { cursor: pointer; }
   position: relative;
   overflow: hidden;
   padding: 1.4rem 1.5rem;
+  direction: ltr;
 }
 @media (min-width: 768px) {
   .marquee-band__inner {
@@ -215,6 +216,7 @@ a, button, [role='button'] { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 3rem;
+  direction: ltr;
   white-space: nowrap;
   width: max-content;
   font-size: clamp(0.85rem, 0.9vw, 1rem);
@@ -232,6 +234,10 @@ a, button, [role='button'] { cursor: pointer; }
 .marquee-band__bullet {
   font-size: 0.65rem;
   opacity: 0.7;
+}
+.lang-ar .marquee-band__item span:first-child {
+  direction: rtl;
+  text-align: right;
 }
 .marquee-band__inner:hover .marquee-band__track {
   animation-play-state: paused;

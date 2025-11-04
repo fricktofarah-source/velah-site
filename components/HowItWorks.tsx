@@ -62,7 +62,7 @@ export default function HowItWorks() {
                     key={s.id}
                     onClick={() => setActive(s.id)}
                     className={[
-                      "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
+                      "inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
                       isActive
                         ? "bg-[var(--velah)] text-slate-900 border-[var(--velah)] hover:bg-[#68bac8]"
                         : "bg-white text-slate-700 hover:bg-slate-100"
@@ -79,7 +79,7 @@ export default function HowItWorks() {
             <div key={active} className="mt-4 animate-pop-in">
               <p className="text-slate-700">{step.body}</p>
 
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                 {step.chips.map((chip) => (
                   <span key={chip} className="chip">{chip}</span>
                 ))}
@@ -132,11 +132,11 @@ export default function HowItWorks() {
 
 /* tiny visuals */
 function Box({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border bg-white/70 backdrop-blur p-3">{children}</div>;
+  return <div className="rounded-xl border bg-white/70 backdrop-blur p-4 sm:p-5">{children}</div>;
 }
 function MockPlan({ items }: { items: Array<{ label: string; value: string }> }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {items.map((item) => (
         <Box key={item.label}>
           <div className="text-xs text-slate-500">{item.label}</div>

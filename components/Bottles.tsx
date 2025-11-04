@@ -34,9 +34,8 @@ export default function Bottles() {
               key={b.key}
               className="group rounded-3xl border bg-white/70 backdrop-blur p-6 sm:p-8 transition hover:-translate-y-1 hover:shadow-soft"
             >
-              <div className="grid grid-cols-[auto_1fr] gap-6 items-center">
-                {/* Image column */}
-                <div className="relative h-48 w-40 sm:h-56 sm:w-48">
+              <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr] gap-6 items-center">
+                <div className="relative h-48 w-36 sm:h-56 sm:w-48">
                   <Image
                     src={b.img}
                     alt={b.name}
@@ -46,7 +45,6 @@ export default function Bottles() {
                   />
                 </div>
 
-                {/* Text column */}
                 <div>
                   <h3 className="text-xl font-semibold">{b.name}</h3>
                   <p className="mt-2 text-slate-600">{b.desc}</p>

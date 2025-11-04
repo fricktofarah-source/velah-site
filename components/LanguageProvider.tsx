@@ -15,19 +15,7 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 const STORAGE_KEY = "velah:lang";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-        if (stored && SUPPORTED_LANGUAGES.includes(stored as Language)) {
-          return stored as Language;
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-    return "EN";
-  });
+  const [language, setLanguageState] = useState<Language>("EN");
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -37,6 +25,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       /* ignore */
     }
   };
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored && SUPPORTED_LANGUAGES.includes(stored as Language)) {
+        setLanguageState(stored as Language);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof document === "undefined") return;

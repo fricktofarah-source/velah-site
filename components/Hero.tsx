@@ -4,6 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { translations } from "@/lib/i18n";
 import { useLanguage } from "./LanguageProvider";
 
 type Slide = { src: string; alt: string; position?: string };
@@ -11,7 +12,7 @@ type Slide = { src: string; alt: string; position?: string };
 export default function Hero() {
   const { language, t } = useLanguage();
   const heroCopy = t.hero;
-  const slides: Slide[] = heroCopy.slides;
+  const slides: Slide[] = heroCopy.slides?.length ? heroCopy.slides : translations.EN.hero.slides;
   const revealClass = useMemo(
     () =>
       "transition-opacity duration-[700ms] ease-[cubic-bezier(.22,1,.36,1)] opacity-0 translate-y-6 animate-[heroReveal_0.7s_ease_0.1s_forwards]",
@@ -47,27 +48,47 @@ export default function Hero() {
       </div>
 
       {/* Full-width slider */}
-      <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden -mt-16 sm:-mt-20">
-        <div className="relative aspect-[20/11] sm:aspect-[22/11] lg:aspect-[24/11]">
-          <div
-            className="flex h-full w-full transition-transform duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)]"
-            style={{ transform: `translateX(-${active * 100}%)` }}
-            aria-live="polite"
-          >
-            {slides.map((slide, idx) => (
-              <div key={`${slide.src}-${idx}`} className="relative h-full w-full shrink-0 min-w-full bg-black">
-                <Image
-                  src={slide.src}
-                  alt={slide.alt}
-                  fill
-                  sizes="100vw"
-                  priority={idx === 0}
-                  className="object-cover object-center"
-                  style={{ objectPosition: slide.position ?? "50% 50%" }}
-                />
+      <div
+        className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden -mt-16 sm:-mt-20"
+        dir="ltr"
+      >
+        <div className="relative aspect-[20/12] sm:aspect-[22/12] lg:aspect-[24/12]" dir="ltr" aria-live="polite">
+          {slides.map((slide, idx) => {
+            const isSvg = slide.src.toLowerCase().endsWith(".svg");
+            const isActive = idx === active;
+            return (
+              <div
+                key={`${slide.src}-${idx}`}
+                className="absolute inset-0 h-full w-full bg-black transition-opacity duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)]"
+                style={{ opacity: isActive ? 1 : 0, visibility: isActive ? "visible" : "hidden" }}
+                aria-hidden={!isActive}
+              >
+                {isSvg ? (
+                  <div
+                    role="img"
+                    aria-label={slide.alt}
+                    className="absolute inset-0 h-full w-full"
+                    style={{
+                      backgroundImage: `url('${slide.src}')`,
+                      backgroundSize: "cover",
+                      backgroundPosition: slide.position ?? "50% 50%",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={slide.src}
+                    alt={slide.alt}
+                    fill
+                    sizes="100vw"
+                    priority={idx === 0}
+                    className="object-cover object-center"
+                    style={{ objectPosition: slide.position ?? "50% 50%" }}
+                  />
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center sm:justify-between items-end px-4 pb-6 sm:px-8 sm:pb-8">
             <div className="hidden sm:block text-xs font-semibold uppercase tracking-[0.26em] text-white/80">
               Velah

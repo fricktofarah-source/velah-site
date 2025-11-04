@@ -20,9 +20,9 @@ export default function HomePage() {
 
       <Bottles />
 
-      <HowItWorks />
-
       <MarqueeBand />
+
+      <HowItWorks />
 
       <Experience />
 

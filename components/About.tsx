@@ -35,12 +35,12 @@ export default function About() {
       <div className="section-shell section-shell--wide">
         <div className="grid md:grid-cols-2 gap-10 sm:gap-12 md:gap-12 items-center">
           <div>
-            <h2 id="about-title" className="text-4xl md:text-5xl font-semibold tracking-tight">{aboutCopy.heading}</h2>
+            <h2 id="about-title" className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">{aboutCopy.heading}</h2>
 
             {aboutCopy.paragraphs.map((paragraph, idx) => (
               <p
                 key={idx}
-                className={`text-lg text-slate-700 leading-relaxed max-w-xl ${idx === 0 ? "mt-5" : "mt-4"}`}
+                className={`text-base sm:text-lg text-slate-700 leading-relaxed max-w-xl ${idx === 0 ? "mt-4" : "mt-3"}`}
               >
                 {paragraph}
               </p>

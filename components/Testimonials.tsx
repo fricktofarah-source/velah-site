@@ -19,16 +19,16 @@ export default function Testimonials() {
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-medium">
               {copy.badge}
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+            <h2 className="mt-3 text-2xl sm:text-4xl font-semibold tracking-tight text-slate-900">
               {copy.heading}
             </h2>
-            <p className="mt-2 text-slate-600 max-w-lg">
+            <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-lg">
               {copy.body}
             </p>
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="mt-8 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           {testimonials.map((item) => (
             <article
               key={item.name}

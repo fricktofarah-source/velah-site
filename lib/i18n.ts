@@ -546,7 +546,7 @@ export const translations: Record<Language, SiteCopy> = {
       secondaryCta: "تعرّف على الحلقة الدائرية",
       slides: [
         {
-          src: "/assets/Dubai_landscape.png",
+          src: "/assets/Dubai_landscape_Arabic.svg",
           alt: "مسار توصيل فيلاه يطل على أفق دبي عند الشروق",
           position: "50% 18%",
         },
