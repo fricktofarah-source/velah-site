@@ -33,20 +33,12 @@ export default function Hero() {
   }, [language, slides.length]);
 
   return (
-    <section
-      className="relative isolate pt-0 pb-16 sm:pb-20"
-      aria-label="Velah reusable glass water service"
-    >
+    <section className="relative isolate bg-white pt-0 pb-16 sm:pb-20" aria-label="Velah reusable glass water service">
       <style>{`
         @keyframes heroReveal {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-white" />
-      </div>
-
       {/* Full-width slider */}
       <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden -mt-16 sm:-mt-20" dir="ltr">
         <div className="relative aspect-[20/12] sm:aspect-[22/12] lg:aspect-[24/12]" dir="ltr" aria-live="polite">
