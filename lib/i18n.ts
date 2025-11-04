@@ -496,7 +496,7 @@ export const translations: Record<Language, SiteCopy> = {
   AR: {
     nav: {
       navLinks: {
-        about: "عن فيلاه",
+        about: "عن فيلا",
         sustainability: "الاستدامة",
         subscription: "الاشتراك",
         blog: "المدونة",
@@ -509,15 +509,15 @@ export const translations: Record<Language, SiteCopy> = {
         { code: "AR", label: "العربية" },
       ],
       suggestions: [
-        { kind: "section", id: "about", label: "عن فيلاه" },
+        { kind: "section", id: "about", label: "عن فيلا" },
         { kind: "section", id: "bottles", label: "العبوات المتاحة" },
-        { kind: "section", id: "how", label: "كيف تعمل فيلاه" },
+        { kind: "section", id: "how", label: "كيف تعمل فيلا" },
         { kind: "section", id: "subscription", label: "خطط الاشتراك" },
         { kind: "section", id: "sustainability", label: "الاستدامة" },
         { kind: "section", id: "voices", label: "آراء العملاء" },
         { kind: "section", id: "blog", label: "من المدونة" },
         { kind: "page", href: "/subscription", label: "نظرة عامة على الاشتراك" },
-        { kind: "page", href: "/about", label: "تعرّف على فيلاه" },
+        { kind: "page", href: "/about", label: "تعرّف على فيلا" },
         { kind: "page", href: "/hydration", label: "ترطيبي" },
         { kind: "post", slug: "why-glass-better-water", label: "لماذا يجعل الزجاج الماء ألذ" },
         { kind: "post", slug: "our-dubai-routes", label: "مسارات التوصيل في دبي" },
@@ -527,7 +527,7 @@ export const translations: Record<Language, SiteCopy> = {
       signIn: "تسجيل الدخول",
       signOut: "تسجيل الخروج",
       waitlistModal: {
-        title: "انضم إلى قائمة انتظار فيلاه",
+        title: "انضم إلى قائمة انتظار فيلا",
         emailLabel: "البريد الإلكتروني",
         areaLabel: "المنطقة (دبي)",
         areaPlaceholder: "مرسى دبي",
@@ -541,7 +541,7 @@ export const translations: Record<Language, SiteCopy> = {
       },
     },
     hero: {
-      badge: "ترطيب فيلاه",
+      badge: "ترطيب فيلا",
       heading: "مياه زجاجية نقية على مسارات أسبوعية هادئة في دبي.",
       body: "تصل القوارير مبردة وجاهزة لمنزلك، نعيد الفارغ في كل زيارة، وتُحكم الأغطية الستانلس كل سكب نظيف.",
       primaryCta: "انضم إلى قائمة الانتظار",
@@ -550,21 +550,21 @@ export const translations: Record<Language, SiteCopy> = {
       slides: [
         {
           src: "/assets/Dubai_landscape_Arabic_v2.png",
-          alt: "مسار توصيل فيلاه يطل على أفق دبي عند الشروق",
+          alt: "مسار توصيل فيلا يطل على أفق دبي عند الشروق",
           position: "50% 18%",
         },
         {
           src: "/assets/velah-nature-1.png",
-          alt: "قوارير فيلاه الزجاجية بجانب فاكهة وأعشاب طازجة",
+          alt: "قوارير فيلا الزجاجية بجانب فاكهة وأعشاب طازجة",
         },
         {
           src: "/assets/Velah_bottle_transparent.png",
-          alt: "قارورة فيلاه الزجاجية على خلفية فاتحة",
+          alt: "قارورة فيلا الزجاجية على خلفية فاتحة",
         },
       ],
     },
     marquee: {
-      ariaLabel: "نصائح الترطيب من فيلاه",
+      ariaLabel: "نصائح الترطيب من فيلا",
       phrases: [
         "اشرب كوب ماء خلال 30 دقيقة من الاستيقاظ",
         "استهدف 500 مل في الساعة خلال حرارة الصيف",
@@ -577,17 +577,17 @@ export const translations: Record<Language, SiteCopy> = {
       ],
     },
     about: {
-      heading: "عن فيلاه",
+      heading: "عن فيلا",
       paragraphs: [
-        "فيلاه هي الماء بلا ضوضاء. نوصله في زجاج قابل لإعادة الاستخدام مع أغطية من الستانلس، ونجمع القوارير الفارغة أسبوعيًا لتبقى الدورة مستمرة.",
+        "فيلا هي الماء بلا ضوضاء. نوصله في زجاج قابل لإعادة الاستخدام مع أغطية من الستانلس، ونجمع القوارير الفارغة أسبوعيًا لتبقى الدورة مستمرة.",
         "الفكرة بسيطة: طعم نقي في المنزل، ونفايات أقل في المدينة. خدمة مدروسة بقدر المنتج. تؤكد التسليمات عند الحاجة، ونتولى نحن الباقي عند بابك.",
-        "فيلاه طقس بسيط في زجاج. نظيف، هادئ، ومصمم ليبقى.",
+        "فيلا طقس بسيط في زجاج. نظيف، هادئ، ومصمم ليبقى.",
       ],
       readMore: "اقرأ المزيد",
       quotes: [
         {
           by: "المؤسس",
-          text: "أنشأنا فيلاه ليكون الماء في المنزل هادئًا ونقيًا ومدروسًا. الزجاج يحافظ على الطعم الصادق، والخدمة تزيل العناء ليبقى الطقس بسيطًا.",
+          text: "أنشأنا فيلا ليكون الماء في المنزل هادئًا ونقيًا ومدروسًا. الزجاج يحافظ على الطعم الصادق، والخدمة تزيل العناء ليبقى الطقس بسيطًا.",
           sub: "قوارير طازجة تصل. والعائدة تُجمع.",
         },
         {
@@ -627,7 +627,7 @@ export const translations: Record<Language, SiteCopy> = {
       addToPlan: "أضف إلى خطتك",
     },
     howItWorks: {
-      heading: "كيف تعمل فيلاه",
+      heading: "كيف تعمل فيلا",
       tagline: "حلقة إعادة تعبئة نظيفة وبسيطة.",
       steps: [
         {
@@ -676,7 +676,7 @@ export const translations: Record<Language, SiteCopy> = {
     experience: {
       badge: "التجربة",
       heading: "زجاج يشعر بأنه جزء من منزلك.",
-      body: "تحمل قوارير فيلاه توازناً معدنياً ثابتًا، تبقى بنكهة محايدة، وتصل مبردة. الأغطية الستانلس محكمة لتنتقل من الإفطار إلى السهرات بلا طعم بلاستيك ولا آثار رطوبة.",
+      body: "تحمل قوارير فيلا توازناً معدنياً ثابتًا، تبقى بنكهة محايدة، وتصل مبردة. الأغطية الستانلس محكمة لتنتقل من الإفطار إلى السهرات بلا طعم بلاستيك ولا آثار رطوبة.",
       cards: [
         {
           title: "جاهز للطاولة",
@@ -688,7 +688,7 @@ export const translations: Record<Language, SiteCopy> = {
         },
       ],
       primaryCta: "شاهد حلقة الزجاج",
-      secondaryCta: "كيف تهيئ فيلاه كل قارورة",
+      secondaryCta: "كيف تهيئ فيلا كل قارورة",
     },
     subscriptionPeek: {
       badge: "معاينة الاشتراك",
@@ -779,14 +779,14 @@ export const translations: Record<Language, SiteCopy> = {
     },
     testimonials: {
       badge: "آراء العملاء",
-      heading: "أشخاص يعتمدون على فيلاه.",
-      body: "من المطابخ الراقية إلى استوديوهات العافية، تبقي فيلاه الماء هادئًا ودائريًا وجاهزًا دائمًا.",
+      heading: "أشخاص يعتمدون على فيلا.",
+      body: "من المطابخ الراقية إلى استوديوهات العافية، تبقي فيلا الماء هادئًا ودائريًا وجاهزًا دائمًا.",
       entries: [
         {
           initials: "LR",
           name: "لينا رحمن",
           role: "الشيف التنفيذي، أتيليه 91",
-          quote: "توقفنا عن تخزين القوارير البلاستيكية في المطبخ. زجاج فيلاه يصل مبردًا، والتوازن المعدني يحافظ على برنامج القهوة لدينا ثابتًا.",
+          quote: "توقفنا عن تخزين القوارير البلاستيكية في المطبخ. زجاج فيلا يصل مبردًا، والتوازن المعدني يحافظ على برنامج القهوة لدينا ثابتًا.",
         },
         {
           initials: "AM",
@@ -798,7 +798,7 @@ export const translations: Record<Language, SiteCopy> = {
           initials: "SA",
           name: "سارة المكتوم",
           role: "مؤسسة، استوديو ميسا",
-          quote: "يلفت انتباه العملاء الديكور الزجاجي فور وصولهم. أزالت فيلاه صداع اللوجستيات وتوافقت مع أهداف الاستدامة لدينا.",
+          quote: "يلفت انتباه العملاء الديكور الزجاجي فور وصولهم. أزالت فيلا صداع اللوجستيات وتوافقت مع أهداف الاستدامة لدينا.",
         },
       ],
     },
@@ -823,7 +823,7 @@ export const translations: Record<Language, SiteCopy> = {
         { label: "الخصوصية", href: "#" },
       ],
       followTitle: "تابعنا",
-      copyright: (year) => `© ${year} فيلاه. جميع الحقوق محفوظة.`,
+      copyright: (year) => `© ${year} فيلا. جميع الحقوق محفوظة.`,
       tagline: "مصنوع من الزجاج لا البلاستيك.",
     },
   },
