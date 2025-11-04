@@ -14,10 +14,14 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
     shortcut: "/icon-192x192.png",
   },
+  themeColor: "#ffffff",
+  appleWebApp: {
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#7FCBD8",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
