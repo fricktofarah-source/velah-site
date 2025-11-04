@@ -44,7 +44,7 @@ export default function Hero() {
       `}</style>
 
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_-10%,rgba(127,203,216,0.18),transparent_75%)]" />
+        <div className="absolute inset-0 bg-white" />
       </div>
 
       {/* Full-width slider */}
@@ -74,16 +74,16 @@ export default function Hero() {
               );
             })}
           </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center sm:justify-between items-end px-4 pb-6 sm:px-8 sm:pb-8">
-            {heroCopy.sliderLabel ? (
-              <div className="hidden sm:block text-xs font-semibold uppercase tracking-[0.26em] text-white/80">
-                {heroCopy.sliderLabel}
-              </div>
-            ) : (
-              <div className="hidden sm:block text-xs font-semibold uppercase tracking-[0.26em] text-white/80">
-                Velah
-              </div>
-            )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex w-full items-end justify-between px-4 pb-6 sm:px-8 sm:pb-8">
+            <div
+              className={`${
+                language === "AR"
+                  ? "text-sm font-semibold text-white/80"
+                  : "text-xs font-semibold uppercase tracking-[0.26em] text-white/80"
+              }`}
+            >
+              {heroCopy.sliderLabel ?? "Velah"}
+            </div>
             <div className="flex items-center gap-2 pointer-events-auto">
               {slides.map((_, idx) => {
                 const isActive = idx === active;
