@@ -42,6 +42,9 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
             const date = new Date(post.date).toLocaleDateString(language === "AR" ? "ar-SA" : "en-US", {
               dateStyle: "medium",
             });
+            const localized = language === "AR" ? post.translations?.AR : undefined;
+            const displayTitle = localized?.title ?? post.title;
+            const displayExcerpt = localized?.excerpt ?? post.excerpt;
 
             return (
               <article
@@ -53,10 +56,10 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
                 </div>
                 <h3 className="mt-2 font-semibold text-lg">
                   <Link href={`/blog/${post.slug}`} className="link-underline">
-                    {post.title}
+                    {displayTitle}
                   </Link>
                 </h3>
-                <p className="mt-2 text-slate-600 flex-1">{post.excerpt}</p>
+                <p className="mt-2 text-slate-600 flex-1">{displayExcerpt}</p>
                 <div className="mt-auto pt-4">
                   <Link
                     href={`/blog/${post.slug}`}

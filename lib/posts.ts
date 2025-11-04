@@ -24,6 +24,15 @@ export type Post = {
   hero?: PostImage & { eyebrow?: string };
   sections?: PostSection[];
   cta?: { label: string; href: string; description?: string };
+  translations?: Partial<
+    Record<
+      "AR",
+      {
+        title?: string;
+        excerpt?: string;
+      }
+    >
+  >;
 };
 
 const joinContent = (sections: PostSection[]): string =>
@@ -91,6 +100,12 @@ export const posts: Post[] = [
       label: "Build your hydration plan",
       href: "/subscription",
       description: "Design a Velah mix that keeps glass within reach all day without plastic.",
+    },
+    translations: {
+      AR: {
+        title: "الترطيب وصفاء الذهن: لماذا الماء المنتظم ضروري",
+        excerpt: "حتى الجفاف البسيط يبطئ سرعة الاستجابة والتركيز. تكتيكات عملية لمناخ الخليج وكيف تجعل فيلا الترطيب عادة بلا عناء.",
+      },
     },
     content: joinContent([
       {
@@ -166,6 +181,12 @@ export const posts: Post[] = [
       label: "See Velah’s refillable loop",
       href: "/sustainability",
       description: "Explore how Velah’s deposit system keeps pure water circulating in glass across Dubai.",
+    },
+    translations: {
+      AR: {
+        title: "الجزيئات البلاستيكية الدقيقة في الماء: المكوّن الخفي الذي نتجنبه",
+        excerpt: "قد تحتوي المياه المعبأة اليوم على ما يصل إلى ٢٤٠ ألف جزء بلاستيكي دقيق في كل لتر. إليك ما تقوله الأبحاث وكيف يحافظ الزجاج مع نظام الإرجاع على نقاء الماء.",
+      },
     },
     content: joinContent([
       {
@@ -244,6 +265,12 @@ export const posts: Post[] = [
       label: "Customize your weekly mix",
       href: "/subscription",
       description: "Choose the Velah bottle formats that match your routine and mineral goals.",
+    },
+    translations: {
+      AR: {
+        title: "المعادن والطعم والأداء: صياغة ملف ماء أفضل",
+        excerpt: "الماء المثالي ليس مجرد H₂O. توازن المعادن يدعم الطعم والتحضير والتعافي، وفيلا تضبط ملفها لتناسب الحياة اليومية.",
+      },
     },
     content: joinContent([
       {

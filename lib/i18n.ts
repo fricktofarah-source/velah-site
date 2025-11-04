@@ -43,6 +43,7 @@ type HeroCopy = {
   body: string;
   primaryCta: string;
   secondaryCta: string;
+  sliderLabel: string;
   slides: Array<{ src: string; alt: string; position?: string }>;
 };
 
@@ -211,6 +212,7 @@ export const translations: Record<Language, SiteCopy> = {
       body: "Chilled bottles arrive ready for your counter, empties return with every swap, and stainless caps keep every pour clean.",
       primaryCta: "Join the waitlist",
       secondaryCta: "Learn about the loop",
+      sliderLabel: "Velah",
       slides: [
         {
           src: "/assets/Dubai_landscape.png",
@@ -544,9 +546,10 @@ export const translations: Record<Language, SiteCopy> = {
       body: "تصل القوارير مبردة وجاهزة لمنزلك، نعيد الفارغ في كل زيارة، وتُحكم الأغطية الستانلس كل سكب نظيف.",
       primaryCta: "انضم إلى قائمة الانتظار",
       secondaryCta: "تعرّف على الحلقة الدائرية",
+      sliderLabel: "فيلا",
       slides: [
         {
-          src: "/assets/Dubai_landscape_Arabic.svg",
+          src: "/assets/Dubai_landscape_Arabic_v2.png",
           alt: "مسار توصيل فيلاه يطل على أفق دبي عند الشروق",
           position: "50% 18%",
         },
