@@ -1,9 +1,6 @@
 // app/about/page.tsx
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
-
-// Client component holds all interactivity (tiny, respectful)
-const AboutClient = dynamic(() => import("../../components/AboutClient"), { ssr: false });
+import ScrollVideo from "@/components/ScrollVideo";
 
 export const metadata: Metadata = {
   title: "About | Velah",
@@ -16,5 +13,20 @@ export const viewport: Viewport = {
 };
 
 export default function AboutPage() {
-  return <AboutClient />;
+  return (
+    <>
+      <div className="-mt-16 sm:-mt-20">
+        <ScrollVideo
+          src="/videos/velah_animation.mp4"
+          showCue={false}
+          showFades={false}
+          transformOnScroll={false}
+          backgroundColor="#fff"
+          minHeight="160vh"
+        />
+      </div>
+
+      <main className="section-shell py-24 sm:py-32" />
+    </>
+  );
 }

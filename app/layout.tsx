@@ -14,7 +14,6 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
     shortcut: "/icon-192x192.png",
   },
-  themeColor: "#ffffff",
   appleWebApp: {
     statusBarStyle: "default",
   },

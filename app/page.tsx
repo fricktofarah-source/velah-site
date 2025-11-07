@@ -1,4 +1,5 @@
 // app/page.tsx
+import type { ReactNode } from "react";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Bottles from "@/components/Bottles";
@@ -7,32 +8,66 @@ import MarqueeBand from "@/components/MarqueeBand";
 import Experience from "@/components/Experience";
 import SubscriptionPeek from "@/components/SubscriptionPeek";
 import ImpactStats from "@/components/ImpactStats";
-import Testimonials from "@/components/Testimonials";
 import BlogPreview from "@/components/BlogPreview";
 import { posts } from "@/lib/posts";
+import SectionReveal from "@/components/SectionReveal";
+
+type SectionConfig = {
+  key: string;
+  render: () => ReactNode;
+  fullBleed?: boolean;
+  animate?: boolean;
+};
+
+const HOME_SECTIONS: SectionConfig[] = [
+  { key: "hero", fullBleed: true, animate: false, render: () => <Hero /> },
+  { key: "about", render: () => <About /> },
+  { key: "bottles", render: () => <Bottles /> },
+  { key: "marquee", fullBleed: true, render: () => <MarqueeBand /> },
+  { key: "how", render: () => <HowItWorks /> },
+  { key: "experience", render: () => <Experience /> },
+  { key: "subscription", render: () => <SubscriptionPeek /> },
+  { key: "impact", render: () => <ImpactStats /> },
+  { key: "blog", render: () => <BlogPreview posts={posts} /> },
+];
 
 export default function HomePage() {
   return (
-    <>
-      <Hero />
+    <main className="home-sections">
+      {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => (
+        <HomeSection
+          key={key}
+          fullBleed={fullBleed}
+          hasDivider={index > 0 && !fullBleed}
+          animate={animate}
+          index={index}
+        >
+          {render()}
+        </HomeSection>
+      ))}
+    </main>
+  );
+}
 
-      <About />
+type HomeSectionProps = {
+  children: ReactNode;
+  fullBleed?: boolean;
+  hasDivider?: boolean;
+  animate?: boolean;
+  index: number;
+};
 
-      <Bottles />
+function HomeSection({ children, fullBleed, hasDivider, animate = true, index }: HomeSectionProps) {
+  const revealDelay = Math.min(index * 0.08, 0.4);
+  const content = animate ? <SectionReveal delay={revealDelay}>{children}</SectionReveal> : children;
 
-      <MarqueeBand />
+  if (fullBleed) {
+    return <>{content}</>;
+  }
 
-      <HowItWorks />
-
-      <Experience />
-
-      <SubscriptionPeek />
-
-      <ImpactStats />
-
-      <Testimonials />
-
-      <BlogPreview posts={posts} />
-    </>
+  return (
+    <div className={hasDivider ? "home-section-block home-section-block--with-divider" : "home-section-block"}>
+      {content}
+    </div>
   );
 }
