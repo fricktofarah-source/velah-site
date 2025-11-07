@@ -37,16 +37,31 @@ export default function HydrationPage() {
 
   /* session listen */
   useEffect(() => {
+    let isMounted = true;
+
     async function init() {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        setSession(data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null);
+      } catch (error) {
+        console.warn("supabase.auth.getSession failed, falling back to guest mode", error);
+        if (isMounted) setSession(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
+
     const sub = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s ? { user: { id: s.user.id, email: s.user.email } } : null);
     });
+
     init();
-    return () => sub.data?.subscription.unsubscribe();
+
+    return () => {
+      isMounted = false;
+      sub.data?.subscription.unsubscribe();
+    };
   }, []);
 
   /* load state */
@@ -121,8 +136,14 @@ export default function HydrationPage() {
       setHistory(list);
     }
 
-    if (session?.user.id) loadAuthed(session.user.id);
-    else loadGuest();
+    if (session?.user.id) {
+      loadAuthed(session.user.id).catch((error) => {
+        console.warn("Failed to load hydration data for user, falling back to guest mode", error);
+        loadGuest();
+      });
+    } else {
+      loadGuest();
+    }
   }, [loading, session?.user.id, today]);
 
   /* midnight reset (keeps history) */
@@ -294,9 +315,9 @@ export default function HydrationPage() {
               const p = goal ? Math.min(100, Math.round((d.intake_ml / goal) * 100)) : 0;
               return (
                 <div key={d.day} className="flex flex-col items-center">
-                  <div className="h-40 w-7 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="relative h-40 w-7 rounded-full bg-slate-200 overflow-hidden">
                     <div
-                      className="w-full rounded-t-full bg-[var(--velah)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]"
+                      className="absolute inset-x-0 bottom-0 rounded-t-full bg-[var(--velah)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)]"
                       style={{ height: `${p}%` }}
                       title={`${fmt(d.intake_ml)} ml`}
                     />
