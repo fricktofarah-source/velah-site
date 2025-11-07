@@ -9,6 +9,10 @@ type SectionRevealProps = {
   once?: boolean;
 };
 
+type SectionRevealStyle = CSSProperties & {
+  "--section-reveal-delay"?: string;
+};
+
 export default function SectionReveal({ children, delay = 0, once = true }: SectionRevealProps) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -42,7 +46,7 @@ export default function SectionReveal({ children, delay = 0, once = true }: Sect
     return () => observer.disconnect();
   }, [once]);
 
-  const style: CSSProperties = delay
+  const style: SectionRevealStyle = delay
     ? {
         ["--section-reveal-delay" as const]: `${delay}s`,
       }
