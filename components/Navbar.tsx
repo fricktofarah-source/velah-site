@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
+import { useStandaloneMode } from "@/lib/useStandaloneMode";
 
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
@@ -225,7 +226,22 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const { isStandaloneDisplay } = useStandaloneMode();
   const navLinks = t.nav.navLinks;
+  const allNavItems: Array<
+    | { key: "about" | "sustainability" | "subscription" | "blog"; label: string; type: "section"; sectionId: string }
+    | { key: "hydration"; label: string; type: "route"; href: string }
+  > = [
+    { key: "about", label: navLinks.about, type: "section", sectionId: "about" },
+    { key: "sustainability", label: navLinks.sustainability, type: "section", sectionId: "sustainability" },
+    { key: "subscription", label: navLinks.subscription, type: "section", sectionId: "subscription" },
+    { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
+    { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
+  ];
+  const standaloneNavKeys = new Set(["subscription", "hydration"]);
+  const visibleNavItems = isStandaloneDisplay
+    ? allNavItems.filter((item) => standaloneNavKeys.has(item.key))
+    : allNavItems;
   const waitlistCopy = t.nav.waitlistModal;
   const languageOptions = t.nav.languages;
   const currentLanguageLabel =
@@ -281,21 +297,25 @@ export default function Navbar() {
 
           {/* MIDDLE: Centered nav */}
           <div className="hidden md:flex items-center justify-center md:justify-center gap-7 whitespace-nowrap justify-self-center md:col-start-2 min-w-0">
-            <a href="#about" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("about"); }}>
-              {navLinks.about}
-            </a>
-            <a href="#sustainability" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("sustainability"); }}>
-              {navLinks.sustainability}
-            </a>
-            <a href="#subscription" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("subscription"); }}>
-              {navLinks.subscription}
-            </a>
-            <a href="#blog" className="nav-link" onClick={(e) => { e.preventDefault(); goSection("blog"); }}>
-              {navLinks.blog}
-            </a>
-            <Link href="/hydration" className="nav-link">
-              {navLinks.hydration}
-            </Link>
+            {visibleNavItems.map((item) =>
+              item.type === "section" ? (
+                <a
+                  key={item.key}
+                  href={`#${item.sectionId}`}
+                  className="nav-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    goSection(item.sectionId);
+                  }}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link key={item.key} href={item.href} className="nav-link">
+                  {item.label}
+                </Link>
+              )
+            )}
           </div>
 
           {/* RIGHT: Controls (search grows; still doesn’t move the center) */}
@@ -497,11 +517,33 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 z-[50] bg-black/0" onClick={() => setMobileOpen(false)}>
           <div className="absolute left-0 right-0 top-[80px] mx-4 rounded-2xl border bg-white shadow-soft animate-pop-in" onClick={(e) => e.stopPropagation()}>
             <nav className="p-2">
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("about")}>{navLinks.about}</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("sustainability")}>{navLinks.sustainability}</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("subscription")}>{navLinks.subscription}</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => goSection("blog")}>{navLinks.blog}</button>
-              <button type="button" className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50" onClick={() => router.push("/hydration")}>{navLinks.hydration}</button>
+              {visibleNavItems.map((item) =>
+                item.type === "section" ? (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50"
+                    onClick={() => {
+                      goSection(item.sectionId);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50"
+                    onClick={() => {
+                      router.push(item.href);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                )
+              )}
               <div className="h-2" />
               <div className="px-4 py-2 border-t border-slate-200 mb-2">
                 <div className="text-xs uppercase tracking-[0.15em] text-slate-500 mb-2">
