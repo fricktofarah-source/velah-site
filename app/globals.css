@@ -225,6 +225,9 @@ a, button, [role='button'] { cursor: pointer; }
     padding-top: 0;
     padding-bottom: clamp(5rem, 14vw, 6.5rem);
   }
+  body.standalone-app {
+    overflow-x: hidden;
+  }
   .standalone-hydration .standalone-hydration-grid {
     display: grid;
     gap: 1.5rem;

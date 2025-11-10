@@ -322,7 +322,7 @@ export default function HydrationPage() {
         {/* HISTORY */}
         <section className="mt-10 card p-6">
           <h3 className="text-lg font-semibold">{t.hydration.historyHeading}</h3>
-          <div className="mt-4 grid grid-cols-7 gap-3 small:grid-cols-5 small:gap-2">
+          <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-7 sm:gap-3">
             {history.map((d) => {
               const p = goal ? Math.min(100, Math.round((d.intake_ml / goal) * 100)) : 0;
               return (

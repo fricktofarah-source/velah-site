@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import Subscription from "@/components/Subscription";
 import { useLanguage } from "./LanguageProvider";
 
 type StandaloneView = "about" | "subscription";
@@ -12,21 +13,11 @@ export default function StandaloneHome() {
   const hero = t.hero;
   const aboutCopy = t.about;
   const subscription = t.subscriptionPeek;
-  const bundles = subscription.bundles;
   const bottles = t.bottles.items;
 
-  const [activeBundleId, setActiveBundleId] = useState(bundles[0]?.id ?? "");
   const [view, setView] = useState<StandaloneView>("about");
 
-  const activeBundle = useMemo(() => {
-    return bundles.find((bundle) => bundle.id === activeBundleId) ?? bundles[0] ?? null;
-  }, [bundles, activeBundleId]);
-
   const openWaitlist = () => window.dispatchEvent(new Event("velah:open-waitlist"));
-
-  const scrollToSubscription = () => {
-    document.getElementById("standalone-subscription")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const handleBottleSelect = (key: (typeof bottles)[number]["key"]) => {
     try {
@@ -36,9 +27,6 @@ export default function StandaloneHome() {
     }
     if (view !== "subscription") {
       setView("subscription");
-      setTimeout(scrollToSubscription, 60);
-    } else {
-      scrollToSubscription();
     }
   };
 
@@ -128,55 +116,9 @@ export default function StandaloneHome() {
           <p className="text-sm text-slate-600">{subscription.nextStepsBody}</p>
         </div>
 
-        <div className="standalone-bundle-tabs">
-          {bundles.map((bundle) => {
-            const isActive = bundle.id === activeBundleId;
-            return (
-              <button key={bundle.id} type="button" className={isActive ? "is-active" : undefined} onClick={() => setActiveBundleId(bundle.id)}>
-                {bundle.name}
-              </button>
-            );
-          })}
+        <div className="mt-6">
+          <Subscription />
         </div>
-
-        {activeBundle && (
-          <div className="standalone-bundle-card">
-            <div className="standalone-bundle-card__mix">
-              {activeBundle.mix.map((item) => (
-                <div key={item.label} className="standalone-pill">
-                  <div className="standalone-label">{item.label}</div>
-                  <div className="mt-1 text-2xl font-semibold text-slate-900">{item.amount}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4 space-y-2 text-sm text-slate-600">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-900">{activeBundle.servings}</span>
-                <span>{subscription.priceNote}</span>
-              </div>
-              <div className="text-2xl font-semibold text-slate-900">{activeBundle.price}</div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 p-4 space-y-3 text-sm text-slate-600">
-              <div>
-                <div className="standalone-label">{subscription.deliveryHeadline}</div>
-                <ul className="mt-2 space-y-1">
-                  {subscription.deliveryItems.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <div className="standalone-label">{subscription.nextStepsHeadline}</div>
-                <p className="mt-2">{subscription.nextStepsBody}</p>
-              </div>
-              <button type="button" className="btn btn-primary standalone-primary-btn" onClick={openWaitlist}>
-                {subscription.joinWaitlist}
-              </button>
-            </div>
-          </div>
-        )}
       </section>
 
       <section className="standalone-section">

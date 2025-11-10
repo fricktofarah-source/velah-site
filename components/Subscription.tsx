@@ -60,7 +60,7 @@ function suggestMix(weeklyLiters: number): MixItem[] {
     .map(([size, qty]) => ({ size, qty }));
 }
 
-export default function Subscription() {
+export default function Subscription({ compact = false }: { compact?: boolean }) {
   // Inputs
   const [people, setPeople] = useState(2);
   const [glassesPerPerson, setGlassesPerPerson] = useState(8); // per day
@@ -163,9 +163,9 @@ export default function Subscription() {
     setter((prev: number) => clamp(prev + dir));
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 items-start">
+    <div className={compact ? "grid gap-6" : "grid gap-8 md:grid-cols-2 items-start"}>
       {/* Inputs */}
-      <div className="card p-6">
+      <div className={`card ${compact ? "p-4" : "p-6"}`}>
         {/* Slim step header */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tell us about your week</h3>
@@ -215,7 +215,7 @@ export default function Subscription() {
       </div>
 
       {/* Plan + Edit */}
-      <div className="card p-6">
+      <div className={`card ${compact ? "p-4" : "p-6"}`}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Your weekly plan</h3>
 
