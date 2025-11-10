@@ -223,6 +223,7 @@ a, button, [role='button'] { cursor: pointer; }
   }
   body.standalone-app #content {
     padding-top: 0;
+    padding-bottom: clamp(5rem, 14vw, 6.5rem);
   }
   .standalone-bottom-nav {
     position: fixed;
@@ -233,7 +234,7 @@ a, button, [role='button'] { cursor: pointer; }
     display: flex;
     gap: 0.35rem;
     border-radius: 1rem;
-    background: rgba(15, 23, 42, 0.92);
+    background: var(--velah);
     padding: 0.4rem;
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
     z-index: 80;
@@ -242,7 +243,7 @@ a, button, [role='button'] { cursor: pointer; }
     flex: 1;
     border: none;
     background: transparent;
-    color: rgba(241, 245, 249, 0.85);
+    color: #0f172a;
     border-radius: 0.85rem;
     height: 2.75rem;
     display: flex;
@@ -251,8 +252,8 @@ a, button, [role='button'] { cursor: pointer; }
     transition: background 0.2s ease, color 0.2s ease;
   }
   .standalone-bottom-nav button.is-active {
-    background: #fff;
-    color: #0f172a;
+    background: #0f172a;
+    color: #fff;
   }
   .section-reveal {
     opacity: 0;
