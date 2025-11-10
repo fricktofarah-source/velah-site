@@ -14,6 +14,7 @@ export type PostSection = {
 };
 
 export type Post = {
+  category?: string;
   slug: string;
   title: string;
   excerpt: string;
