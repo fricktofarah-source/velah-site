@@ -1,4 +1,5 @@
 // app/page.tsx
+'use client';
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
