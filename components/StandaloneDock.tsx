@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useStandaloneMode } from "@/lib/useStandaloneMode";
 import { useLanguage } from "./LanguageProvider";
 
-type DockView = "about" | "subscription";
+type DockView = "about" | "subscription" | "blog";
 
 export default function StandaloneDock() {
   const { isStandaloneDisplay } = useStandaloneMode();
@@ -18,11 +18,11 @@ export default function StandaloneDock() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.sessionStorage.getItem("standalone:last-view");
-    if (stored === "subscription" || stored === "about") setHomeView(stored);
+    if (stored === "subscription" || stored === "about" || stored === "blog") setHomeView(stored);
 
     const onViewChange = (event: Event) => {
       const detail = (event as CustomEvent<DockView>).detail;
-      if (detail === "subscription" || detail === "about") {
+      if (detail === "subscription" || detail === "about" || detail === "blog") {
         setHomeView(detail);
         window.sessionStorage.setItem("standalone:last-view", detail);
       }
@@ -51,6 +51,7 @@ export default function StandaloneDock() {
 
   const aboutActive = pathname === "/" && homeView === "about";
   const subActive = pathname === "/" && homeView === "subscription";
+  const blogActive = pathname === "/" && homeView === "blog";
   const hydrationActive = pathname.startsWith("/hydration");
 
   return (
@@ -81,6 +82,21 @@ export default function StandaloneDock() {
           <path
             fill="currentColor"
             d="M7 4h10l3 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9l3-5zm1.7 2-2 3H17.3l-2-3H8.7zM6 11v8h12v-8H6z"
+          />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        className={blogActive ? "is-active" : undefined}
+        aria-label={t.blog.heading}
+        aria-current={blogActive ? "page" : undefined}
+        onClick={() => goToHomeView("blog")}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
+          <path
+            fill="currentColor"
+            d="M6 4h11a1 1 0 0 1 1 1v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h10V6H6zm2 2h6v2H8V8zm0 4h6v2H8v-2z"
           />
         </svg>
       </button>

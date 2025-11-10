@@ -7,7 +7,7 @@ import Subscription from "@/components/Subscription";
 import { posts } from "@/lib/posts";
 import { useLanguage } from "./LanguageProvider";
 
-type StandaloneView = "about" | "subscription";
+type StandaloneView = "about" | "subscription" | "blog";
 
 export default function StandaloneHome() {
   const { t } = useLanguage();
@@ -35,17 +35,17 @@ export default function StandaloneHome() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const target = window.sessionStorage.getItem("standalone:target-view");
-    if (target === "subscription" || target === "about") {
+    if (target === "subscription" || target === "about" || target === "blog") {
       setView(target);
       window.sessionStorage.removeItem("standalone:target-view");
     } else {
       const stored = window.sessionStorage.getItem("standalone:last-view");
-      if (stored === "subscription" || stored === "about") setView(stored);
+      if (stored === "subscription" || stored === "about" || stored === "blog") setView(stored);
     }
 
     const onSetView = (event: Event) => {
       const detail = (event as CustomEvent<StandaloneView>).detail;
-      if (detail === "subscription" || detail === "about") {
+      if (detail === "subscription" || detail === "about" || detail === "blog") {
         setView(detail);
       }
     };
@@ -89,6 +89,55 @@ export default function StandaloneHome() {
               </div>
               <span aria-hidden>→</span>
             </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+
+  const BlogView = (
+    <>
+      <section className="standalone-hero-card">
+        <span className="standalone-badge">{t.blog.heading}</span>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{t.blog.mobileButton}</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          {t.blog.readMore}
+        </p>
+        <div className="standalone-hero__actions">
+          <Link href="/blog" className="btn btn-primary standalone-primary-btn">
+            {t.blog.allPosts}
+          </Link>
+          <button type="button" className="btn btn-ghost standalone-ghost-btn" onClick={openWaitlist}>
+            {subscription.joinWaitlist}
+          </button>
+        </div>
+      </section>
+
+      <section className="standalone-section">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">{t.blog.heading}</h3>
+            <p className="text-sm text-slate-600 mt-1">{t.blog.mobileButton}</p>
+          </div>
+          <Link href="/blog" className="btn btn-ghost text-sm">
+            {t.blog.allPosts}
+          </Link>
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {blogPosts.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2 hover:-translate-y-0.5 transition"
+            >
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                {post.category ?? post.tags?.[0] ?? "Journal"}
+              </div>
+              <div className="text-lg font-semibold text-slate-900 leading-tight">{post.title}</div>
+              <p className="text-sm text-slate-600 line-clamp-2">{post.excerpt}</p>
+              <span className="text-sm font-semibold text-[var(--velah)]">Read →</span>
+            </Link>
           ))}
         </div>
       </section>
@@ -140,35 +189,6 @@ export default function StandaloneHome() {
         </div>
       </section>
 
-      <section className="standalone-section">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-xl font-semibold text-slate-900">{t.blog.heading}</h3>
-            <p className="text-sm text-slate-600 mt-1">{t.blog.mobileButton}</p>
-          </div>
-          <Link href="/blog" className="btn btn-ghost text-sm">
-            {t.blog.allPosts}
-          </Link>
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {blogPosts.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2 hover:-translate-y-0.5 transition"
-            >
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                {post.category ?? post.tags?.[0] ?? "Journal"}
-              </div>
-              <div className="text-lg font-semibold text-slate-900 leading-tight">{post.title}</div>
-              <p className="text-sm text-slate-600 line-clamp-2">{post.excerpt}</p>
-              <span className="text-sm font-semibold text-[var(--velah)]">Read →</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       <section id="standalone-subscription" className="standalone-section">
         <div className="flex flex-col gap-1 text-left">
           <span className="standalone-badge">{subscription.badge}</span>
@@ -214,6 +234,7 @@ export default function StandaloneHome() {
     <div className="standalone-home">
       <div className="standalone-home__content">
         {view === "about" && AboutView}
+        {view === "blog" && BlogView}
         {view === "subscription" && SubscriptionView}
       </div>
     </div>
