@@ -143,6 +143,28 @@ type FooterCopy = {
   tagline: string;
 };
 
+type HydrationCopy = {
+  title: string;
+  statusSignedIn: string;
+  statusSignedInAs: (email: string) => string;
+  statusGuest: string;
+  todayHeading: string;
+  dailyGoalLabel: string;
+  dailyGoalPlaceholder: string;
+  saveGoal: string;
+  quickAdd: string;
+  customAmountLabel: string;
+  customAmountPlaceholder: string;
+  customAmountCta: string;
+  adjustTotalLabel: string;
+  setTotalLabel: string;
+  setTotalPlaceholder: string;
+  setTotalCta: string;
+  resetToday: string;
+  historyHeading: string;
+  unitMl: string;
+};
+
 type SiteCopy = {
   nav: NavCopy;
   hero: HeroCopy;
@@ -156,6 +178,7 @@ type SiteCopy = {
   testimonials: TestimonialsCopy;
   blog: BlogCopy;
   footer: FooterCopy;
+  hydration: HydrationCopy;
 };
 
 export const translations: Record<Language, SiteCopy> = {
@@ -491,6 +514,27 @@ export const translations: Record<Language, SiteCopy> = {
       copyright: (year) => `© ${year} Velah. All rights reserved.`,
       tagline: "Made with glass, not plastic.",
     },
+    hydration: {
+      title: "My hydration",
+      statusSignedIn: "Signed in",
+      statusSignedInAs: (email) => `Signed in as ${email}`,
+      statusGuest: "Guest mode",
+      todayHeading: "Today",
+      dailyGoalLabel: "Daily goal (ml)",
+      dailyGoalPlaceholder: "e.g., 2000",
+      saveGoal: "Save goal",
+      quickAdd: "Quick add",
+      customAmountLabel: "Custom amount",
+      customAmountPlaceholder: "Custom",
+      customAmountCta: "Add",
+      adjustTotalLabel: "Adjust total",
+      setTotalLabel: "Set total",
+      setTotalPlaceholder: "Set total",
+      setTotalCta: "Set total",
+      resetToday: "Reset today",
+      historyHeading: "Last 7 days",
+      unitMl: "ml",
+    },
   },
   AR: {
     nav: {
@@ -823,6 +867,27 @@ export const translations: Record<Language, SiteCopy> = {
       followTitle: "تابعنا",
       copyright: (year) => `© ${year} فيلا. جميع الحقوق محفوظة.`,
       tagline: "مصنوع من الزجاج لا البلاستيك.",
+    },
+    hydration: {
+      title: "ترطيبي",
+      statusSignedIn: "تم تسجيل الدخول",
+      statusSignedInAs: (email) => `تم تسجيل الدخول كـ ${email}`,
+      statusGuest: "وضع الضيف",
+      todayHeading: "اليوم",
+      dailyGoalLabel: "الهدف اليومي (مل)",
+      dailyGoalPlaceholder: "مثال: ٢٠٠٠",
+      saveGoal: "احفظ الهدف",
+      quickAdd: "إضافة سريعة",
+      customAmountLabel: "كمية مخصصة",
+      customAmountPlaceholder: "مخصص",
+      customAmountCta: "أضف",
+      adjustTotalLabel: "ضبط الإجمالي",
+      setTotalLabel: "تعيين الإجمالي",
+      setTotalPlaceholder: "أدخل الإجمالي",
+      setTotalCta: "تعيين",
+      resetToday: "إعادة تعيين اليوم",
+      historyHeading: "آخر ٧ أيام",
+      unitMl: "مل",
     },
   },
 } as const;

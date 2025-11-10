@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import AddToHome from "../../components/AddToHome";
+import { useLanguage } from "@/components/LanguageProvider";
 
 /* ---------- helpers ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -15,6 +16,7 @@ type SessionLike = { user: { id: string; email?: string | null } } | null;
 type HistoryItem = { day: string; intake_ml: number };
 
 export default function HydrationPage() {
+  const { t } = useLanguage();
   /* auth/session */
   const [session, setSession] = useState<SessionLike>(null);
   const [loading, setLoading] = useState(true);
@@ -204,9 +206,13 @@ export default function HydrationPage() {
     <main className="min-h-[calc(100vh-80px)] bg-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
         <header className="flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-semibold tracking-tight">My hydration</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t.hydration.title}</h1>
           <div className="text-sm text-slate-500">
-            {session ? `Signed in${session.user.email ? ` as ${session.user.email}` : ""}` : "Guest mode"}
+            {session
+              ? session.user.email
+                ? t.hydration.statusSignedInAs(session.user.email)
+                : t.hydration.statusSignedIn
+              : t.hydration.statusGuest}
           </div>
         </header>
 
@@ -220,15 +226,15 @@ export default function HydrationPage() {
 
           {/* Goal + Quick actions */}
           <div className="card p-6">
-            <h2 className="text-xl font-semibold">Today</h2>
+            <h2 className="text-xl font-semibold">{t.hydration.todayHeading}</h2>
             <p className="text-slate-600 mt-1">
-              {fmt(intake)} ml {goal ? <>/ {fmt(goal)} ml</> : null}
+              {fmt(intake)} {t.hydration.unitMl} {goal ? <>/ {fmt(goal)} {t.hydration.unitMl}</> : null}
             </p>
 
             {/* Set goal */}
             <div className="mt-5">
               <label className="text-sm text-slate-600" htmlFor="daily-goal">
-                Daily goal (ml)
+                {t.hydration.dailyGoalLabel}
               </label>
               <div className="mt-2 flex items-center gap-2">
                 <input
@@ -236,19 +242,19 @@ export default function HydrationPage() {
                   type="number"
                   inputMode="numeric"
                   className="border rounded-2xl px-3 py-2 w-36 focus-ring"
-                  placeholder="e.g., 2000"
+                  placeholder={t.hydration.dailyGoalPlaceholder}
                   value={goalInput}
                   onChange={(e) => setGoalInput(e.target.value)}
                 />
                 <button onClick={saveGoal} className="btn btn-primary h-10 px-4 rounded-full">
-                  Save goal
+                  {t.hydration.saveGoal}
                 </button>
               </div>
             </div>
 
             {/* Quick add */}
             <div className="mt-6">
-              <div className="text-sm text-slate-600 mb-2">Quick add</div>
+              <div className="text-sm text-slate-600 mb-2">{t.hydration.quickAdd}</div>
               <div className="flex flex-wrap items-center gap-2">
                 {[250, 330, 500, 750].map((n) => (
                   <button key={n} onClick={() => add(n)} className="btn btn-ghost h-10 px-4 rounded-full">
@@ -256,13 +262,15 @@ export default function HydrationPage() {
                   </button>
                 ))}
                 <div className="flex items-center gap-2">
-                  <label className="sr-only" htmlFor="custom-add">Custom amount</label>
+                  <label className="sr-only" htmlFor="custom-add">
+                    {t.hydration.customAmountLabel}
+                  </label>
                   <input
                     id="custom-add"
                     type="number"
                     inputMode="numeric"
                     className="border rounded-2xl px-3 py-2 w-28 focus-ring"
-                    placeholder="Custom"
+                    placeholder={t.hydration.customAmountPlaceholder}
                     value={customAdd}
                     onChange={(e) => setCustomAdd(e.target.value)}
                   />
@@ -273,7 +281,7 @@ export default function HydrationPage() {
                     }}
                     className="btn btn-primary h-10 px-4 rounded-full"
                   >
-                    Add
+                    {t.hydration.customAmountCta}
                   </button>
                 </div>
               </div>
@@ -281,15 +289,17 @@ export default function HydrationPage() {
 
             {/* Set exact / reset */}
             <div className="mt-6">
-              <div className="text-sm text-slate-600 mb-2">Adjust total</div>
+              <div className="text-sm text-slate-600 mb-2">{t.hydration.adjustTotalLabel}</div>
               <div className="flex items-center gap-2">
-                <label className="sr-only" htmlFor="set-total">Set total</label>
+                <label className="sr-only" htmlFor="set-total">
+                  {t.hydration.setTotalLabel}
+                </label>
                 <input
                   id="set-total"
                   type="number"
                   inputMode="numeric"
                   className="border rounded-2xl px-3 py-2 w-32 focus-ring"
-                  placeholder="Set total"
+                  placeholder={t.hydration.setTotalPlaceholder}
                   value={adjustInput}
                   onChange={(e) => setAdjustInput(e.target.value)}
                 />
@@ -297,10 +307,10 @@ export default function HydrationPage() {
                   onClick={() => setTotal(Number(adjustInput || 0))}
                   className="btn btn-ghost h-10 px-4 rounded-full"
                 >
-                  Set total
+                  {t.hydration.setTotalCta}
                 </button>
                 <button onClick={() => setTotal(0)} className="btn btn-ghost h-10 px-4 rounded-full">
-                  Reset today
+                  {t.hydration.resetToday}
                 </button>
               </div>
             </div>
@@ -309,7 +319,7 @@ export default function HydrationPage() {
 
         {/* HISTORY */}
         <section className="mt-10 card p-6">
-          <h3 className="text-lg font-semibold">Last 7 days</h3>
+          <h3 className="text-lg font-semibold">{t.hydration.historyHeading}</h3>
           <div className="mt-4 grid grid-cols-7 gap-3">
             {history.map((d) => {
               const p = goal ? Math.min(100, Math.round((d.intake_ml / goal) * 100)) : 0;

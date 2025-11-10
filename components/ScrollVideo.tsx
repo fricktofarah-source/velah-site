@@ -138,7 +138,7 @@ export default function ScrollVideo({
       removeMotionListener();
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [transformOnScroll]);
 
   return (
     <section

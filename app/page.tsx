@@ -1,5 +1,5 @@
 // app/page.tsx
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Bottles from "@/components/Bottles";
@@ -19,6 +19,8 @@ type SectionConfig = {
   animate?: boolean;
 };
 
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
+
 const HOME_SECTIONS: SectionConfig[] = [
   { key: "hero", fullBleed: true, animate: false, render: () => <Hero /> },
   { key: "about", render: () => <About /> },
@@ -31,10 +33,72 @@ const HOME_SECTIONS: SectionConfig[] = [
   { key: "blog", render: () => <BlogPreview posts={posts} /> },
 ];
 
+const STANDALONE_SECTION_KEYS = new Set(["hero", "bottles", "subscription", "how"]);
+
+function isStandaloneDisplay() {
+  if (typeof window === "undefined") return false;
+  const standaloneMedia = window.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
+  const iosStandalone = ((window.navigator as NavigatorWithStandalone | undefined)?.standalone ?? false) === true;
+  return standaloneMedia || iosStandalone;
+}
+
 export default function HomePage() {
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const update = () => setIsStandalone(isStandaloneDisplay());
+    update();
+    const media = window.matchMedia?.("(display-mode: standalone)");
+    if (media?.addEventListener) {
+      media.addEventListener("change", update);
+    } else if (media?.addListener) {
+      media.addListener(update);
+    }
+    window.addEventListener("visibilitychange", update);
+    window.addEventListener("resize", update);
+    return () => {
+      if (media?.removeEventListener) {
+        media.removeEventListener("change", update);
+      } else if (media?.removeListener) {
+        media.removeListener(update);
+      }
+      window.removeEventListener("visibilitychange", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setIsMobileViewport(mq.matches);
+    apply();
+    const listener = (event: MediaQueryListEvent) => setIsMobileViewport(event.matches);
+    if (mq.addEventListener) {
+      mq.addEventListener("change", listener);
+    } else {
+      mq.addListener(listener);
+    }
+    return () => {
+      if (mq.removeEventListener) {
+        mq.removeEventListener("change", listener);
+      } else {
+        mq.removeListener(listener);
+      }
+    };
+  }, []);
+
+  const isStandaloneMobile = isStandalone && isMobileViewport;
+
+  const sections = useMemo(() => {
+    if (!isStandaloneMobile) return HOME_SECTIONS;
+    return HOME_SECTIONS.filter((section) => STANDALONE_SECTION_KEYS.has(section.key));
+  }, [isStandaloneMobile]);
+
   return (
-    <main className="home-sections">
-      {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => (
+    <main className={isStandaloneMobile ? "home-sections home-sections--standalone" : "home-sections"}>
+      {sections.map(({ key, render, fullBleed, animate }, index) => (
         <HomeSection
           key={key}
           fullBleed={fullBleed}
