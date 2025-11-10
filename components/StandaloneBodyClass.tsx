@@ -9,8 +9,7 @@ export default function StandaloneBodyClass() {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const body = document.body;
-    body.classList.toggle("standalone-app", isStandaloneDisplay);
+    document.body.classList.toggle("standalone-app", isStandaloneDisplay);
 
     const meta = document.querySelector('meta[name="viewport"]');
     if (meta && originalViewportRef.current === null) {
@@ -18,14 +17,17 @@ export default function StandaloneBodyClass() {
     }
     if (meta) {
       if (isStandaloneDisplay) {
-        meta.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
+        meta.setAttribute(
+          "content",
+          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        );
       } else if (originalViewportRef.current) {
         meta.setAttribute("content", originalViewportRef.current);
       }
     }
 
     return () => {
-      body.classList.remove("standalone-app");
+      document.body.classList.remove("standalone-app");
       if (meta && originalViewportRef.current) {
         meta.setAttribute("content", originalViewportRef.current);
       }

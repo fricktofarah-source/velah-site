@@ -203,11 +203,11 @@ export default function HydrationPage() {
 
   /* UI */
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-white">
+    <main className="min-h-[calc(100vh-80px)] bg-white standalone-hydration">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <header className="flex items-center justify-between gap-4">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">{t.hydration.title}</h1>
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-slate-500 text-right sm:text-left">
             {session
               ? session.user.email
                 ? t.hydration.statusSignedInAs(session.user.email)
@@ -217,7 +217,7 @@ export default function HydrationPage() {
         </header>
 
         {/* PROGRESS RING */}
-        <section className="mt-8 grid lg:grid-cols-[1.1fr_.9fr] gap-10 items-center">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_.9fr] items-start">
           <ProgressRing
             percent={percent}
             numerator={intake}
@@ -225,18 +225,20 @@ export default function HydrationPage() {
           />
 
           {/* Goal + Quick actions */}
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold">{t.hydration.todayHeading}</h2>
-            <p className="text-slate-600 mt-1">
+          <div className="card p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold">{t.hydration.todayHeading}</h2>
+              <p className="text-slate-600 mt-1">
               {fmt(intake)} {t.hydration.unitMl} {goal ? <>/ {fmt(goal)} {t.hydration.unitMl}</> : null}
             </p>
+            </div>
 
             {/* Set goal */}
             <div className="mt-5">
               <label className="text-sm text-slate-600" htmlFor="daily-goal">
                 {t.hydration.dailyGoalLabel}
               </label>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <input
                   id="daily-goal"
                   type="number"
@@ -320,7 +322,7 @@ export default function HydrationPage() {
         {/* HISTORY */}
         <section className="mt-10 card p-6">
           <h3 className="text-lg font-semibold">{t.hydration.historyHeading}</h3>
-          <div className="mt-4 grid grid-cols-7 gap-3">
+          <div className="mt-4 grid grid-cols-7 gap-3 small:grid-cols-5 small:gap-2">
             {history.map((d) => {
               const p = goal ? Math.min(100, Math.round((d.intake_ml / goal) * 100)) : 0;
               return (
