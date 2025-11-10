@@ -30,9 +30,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Mobile menu
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   // Search
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);     // pill expanded
@@ -95,7 +92,6 @@ export default function Navbar() {
   }
 
   function goSection(id: string) {
-    setMobileOpen(false);
     if (pathname === "/") {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
@@ -104,15 +100,6 @@ export default function Navbar() {
   }
 
   // -------- Effects --------
-
-  // Close mobile menu on md+
-  useEffect(() => {
-    function onResize() {
-      if (window.innerWidth >= 768) setMobileOpen(false);
-    }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   useEffect(() => {
     setZone(t.nav.waitlistModal.areaPlaceholder);
@@ -405,7 +392,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-            <div ref={langWrapRef} className="relative hidden sm:block">
+            <div ref={langWrapRef} className="relative">
               <button
                 type="button"
                 onClick={() => setLangMenuOpen((prev) => !prev)}
@@ -494,92 +481,9 @@ export default function Navbar() {
             >
               {t.nav.joinWaitlist}
             </button>
-
-            {/* Mobile hamburger */}
-            <button
-              type="button"
-              className="md:hidden btn btn-ghost btn-no-arrow h-9 px-3 rounded-full focus-ring"
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              onClick={() => setMobileOpen((v) => !v)}
-            >
-              <span className="relative block w-5 h-5">
-                <span className={`absolute left-0 top-1 block h-[2px] w-5 bg-current transition-transform duration-300 ${mobileOpen ? "translate-y-2 rotate-45" : ""}`} />
-                <span className={`absolute left-0 top-2.5 block h-[2px] w-5 bg-current transition-opacity duration-300 ${mobileOpen ? "opacity-0" : "opacity-100"}`} />
-                <span className={`absolute left-0 top-4 block h-[2px] w-5 bg-current transition-transform duration-300 ${mobileOpen ? "-translate-y-2 -rotate-45" : ""}`} />
-              </span>
-            </button>
           </div>
         </div>
       </nav>
-
-      {/* Mobile dropdown */}
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-[50] bg-black/0" onClick={() => setMobileOpen(false)}>
-          <div className="absolute left-0 right-0 top-[80px] mx-4 rounded-2xl border bg-white shadow-soft animate-pop-in" onClick={(e) => e.stopPropagation()}>
-            <nav className="p-2">
-              {visibleNavItems.map((item) =>
-                item.type === "section" ? (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50"
-                    onClick={() => {
-                      goSection(item.sectionId);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ) : (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className="w-full text-left nav-link block px-4 py-3 rounded-xl hover:bg-slate-50"
-                    onClick={() => {
-                      router.push(item.href);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                )
-              )}
-              <div className="h-2" />
-              <div className="px-4 py-2 border-t border-slate-200 mb-2">
-                <div className="text-xs uppercase tracking-[0.15em] text-slate-500 mb-2">
-                  {t.nav.languageAria}
-                </div>
-                <div className="flex flex-col gap-1">
-                  {languageOptions.map((option) => (
-                    <button
-                      key={option.code}
-                      type="button"
-                      className={`w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-slate-50 ${
-                        option.code === language ? "bg-slate-100 border-slate-300 font-semibold" : "border-transparent"
-                      }`}
-                      onClick={() => {
-                        setLanguage(option.code);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {isAuthed ? (
-                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={async () => { await supabase.auth.signOut(); setMobileOpen(false); }}>
-                  {t.nav.signOut}
-                </button>
-              ) : (
-                <button type="button" className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 text-sm" onClick={() => { setAuthMode("signin"); setAuthOpen(true); setMobileOpen(false); }}>
-                  {t.nav.signIn}
-                </button>
-              )}
-            </nav>
-          </div>
-        </div>
-      )}
 
       {/* Waitlist modal */}
       {open && (

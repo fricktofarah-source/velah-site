@@ -4,6 +4,8 @@ import type { Metadata, Viewport } from "next";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import StandaloneBodyClass from "@/components/StandaloneBodyClass";
+import StandaloneDock from "@/components/StandaloneDock";
 
 export const metadata: Metadata = {
   title: "Velah",
@@ -28,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <LanguageProvider>
+          <StandaloneBodyClass />
           {/* Skip link for keyboard/screen readers */}
           <a
             href="#content"
@@ -42,6 +45,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="content" className="flex-1 pt-16 sm:pt-20">
             {children}
           </main>
+
+          <StandaloneDock />
 
           <Footer />
         </LanguageProvider>
