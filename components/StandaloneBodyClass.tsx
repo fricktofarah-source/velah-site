@@ -34,8 +34,10 @@ export default function StandaloneBodyClass() {
       setViewport(true);
 
       const lockOrientation = async () => {
+        const orientation = window.screen.orientation;
+        if (!orientation || typeof orientation.lock !== "function") return;
         try {
-          await window.screen.orientation?.lock?.("portrait");
+          await orientation.lock("portrait");
         } catch {
           /* ignore */
         }
@@ -54,18 +56,24 @@ export default function StandaloneBodyClass() {
         window.removeEventListener("orientationchange", updateOrientationClass);
         window.removeEventListener("resize", updateOrientationClass);
         body.classList.remove("standalone-landscape");
-        try {
-          window.screen.orientation?.unlock?.();
-        } catch {
-          /* ignore */
+        const orientation = window.screen.orientation;
+        if (orientation && typeof orientation.unlock === "function") {
+          try {
+            orientation.unlock();
+          } catch {
+            /* ignore */
+          }
         }
       };
     } else {
       setViewport(false);
-      try {
-        window.screen.orientation?.unlock?.();
-      } catch {
-        /* ignore */
+      const orientation = window.screen.orientation;
+      if (orientation && typeof orientation.unlock === "function") {
+        try {
+          orientation.unlock();
+        } catch {
+          /* ignore */
+        }
       }
     }
 
