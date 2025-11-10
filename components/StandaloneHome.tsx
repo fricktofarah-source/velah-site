@@ -109,18 +109,6 @@ export default function StandaloneHome() {
         </div>
       </section>
 
-      <section id="standalone-subscription" className="standalone-section">
-        <div className="flex flex-col gap-1 text-left">
-          <span className="standalone-badge">{subscription.badge}</span>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{subscription.heading}</h2>
-          <p className="text-sm text-slate-600">{subscription.nextStepsBody}</p>
-        </div>
-
-        <div className="mt-6">
-          <Subscription compact />
-        </div>
-      </section>
-
       <section className="standalone-section">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -147,6 +135,18 @@ export default function StandaloneHome() {
               </button>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section id="standalone-subscription" className="standalone-section">
+        <div className="flex flex-col gap-1 text-left">
+          <span className="standalone-badge">{subscription.badge}</span>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{subscription.heading}</h2>
+          <p className="text-sm text-slate-600">{subscription.nextStepsBody}</p>
+        </div>
+
+        <div className="mt-6">
+          <Subscription compact />
         </div>
       </section>
     </>
