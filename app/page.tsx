@@ -1,6 +1,6 @@
 // app/page.tsx
 'use client';
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Bottles from "@/components/Bottles";
@@ -12,6 +12,7 @@ import ImpactStats from "@/components/ImpactStats";
 import BlogPreview from "@/components/BlogPreview";
 import { posts } from "@/lib/posts";
 import SectionReveal from "@/components/SectionReveal";
+import StandaloneHome from "@/components/StandaloneHome";
 
 type SectionConfig = {
   key: string;
@@ -33,8 +34,6 @@ const HOME_SECTIONS: SectionConfig[] = [
   { key: "impact", render: () => <ImpactStats /> },
   { key: "blog", render: () => <BlogPreview posts={posts} /> },
 ];
-
-const STANDALONE_SECTION_KEYS = new Set(["hero", "bottles", "subscription", "how"]);
 
 function isStandaloneDisplay() {
   if (typeof window === "undefined") return false;
@@ -92,14 +91,13 @@ export default function HomePage() {
 
   const isStandaloneMobile = isStandalone && isMobileViewport;
 
-  const sections = useMemo(() => {
-    if (!isStandaloneMobile) return HOME_SECTIONS;
-    return HOME_SECTIONS.filter((section) => STANDALONE_SECTION_KEYS.has(section.key));
-  }, [isStandaloneMobile]);
+  if (isStandaloneMobile) {
+    return <StandaloneHome />;
+  }
 
   return (
-    <main className={isStandaloneMobile ? "home-sections home-sections--standalone" : "home-sections"}>
-      {sections.map(({ key, render, fullBleed, animate }, index) => (
+    <main className="home-sections">
+      {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => (
         <HomeSection
           key={key}
           fullBleed={fullBleed}

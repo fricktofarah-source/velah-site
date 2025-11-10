@@ -69,19 +69,7 @@ a, button, [role='button'] { cursor: pointer; }
   /* Sections (mobile-first rhythm) */
   .section { @apply py-16 sm:py-20; }
   .home-sections { @apply flex flex-col; }
-  .home-sections--standalone {
-    gap: clamp(1rem, 4vw, 2rem);
-    padding: clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 1.75rem) 3rem;
-    background: #f8fafc;
-  }
   .home-section-block { position: relative; }
-  .home-sections--standalone .home-section-block {
-    border-radius: 1.5rem;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    background: #fff;
-    padding: clamp(1.5rem, 5vw, 2.5rem);
-    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
-  }
   .home-section-block--with-divider::before {
     content: "";
     position: absolute;
@@ -92,8 +80,141 @@ a, button, [role='button'] { cursor: pointer; }
     pointer-events: none;
     z-index: 2;
   }
-  .home-sections--standalone .home-section-block--with-divider::before {
+  .standalone-home {
+    min-height: calc(100vh - 4rem);
+    padding: clamp(1.5rem, 6vw, 2.75rem) clamp(1.25rem, 6vw, 2.25rem) 3rem;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 28%, #fff 100%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.25rem, 5vw, 2.25rem);
+  }
+  .standalone-section {
+    border-radius: 1.5rem;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: clamp(1.5rem, 5vw, 2.75rem);
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+  }
+  .standalone-hero-card {
+    border-radius: 1.75rem;
+    padding: clamp(1.75rem, 6vw, 3rem);
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.85), rgba(248, 250, 252, 0.3)),
+      linear-gradient(130deg, #ebfffe 0%, #f0f4ff 60%, #fff 100%);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+  }
+  .standalone-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: rgba(148, 163, 184, 0.2);
+    color: #0f172a;
+  }
+  .standalone-hero__actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .standalone-primary-btn {
+    border-radius: 999px;
+    min-width: 8rem;
+  }
+  .standalone-ghost-btn {
+    border-radius: 999px;
+    min-width: 8rem;
+  }
+  .standalone-bundle-tabs {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+  .standalone-bundle-tabs::-webkit-scrollbar {
     display: none;
+  }
+  .standalone-bundle-tabs button {
+    flex: 1;
+    white-space: nowrap;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #fff;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .standalone-bundle-tabs button.is-active {
+    background: #0f172a;
+    color: #fff;
+  }
+  .standalone-bundle-card {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  .standalone-bundle-card__mix {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .standalone-pill {
+    border-radius: 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 1rem;
+    background: rgba(248, 250, 252, 0.85);
+  }
+  .standalone-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #475569;
+    font-weight: 600;
+  }
+  .standalone-carousel {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.75rem;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(200px, 68%);
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .standalone-carousel::-webkit-scrollbar {
+    display: none;
+  }
+  .standalone-bottle-card {
+    scroll-snap-align: start;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  }
+  .standalone-shortcuts {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .standalone-shortcut {
+    border-radius: 1.25rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(248, 250, 252, 0.8);
   }
   .section-reveal {
     opacity: 0;
