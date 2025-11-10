@@ -5,8 +5,7 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext",
-      "dom.screenorientation"
+      "esnext"
     ],
     "allowJs": true,
     "skipLibCheck": true,
