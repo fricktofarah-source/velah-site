@@ -228,10 +228,6 @@ a, button, [role='button'] { cursor: pointer; }
   body.standalone-app {
     overflow-x: hidden;
   }
-  .standalone-hydration .standalone-hydration-grid {
-    display: grid;
-    gap: 1.5rem;
-  }
   .standalone-bottom-nav {
     position: fixed;
     left: 50%;

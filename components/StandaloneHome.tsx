@@ -117,7 +117,7 @@ export default function StandaloneHome() {
         </div>
 
         <div className="mt-6">
-          <Subscription />
+          <Subscription compact />
         </div>
       </section>
 
