@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "./LanguageProvider";
 
@@ -45,8 +45,8 @@ export default function StandaloneHome() {
   };
 
   const navItems: Array<
-    | { id: StandaloneView; type: "view"; label: string; icon: JSX.Element }
-    | { id: "hydration"; type: "route"; label: string; icon: JSX.Element }
+    | { id: StandaloneView; type: "view"; label: string; icon: ReactElement }
+    | { id: "hydration"; type: "route"; label: string; icon: ReactElement }
   > = [
     {
       id: "about",
