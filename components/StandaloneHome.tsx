@@ -201,32 +201,6 @@ export default function StandaloneHome() {
         </div>
       </section>
 
-      <section className="standalone-section">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-xl font-semibold text-slate-900">{t.blog.heading}</h3>
-            <p className="text-sm text-slate-600 mt-1">{t.blog.mobileButton}</p>
-          </div>
-          <Link href="/blog" className="btn btn-ghost text-sm">
-            {t.blog.allPosts}
-          </Link>
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {blogPosts.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="rounded-2xl border border-slate-200 bg-white/80 p-4 flex flex-col gap-2 hover:-translate-y-0.5 transition"
-            >
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{post.category}</div>
-              <div className="text-lg font-semibold text-slate-900 leading-tight">{post.title}</div>
-              <p className="text-sm text-slate-600 line-clamp-2">{post.excerpt}</p>
-              <span className="text-sm font-semibold text-[var(--velah)]">Read →</span>
-            </Link>
-          ))}
-        </div>
-      </section>
     </>
   );
 
