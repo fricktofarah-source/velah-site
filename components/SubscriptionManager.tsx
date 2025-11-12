@@ -36,7 +36,7 @@ export default function SubscriptionManager() {
     notes: "",
   });
 
-  const loadSubscription = useRef<(userId: string) => Promise<void>>();
+  const loadSubscription = useRef<((userId: string) => Promise<void>) | null>(null);
 
   const applyRecommendation = (event: CustomEvent<{ bottles_5g: number; bottles_1l: number; bottles_500ml: number }>) => {
     const { detail } = event;
