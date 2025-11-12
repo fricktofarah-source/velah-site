@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Subscription from "@/components/Subscription";
 import { posts } from "@/lib/posts";
 import { useLanguage } from "./LanguageProvider";
+import TimezoneSync from "./TimezoneSync";
 
 type StandaloneView = "about" | "subscription" | "blog";
 
@@ -206,6 +207,7 @@ export default function StandaloneHome() {
 
   return (
     <div className="standalone-home">
+      <TimezoneSync />
       <div className="standalone-home__content">
         {view === "about" && AboutView}
         {view === "blog" && BlogView}
