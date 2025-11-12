@@ -2,34 +2,21 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { PushPayload, StoredPushSubscription, sendPush } from "@/lib/pushService";
 
-type Intent = "goal" | "streak";
-
 const dayKey = (value: Date) => value.toISOString().slice(0, 10);
 const formatMl = (value: number) => new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
-const DEFAULT_TIMEZONE = process.env.PUSH_FALLBACK_TIMEZONE || "Asia/Dubai";
-const GOAL_HOUR = Number(process.env.PUSH_GOAL_HOUR ?? 18);
-const STREAK_HOUR = Number(process.env.PUSH_STREAK_HOUR ?? 23);
+const MAX_ZERO_REMINDERS = Number(process.env.PUSH_MAX_ZERO_REMINDERS ?? 4);
+
+type NotificationKind = "reminder" | "congrats";
 
 export async function GET(request: Request) {
-  const intentParam = new URL(request.url).searchParams.get("intent");
-  const intent: Intent = intentParam === "streak" ? "streak" : "goal";
-  return processRequest(request, intent);
+  return processRequest(request);
 }
 
 export async function POST(request: Request) {
-  let intent: Intent = "goal";
-  try {
-    const body = await request.json();
-    if (body?.intent === "streak") {
-      intent = "streak";
-    }
-  } catch {
-    /* empty body */
-  }
-  return processRequest(request, intent);
+  return processRequest(request);
 }
 
-async function processRequest(request: Request, intent: Intent) {
+async function processRequest(request: Request) {
   const secret = process.env.PUSH_CRON_SECRET;
   const allowSensitive = process.env.ALLOW_NON_SENSITIVE_CRON_SECRET === "1";
   if (secret && (allowSensitive || request.headers.get("x-cron-secret"))) {
@@ -39,11 +26,11 @@ async function processRequest(request: Request, intent: Intent) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
-  const result = await dispatchNotifications(intent);
+  const result = await dispatchNotifications();
   return NextResponse.json(result);
 }
 
-async function dispatchNotifications(intent: Intent) {
+async function dispatchNotifications() {
   const today = new Date();
   const todayKey = dayKey(today);
   const start = new Date();
@@ -55,7 +42,7 @@ async function dispatchNotifications(intent: Intent) {
     .select("user_id, endpoint, p256dh, auth");
   if (subError) throw subError;
   if (!subscriptions?.length) {
-    return { intent, sent: 0, skipped: 0, removed: 0, errors: 0 };
+    return { sentCongratulated: 0, sentReminded: 0, skipped: 0, removed: 0, errors: 0 };
   }
 
   const userIds = [...new Set(subscriptions.map((sub) => sub.user_id))];
@@ -67,13 +54,13 @@ async function dispatchNotifications(intent: Intent) {
 
   const { data: profiles, error: profileError } = await supabaseAdmin
     .from("hydration_profiles")
-    .select("user_id, goal_ml, time_zone")
+    .select("user_id, goal_ml")
     .in("user_id", userIds);
   if (profileError) throw profileError;
 
-  const userSettings = new Map<string, { goal: number; timeZone: string | null }>();
+  const goals = new Map<string, number>();
   profiles?.forEach((profile) => {
-    userSettings.set(profile.user_id, { goal: profile.goal_ml || 0, timeZone: profile.time_zone });
+    goals.set(profile.user_id, profile.goal_ml || 0);
   });
 
   const { data: entries, error: entryError } = await supabaseAdmin
@@ -89,17 +76,11 @@ async function dispatchNotifications(intent: Intent) {
     entryMap.set(`${entry.user_id}:${entry.day}`, entry.intake_ml || 0);
   });
 
-  const stats = { intent, sent: 0, skipped: 0, removed: 0, errors: 0 };
+  const stats = { sentCongratulated: 0, sentReminded: 0, skipped: 0, removed: 0, errors: 0 };
 
   for (const userId of userIds) {
-    const settings = userSettings.get(userId);
-    const goal = settings?.goal || 0;
+    const goal = goals.get(userId) || 0;
     if (!goal) {
-      stats.skipped += 1;
-      continue;
-    }
-    const timeZone = settings?.timeZone || DEFAULT_TIMEZONE;
-    if (!shouldSendForIntent(intent, timeZone, today)) {
       stats.skipped += 1;
       continue;
     }
@@ -108,23 +89,25 @@ async function dispatchNotifications(intent: Intent) {
     const history = buildHistory(entryMap, userId, today);
     const streak = computeStreak(history, goal);
     const remaining = Math.max(goal - todayIntake, 0);
-
-    let payload: PushPayload | null = null;
-    if (intent === "goal") {
-      if (todayIntake >= goal) {
-        stats.skipped += 1;
-        continue;
-      }
-      payload = makeGoalPayload(remaining, goal, todayIntake);
-    } else {
-      if (streak === 0 || todayIntake >= goal) {
-        stats.skipped += 1;
-        continue;
-      }
-      payload = makeStreakPayload(streak, remaining);
+    const zeroIntake = todayIntake === 0;
+    const zeroIntakeStreak = computeZeroIntakeStreak(history);
+    if (zeroIntakeStreak >= MAX_ZERO_REMINDERS) {
+      stats.skipped += 1;
+      continue;
     }
 
-    if (!payload) {
+    let payload: PushPayload | null = null;
+    let kind: NotificationKind | null = null;
+
+    if (todayIntake >= goal) {
+      payload = makeCongratsPayload(streak);
+      kind = "congrats";
+    } else {
+      payload = makeReminderPayload({ remaining, zeroIntake, streak });
+      kind = "reminder";
+    }
+
+    if (!payload || !kind) {
       stats.skipped += 1;
       continue;
     }
@@ -136,7 +119,8 @@ async function dispatchNotifications(intent: Intent) {
         if (response.removed) {
           stats.removed += 1;
         } else {
-          stats.sent += 1;
+          if (kind === "congrats") stats.sentCongratulated += 1;
+          if (kind === "reminder") stats.sentReminded += 1;
         }
       } catch (error) {
         console.error("push notification error", error);
@@ -173,37 +157,41 @@ function computeStreak(history: Array<{ day: string; intake_ml: number }>, goal:
   return count;
 }
 
-function makeGoalPayload(remaining: number, goal: number, intake: number): PushPayload {
-  const percent = Math.round((intake / goal) * 100);
-  const body =
-    percent <= 0
-      ? `Your bottles are still quiet today. Pour the first glass and begin the ritual.`
-      : `Only ${formatMl(remaining)} ml left to complete today's calm loop. Take a slow sip and stay steady.`;
+function computeZeroIntakeStreak(history: Array<{ day: string; intake_ml: number }>) {
+  let count = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (entry.intake_ml === 0) {
+      count += 1;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
+function makeReminderPayload(params: { remaining: number; zeroIntake: boolean; streak: number }): PushPayload {
+  if (params.zeroIntake) {
+    return {
+      title: "Begin the ritual",
+      body: "Your ledger is quiet. Pour a chilled glass and let today’s calm begin.",
+      url: "/hydration",
+    };
+  }
   return {
-    title: "Pause for a pour",
-    body,
+    title: "One glass from calm",
+    body: `Only ${formatMl(params.remaining)} ml stand between you and today's serene finish. Take an unhurried sip for day ${params.streak + 1}.`,
     url: "/hydration",
   };
 }
 
-function makeStreakPayload(streak: number, remaining: number): PushPayload {
+function makeCongratsPayload(streak: number): PushPayload {
   return {
-    title: "Keep the streak glowing",
-    body: `Your ${streak}-day flow is ${formatMl(remaining)} ml from tomorrow. Pour a final glass before the city sleeps.`,
+    title: "Glass settled, ritual kept",
+    body:
+      streak > 1
+        ? `That's ${streak} days in velvet rhythm. Stay with the loop and let tomorrow taste just as clean.`
+        : "Today's goal is yours. Exhale, reset the bottles, and carry the clarity forward.",
     url: "/hydration",
   };
-}
-
-function shouldSendForIntent(intent: Intent, timeZone: string, reference: Date) {
-  const { hour } = getLocalTimeParts(reference, timeZone);
-  const targetHour = intent === "goal" ? GOAL_HOUR : STREAK_HOUR;
-  return hour === targetHour;
-}
-
-function getLocalTimeParts(date: Date, timeZone: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "numeric", hour12: false, timeZone });
-  const parts = formatter.formatToParts(date);
-  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? "0");
-  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? "0");
-  return { hour, minute };
 }

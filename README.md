@@ -25,6 +25,7 @@ npm run dev
    VAPID_PRIVATE_KEY=...
    PUSH_CRON_SECRET=...
    PUSH_VAPID_SUBJECT=mailto:hello@velahwater.com # optional
+   PUSH_MAX_ZERO_REMINDERS=4 # optional cap on consecutive zero-intake reminders
    ```
 
 3. Create the `push_subscriptions` table using `supabase/push_subscriptions.sql`.
@@ -34,4 +35,4 @@ npm run dev
    psql … < supabase/add_hydration_timezone.sql
    ```
 
-5. Redeploy. Users can now opt into push notifications, and you can trigger `/api/push/notify` (via Vercel Cron, Supabase Scheduler, etc.) with `{ "intent": "goal" }` for daily reminders or `{ "intent": "streak" }` for the streak warning. Include `Authorization: Bearer $PUSH_CRON_SECRET` (or `x-cron-secret`) if the secret is set.
+5. Redeploy, then schedule a single daily invocation of `/api/push/notify` (for example, using Vercel Cron at `0 14 * * *`). Include `Authorization: Bearer $PUSH_CRON_SECRET` (or `x-cron-secret`) if the secret is set.
