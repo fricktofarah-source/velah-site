@@ -110,7 +110,7 @@ export default function SubscriptionManager() {
         bottles_500ml: Math.max(0, Math.min(48, form.bottles_500ml)),
       };
       const record = await upsertSubscription(sessionUser.id, payload);
-      if (record) setSubscription(record as UserSubscription);
+      setSubscription(record);
     } catch (err) {
       setError("Could not save subscription. Please try again.");
       console.error(err);
@@ -125,7 +125,7 @@ export default function SubscriptionManager() {
     setError(null);
     try {
       const record = await updateSubscriptionStatus(sessionUser.id, status);
-      if (record) setSubscription(record as UserSubscription);
+      setSubscription(record);
     } catch (err) {
       setError("Unable to update status.");
       console.error(err);
@@ -140,7 +140,7 @@ export default function SubscriptionManager() {
     setError(null);
     try {
       const record = await skipNextDelivery(sessionUser.id);
-      if (record) setSubscription(record as UserSubscription);
+      setSubscription(record);
     } catch (err) {
       setError("Unable to skip the next delivery.");
       console.error(err);

@@ -30,15 +30,15 @@ export type SubscriptionPayload = {
 
 const TABLE = "user_subscriptions";
 
-export async function fetchUserSubscription(userId: string) {
-  const { data, error } = await supabase.from<UserSubscription>(TABLE).select("*").eq("user_id", userId).maybeSingle();
+export async function fetchUserSubscription(userId: string): Promise<UserSubscription | null> {
+  const { data, error } = await supabase.from(TABLE).select("*").eq("user_id", userId).maybeSingle();
   if (error) throw error;
-  return data;
+  return (data as UserSubscription | null) ?? null;
 }
 
-export async function upsertSubscription(userId: string, payload: SubscriptionPayload) {
+export async function upsertSubscription(userId: string, payload: SubscriptionPayload): Promise<UserSubscription | null> {
   const { data, error } = await supabase
-    .from<UserSubscription>(TABLE)
+    .from(TABLE)
     .upsert(
       {
         user_id: userId,
@@ -51,39 +51,25 @@ export async function upsertSubscription(userId: string, payload: SubscriptionPa
       },
       { onConflict: "user_id" }
     )
-    .select<UserSubscription>()
+    .select("*")
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return (data as UserSubscription | null) ?? null;
 }
 
-export async function updateSubscriptionStatus(userId: string, status: SubscriptionStatus) {
-  const { data, error } = await supabase
-    .from<UserSubscription>(TABLE)
-    .update({ status })
-    .eq("user_id", userId)
-    .select<UserSubscription>()
-    .maybeSingle();
+export async function updateSubscriptionStatus(userId: string, status: SubscriptionStatus): Promise<UserSubscription | null> {
+  const { data, error } = await supabase.from(TABLE).update({ status }).eq("user_id", userId).select("*").maybeSingle();
   if (error) throw error;
-  return data;
+  return (data as UserSubscription | null) ?? null;
 }
 
-export async function skipNextDelivery(userId: string, days = 7) {
-  const { data, error } = await supabase
-    .from<{ next_delivery: string | null }>(TABLE)
-    .select("next_delivery")
-    .eq("user_id", userId)
-    .maybeSingle();
+export async function skipNextDelivery(userId: string, days = 7): Promise<UserSubscription | null> {
+  const { data, error } = await supabase.from(TABLE).select("next_delivery").eq("user_id", userId).maybeSingle();
   if (error) throw error;
   const baseDate = data?.next_delivery ? new Date(data.next_delivery) : new Date();
   baseDate.setDate(baseDate.getDate() + days);
   const next_delivery = baseDate.toISOString();
-  const { data: updated, error: updateError } = await supabase
-    .from<UserSubscription>(TABLE)
-    .update({ next_delivery })
-    .eq("user_id", userId)
-    .select<UserSubscription>()
-    .maybeSingle();
+  const { data: updated, error: updateError } = await supabase.from(TABLE).update({ next_delivery }).eq("user_id", userId).select("*").maybeSingle();
   if (updateError) throw updateError;
-  return updated;
+  return (updated as UserSubscription | null) ?? null;
 }
