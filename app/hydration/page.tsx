@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import AddToHome from "../../components/AddToHome";
+import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import { useLanguage } from "@/components/LanguageProvider";
 
 /* ---------- helpers ---------- */
@@ -216,7 +217,15 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
            </div>
          </header>
 
-         {/* PROGRESS RING */}
+        <div className="sm:hidden mt-6">
+          <PushNotificationsPrompt
+            title="Stay on track"
+            description="Enable gentle nudges when your hydration streak slips or when it’s time for a refill."
+            buttonLabel="Enable alerts"
+          />
+        </div>
+
+        {/* PROGRESS RING */}
          <section className="mt-8 grid lg:grid-cols-[1.1fr_.9fr] gap-10 items-center">
            <ProgressRing
              percent={percent}

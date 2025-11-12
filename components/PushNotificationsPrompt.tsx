@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const SUPPORTS_PUSH = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+type PushNotificationsPromptProps = {
+  title?: string;
+  description?: string;
+  buttonLabel?: string;
+};
+
+const isPushSupported = () =>
+  typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -16,7 +23,11 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-export default function PushNotificationsPrompt() {
+export default function PushNotificationsPrompt({
+  title = "Get delivery reminders",
+  description = "Enable push notifications on your Velah app to know when your route is scheduled or when it's time to hydrate.",
+  buttonLabel = "Enable notifications",
+}: PushNotificationsPromptProps) {
   const [status, setStatus] = useState<"idle" | "blocked" | "granted" | "loading" | "unsupported">("idle");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
@@ -27,8 +38,7 @@ export default function PushNotificationsPrompt() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!SUPPORTS_PUSH) {
+    if (!isPushSupported()) {
       setStatus("unsupported");
       return;
     }
@@ -41,7 +51,7 @@ export default function PushNotificationsPrompt() {
   }, []);
 
   const enablePush = async () => {
-    if (!SUPPORTS_PUSH) {
+    if (!isPushSupported()) {
       setStatus("unsupported");
       return;
     }
@@ -89,18 +99,16 @@ export default function PushNotificationsPrompt() {
   if (status === "unsupported" || !sessionToken) return null;
   if (status === "granted") {
     return (
-      <div className="text-xs text-emerald-600">
-        Notifications enabled. We’ll only send important hydration or delivery updates.
-      </div>
+      <div className="text-xs text-emerald-600">Notifications enabled. We’ll only send important updates.</div>
     );
   }
 
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 p-4 flex flex-col gap-2 text-sm text-slate-600">
-      <div className="font-semibold text-slate-900">Get delivery reminders</div>
-      <p>Enable push notifications on your Velah app to know when your route is scheduled or when it’s time to hydrate.</p>
+      <div className="font-semibold text-slate-900">{title}</div>
+      <p>{description}</p>
       <button type="button" className="btn btn-primary h-9 px-4 rounded-full w-fit" onClick={enablePush} disabled={status === "loading"}>
-        {status === "loading" ? "Enabling…" : "Enable notifications"}
+        {status === "loading" ? "Enabling…" : buttonLabel}
       </button>
       {status === "blocked" && <p className="text-xs text-red-600">Please allow notifications in your browser settings.</p>}
     </div>

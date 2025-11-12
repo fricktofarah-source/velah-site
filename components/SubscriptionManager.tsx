@@ -10,7 +10,6 @@ import {
   upsertSubscription,
   type UserSubscription,
 } from "@/lib/subscriptionService";
-import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 
 const deliveryDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
 const frequencyOptions = [
@@ -192,7 +191,6 @@ export default function SubscriptionManager() {
               )}
 
           {error && <div className="text-sm text-red-600" role="alert">{error}</div>}
-          {sessionUser && <PushNotificationsPrompt />}
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <label className="text-sm">
