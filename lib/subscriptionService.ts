@@ -51,7 +51,7 @@ export async function upsertSubscription(userId: string, payload: SubscriptionPa
       },
       { onConflict: "user_id" }
     )
-    .select()
+    .select<UserSubscription>()
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -62,7 +62,7 @@ export async function updateSubscriptionStatus(userId: string, status: Subscript
     .from<UserSubscription>(TABLE)
     .update({ status })
     .eq("user_id", userId)
-    .select()
+    .select<UserSubscription>()
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -70,7 +70,7 @@ export async function updateSubscriptionStatus(userId: string, status: Subscript
 
 export async function skipNextDelivery(userId: string, days = 7) {
   const { data, error } = await supabase
-    .from<UserSubscription>(TABLE)
+    .from<{ next_delivery: string | null }>(TABLE)
     .select("next_delivery")
     .eq("user_id", userId)
     .maybeSingle();
@@ -82,7 +82,7 @@ export async function skipNextDelivery(userId: string, days = 7) {
     .from<UserSubscription>(TABLE)
     .update({ next_delivery })
     .eq("user_id", userId)
-    .select()
+    .select<UserSubscription>()
     .maybeSingle();
   if (updateError) throw updateError;
   return updated;
