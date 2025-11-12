@@ -153,9 +153,7 @@ export default function Subscription({ compact = false }: { compact?: boolean })
     [mixForPricing]
   );
 
-  function openWaitlist() {
-    window.dispatchEvent(new CustomEvent("velah:open-waitlist"));
-  }
+  
 
   // helpers
   const clamp = (n: number) => Math.max(0, Math.min(99, Math.floor(n || 0)));
@@ -342,8 +340,16 @@ export default function Subscription({ compact = false }: { compact?: boolean })
 
         {/* Actions */}
         <div className="mt-6 flex flex-wrap gap-3">
-          <button onClick={openWaitlist} className="btn btn-primary h-11 px-5 rounded-full">
-            Join the waitlist
+          <button
+            type="button"
+            className="btn btn-primary h-11 px-5 rounded-full"
+            onClick={() => window.dispatchEvent(new CustomEvent("subscription:apply", { detail: {
+              bottles_5g: suggestion.mix.find((m) => m.size === "5G")?.qty || 0,
+              bottles_1l: suggestion.mix.find((m) => m.size === "1L")?.qty || 0,
+              bottles_500ml: suggestion.mix.find((m) => m.size === "500mL")?.qty || 0,
+            }}))}
+          >
+            Add to current plan
           </button>
           <a href="/about" className="link-underline text-sm font-medium">
             Learn more

@@ -1,6 +1,7 @@
 // app/subscription/page.tsx
 import type { Metadata } from "next";
 import Subscription from "@/components/Subscription";
+import SubscriptionManager from "@/components/SubscriptionManager";
 import Bottles from "@/components/Bottles";
 import Link from "next/link";
 import JoinWaitlistButton from "@/components/JoinWaitlistButton";
@@ -32,6 +33,8 @@ export default function SubscriptionPage() {
           <Subscription />
         </div>
       </section>
+
+      <SubscriptionManager />
 
       {/* Benefits */}
       <section className="section">

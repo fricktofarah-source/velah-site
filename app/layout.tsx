@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import StandaloneBodyClass from "@/components/StandaloneBodyClass";
 import StandaloneDock from "@/components/StandaloneDock";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "Velah",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <LanguageProvider>
+          <ServiceWorkerRegister />
           <StandaloneBodyClass />
           {/* Skip link for keyboard/screen readers */}
           <a
