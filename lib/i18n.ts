@@ -163,6 +163,54 @@ type HydrationCopy = {
   resetToday: string;
   historyHeading: string;
   unitMl: string;
+  pushPrompt: {
+    title: string;
+    description: string;
+    button: string;
+  };
+  streakLabel: string;
+  streakValue: (days: number) => string;
+  streakKeepGoing: string;
+  streakStart: string;
+};
+
+type SubscriptionManagerCopy = {
+  badge: string;
+  title: string;
+  description: string;
+  signInPrompt: string;
+  savingLabel: string;
+  currentPlan: string;
+  frequencyLabel: string;
+  deliveryDayLabel: string;
+  nextDeliveryLabel: string;
+  statusLabel: string;
+  statusActive: string;
+  statusPaused: string;
+  bottles: {
+    fiveG: string;
+    oneL: string;
+    fiveHund: string;
+  };
+  frequencyField: string;
+  frequencyOptions: Record<"weekly" | "biweekly", string>;
+  deliveryDayField: string;
+  weekdays: Record<"monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday", string>;
+  notesLabel: string;
+  notesPlaceholder: string;
+  saveButton: string;
+  createButton: string;
+  pauseButton: string;
+  resumeButton: string;
+  skipButton: string;
+  applySuggestion: string;
+  signInCta: string;
+  errors: {
+    load: string;
+    save: string;
+    status: string;
+    skip: string;
+  };
 };
 
 type SiteCopy = {
@@ -179,6 +227,7 @@ type SiteCopy = {
   blog: BlogCopy;
   footer: FooterCopy;
   hydration: HydrationCopy;
+  subscriptionManager: SubscriptionManagerCopy;
 };
 
 export const translations: Record<Language, SiteCopy> = {
@@ -534,6 +583,64 @@ export const translations: Record<Language, SiteCopy> = {
       resetToday: "Reset today",
       historyHeading: "Last 7 days",
       unitMl: "ml",
+      pushPrompt: {
+        title: "Stay on track",
+        description: "Enable gentle nudges when your hydration streak slips or when it's time for a refill.",
+        button: "Enable alerts",
+      },
+      streakLabel: "Hydration streak",
+      streakValue: (days) => `${days} day${days === 1 ? "" : "s"}`,
+      streakKeepGoing: "Keep meeting your goal to extend it.",
+      streakStart: "Hit today's goal to start a streak.",
+    },
+    subscriptionManager: {
+      badge: "Manage",
+      title: "Your Velah subscription",
+      description: "Adjust deliveries, pause when you travel, or tweak bottle counts at any time.",
+      signInPrompt: "Sign in from the top navigation to create or edit your subscription.",
+      savingLabel: "Saving…",
+      currentPlan: "Current plan",
+      frequencyLabel: "Frequency",
+      deliveryDayLabel: "Delivery day",
+      nextDeliveryLabel: "Next delivery",
+      statusLabel: "Status",
+      statusActive: "Active",
+      statusPaused: "Paused",
+      bottles: {
+        fiveG: "5G bottles",
+        oneL: "1L bottles",
+        fiveHund: "500 mL bottles",
+      },
+      frequencyField: "Delivery frequency",
+      frequencyOptions: {
+        weekly: "Every week",
+        biweekly: "Every other week",
+      },
+      deliveryDayField: "Delivery day",
+      weekdays: {
+        monday: "Monday",
+        tuesday: "Tuesday",
+        wednesday: "Wednesday",
+        thursday: "Thursday",
+        friday: "Friday",
+        saturday: "Saturday",
+        sunday: "Sunday",
+      },
+      notesLabel: "Notes for the driver",
+      notesPlaceholder: "e.g., call when arriving, leave with concierge",
+      saveButton: "Update plan",
+      createButton: "Create plan",
+      pauseButton: "Pause",
+      resumeButton: "Resume",
+      skipButton: "Skip next delivery",
+      applySuggestion: "Apply suggestion",
+      signInCta: "Need an account? Join the waitlist and we'll invite you once service opens.",
+      errors: {
+        load: "Unable to load subscription. Please try again.",
+        save: "Could not save subscription. Please try again.",
+        status: "Unable to update status.",
+        skip: "Unable to skip the next delivery.",
+      },
     },
   },
   AR: {
@@ -888,6 +995,64 @@ export const translations: Record<Language, SiteCopy> = {
       resetToday: "إعادة تعيين اليوم",
       historyHeading: "آخر ٧ أيام",
       unitMl: "مل",
+      pushPrompt: {
+        title: "ابق على المسار",
+        description: "فعّل التذكيرات اللطيفة عندما يتراجع معدل الترطيب أو يحين وقت إعادة التعبئة.",
+        button: "فعّل التنبيهات",
+      },
+      streakLabel: "سلسلة الترطيب",
+      streakValue: (days) => `${days} يوم`,
+      streakKeepGoing: "واصل تحقيق هدفك لتحافظ على السلسلة.",
+      streakStart: "حقق هدف اليوم لبدء السلسلة.",
+    },
+    subscriptionManager: {
+      badge: "إدارة",
+      title: "اشتراكك في فيلا",
+      description: "عدّل مواعيد التوصيل، أوقفها أثناء السفر، أو غيّر أعداد القوارير في أي وقت.",
+      signInPrompt: "سجّل الدخول من أعلى الصفحة لإنشاء أو تعديل اشتراكك.",
+      savingLabel: "جارٍ الحفظ…",
+      currentPlan: "الخطة الحالية",
+      frequencyLabel: "التكرار",
+      deliveryDayLabel: "يوم التوصيل",
+      nextDeliveryLabel: "التوصيل القادم",
+      statusLabel: "الحالة",
+      statusActive: "نشط",
+      statusPaused: "موقوف مؤقتًا",
+      bottles: {
+        fiveG: "قوارير ٥ جالون",
+        oneL: "قوارير ١ لتر",
+        fiveHund: "قوارير ٥٠٠ مل",
+      },
+      frequencyField: "وتيرة التوصيل",
+      frequencyOptions: {
+        weekly: "كل أسبوع",
+        biweekly: "كل أسبوعين",
+      },
+      deliveryDayField: "يوم التوصيل",
+      weekdays: {
+        monday: "الاثنين",
+        tuesday: "الثلاثاء",
+        wednesday: "الأربعاء",
+        thursday: "الخميس",
+        friday: "الجمعة",
+        saturday: "السبت",
+        sunday: "الأحد",
+      },
+      notesLabel: "ملاحظات للسائق",
+      notesPlaceholder: "مثال: اتصل عند الوصول أو سلّم للكونسيرج",
+      saveButton: "حدّث الخطة",
+      createButton: "أنشئ الخطة",
+      pauseButton: "أوقف مؤقتًا",
+      resumeButton: "استأنف",
+      skipButton: "تخط التوصيل القادم",
+      applySuggestion: "طبّق الاقتراح",
+      signInCta: "بحاجة إلى حساب؟ انضم إلى قائمة الانتظار وسندعوك عند فتح الخدمة.",
+      errors: {
+        load: "تعذّر تحميل الاشتراك. حاول مرة أخرى.",
+        save: "تعذّر حفظ الاشتراك. حاول مرة أخرى.",
+        status: "تعذّر تحديث الحالة.",
+        skip: "تعذّر تخطي التوصيل القادم.",
+      },
     },
   },
 } as const;

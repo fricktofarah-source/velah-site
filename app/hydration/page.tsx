@@ -30,13 +30,31 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
    const [adjustInput, setAdjustInput] = useState("");
 
    /* history (7 days) */
-   const [history, setHistory] = useState<HistoryItem[]>([]);
-   const today = dayKey();
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const today = dayKey();
 
-   const percent = useMemo(() => {
-     if (!goal || goal <= 0) return 0;
-     return Math.max(0, Math.min(100, Math.round((intake / goal) * 100)));
-   }, [intake, goal]);
+  const percent = useMemo(() => {
+    if (!goal || goal <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((intake / goal) * 100)));
+  }, [intake, goal]);
+
+  const streak = useMemo(() => {
+    if (!goal || goal <= 0 || history.length === 0) return 0;
+    let count = 0;
+    const cursor = new Date(today);
+    for (let i = history.length - 1; i >= 0; i--) {
+      const entry = history[i];
+      const expected = dayKey(cursor);
+      if (entry.day !== expected) break;
+      if (entry.intake_ml >= goal) {
+        count += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return count;
+  }, [goal, history, today]);
 
    /* session listen */
    useEffect(() => {
@@ -217,11 +235,22 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
            </div>
          </header>
 
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold">{t.hydration.streakLabel}</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{t.hydration.streakValue(streak)}</p>
+            <p className="mt-1 text-sm text-slate-600">{streak > 0 ? t.hydration.streakKeepGoing : t.hydration.streakStart}</p>
+          </div>
+          <div className="h-14 w-14 shrink-0 rounded-2xl bg-white border border-slate-200 shadow-inner flex items-center justify-center text-[var(--velah)] text-2xl font-semibold">
+            {streak}
+          </div>
+        </div>
+
         <div className="sm:hidden mt-6">
           <PushNotificationsPrompt
-            title="Stay on track"
-            description="Enable gentle nudges when your hydration streak slips or when it’s time for a refill."
-            buttonLabel="Enable alerts"
+            title={t.hydration.pushPrompt.title}
+            description={t.hydration.pushPrompt.description}
+            buttonLabel={t.hydration.pushPrompt.button}
           />
         </div>
 
