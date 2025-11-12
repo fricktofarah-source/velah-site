@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 import AddToHome from "../../components/AddToHome";
 import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import { useLanguage } from "@/components/LanguageProvider";
+import TimezoneSync from "@/components/TimezoneSync";
 
 /* ---------- helpers ---------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -222,7 +223,8 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
    /* UI */
    return (
-     <main className="min-h-[calc(100vh-80px)] bg-white">
+    <main className="min-h-[calc(100vh-80px)] bg-white">
+      <TimezoneSync />
        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
          <header className="flex items-center justify-between gap-4">
            <h1 className="text-3xl font-semibold tracking-tight">{t.hydration.title}</h1>

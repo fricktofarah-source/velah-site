@@ -28,5 +28,10 @@ npm run dev
    ```
 
 3. Create the `push_subscriptions` table using `supabase/push_subscriptions.sql`.
+4. Add the `time_zone` column to `hydration_profiles` so reminders can follow each user’s locale:
 
-4. Redeploy. Users can now opt into push notifications, and you can trigger `/api/push/notify` (via Vercel Cron, Supabase Scheduler, etc.) with `{ "intent": "goal" }` for daytime reminders or `{ "intent": "streak" }` near midnight. Include the `x-cron-secret` header if `PUSH_CRON_SECRET` is set.
+   ```
+   psql … < supabase/add_hydration_timezone.sql
+   ```
+
+5. Redeploy. Users can now opt into push notifications, and you can trigger `/api/push/notify` (via Vercel Cron, Supabase Scheduler, etc.) with `{ "intent": "goal" }` for daily reminders or `{ "intent": "streak" }` for the streak warning. Include `Authorization: Bearer $PUSH_CRON_SECRET` (or `x-cron-secret`) if the secret is set.

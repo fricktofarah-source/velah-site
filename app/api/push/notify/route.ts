@@ -6,6 +6,9 @@ type Intent = "goal" | "streak";
 
 const dayKey = (value: Date) => value.toISOString().slice(0, 10);
 const formatMl = (value: number) => new Intl.NumberFormat("en-US").format(Math.max(0, Math.round(value)));
+const DEFAULT_TIMEZONE = process.env.PUSH_FALLBACK_TIMEZONE || "Asia/Dubai";
+const GOAL_HOUR = Number(process.env.PUSH_GOAL_HOUR ?? 18);
+const STREAK_HOUR = Number(process.env.PUSH_STREAK_HOUR ?? 23);
 
 export async function GET(request: Request) {
   const intentParam = new URL(request.url).searchParams.get("intent");
@@ -64,15 +67,13 @@ async function dispatchNotifications(intent: Intent) {
 
   const { data: profiles, error: profileError } = await supabaseAdmin
     .from("hydration_profiles")
-    .select("user_id, goal_ml")
+    .select("user_id, goal_ml, time_zone")
     .in("user_id", userIds);
   if (profileError) throw profileError;
 
-  const goals = new Map<string, number>();
+  const userSettings = new Map<string, { goal: number; timeZone: string | null }>();
   profiles?.forEach((profile) => {
-    if (profile.goal_ml && profile.goal_ml > 0) {
-      goals.set(profile.user_id, profile.goal_ml);
-    }
+    userSettings.set(profile.user_id, { goal: profile.goal_ml || 0, timeZone: profile.time_zone });
   });
 
   const { data: entries, error: entryError } = await supabaseAdmin
@@ -91,8 +92,14 @@ async function dispatchNotifications(intent: Intent) {
   const stats = { intent, sent: 0, skipped: 0, removed: 0, errors: 0 };
 
   for (const userId of userIds) {
-    const goal = goals.get(userId) || 0;
+    const settings = userSettings.get(userId);
+    const goal = settings?.goal || 0;
     if (!goal) {
+      stats.skipped += 1;
+      continue;
+    }
+    const timeZone = settings?.timeZone || DEFAULT_TIMEZONE;
+    if (!shouldSendForIntent(intent, timeZone, today)) {
       stats.skipped += 1;
       continue;
     }
@@ -185,4 +192,18 @@ function makeStreakPayload(streak: number, remaining: number): PushPayload {
     body: `Your ${streak}-day flow is ${formatMl(remaining)} ml from tomorrow. Pour a final glass before the city sleeps.`,
     url: "/hydration",
   };
+}
+
+function shouldSendForIntent(intent: Intent, timeZone: string, reference: Date) {
+  const { hour } = getLocalTimeParts(reference, timeZone);
+  const targetHour = intent === "goal" ? GOAL_HOUR : STREAK_HOUR;
+  return hour === targetHour;
+}
+
+function getLocalTimeParts(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "numeric", hour12: false, timeZone });
+  const parts = formatter.formatToParts(date);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? "0");
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? "0");
+  return { hour, minute };
 }
