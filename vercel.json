@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/push/notify?intent=goal",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/push/notify?intent=streak",
+      "schedule": "45 19 * * *"
+    }
+  ]
+}
+
