@@ -96,12 +96,7 @@ export default function PushNotificationsPrompt({
     }
   };
 
-  if (status === "unsupported" || !sessionToken) return null;
-  if (status === "granted") {
-    return (
-      <div className="text-xs text-emerald-600">Notifications enabled. We’ll only send important updates.</div>
-    );
-  }
+  if (status === "unsupported" || !sessionToken || status === "granted") return null;
 
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 p-4 flex flex-col gap-2 text-sm text-slate-600">
