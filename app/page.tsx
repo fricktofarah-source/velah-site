@@ -6,7 +6,6 @@ import About from "@/components/About";
 import Bottles from "@/components/Bottles";
 import HowItWorks from "@/components/HowItWorks";
 import MarqueeBand from "@/components/MarqueeBand";
-import Experience from "@/components/Experience";
 import SubscriptionPeek from "@/components/SubscriptionPeek";
 import ImpactStats from "@/components/ImpactStats";
 import BlogPreview from "@/components/BlogPreview";
@@ -28,7 +27,6 @@ const HOME_SECTIONS: SectionConfig[] = [
   { key: "bottles", render: () => <Bottles /> },
   { key: "marquee", fullBleed: true, render: () => <MarqueeBand /> },
   { key: "how", render: () => <HowItWorks /> },
-  { key: "experience", render: () => <Experience /> },
   { key: "subscription", render: () => <SubscriptionPeek /> },
   { key: "impact", render: () => <ImpactStats /> },
   { key: "blog", render: () => <BlogPreview posts={posts} /> },
@@ -43,17 +41,16 @@ export default function HomePage() {
 
   return (
     <main className="home-sections">
-      {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => (
-        <HomeSection
-          key={key}
-          fullBleed={fullBleed}
-          hasDivider={index > 0 && !fullBleed}
-          animate={animate}
-          index={index}
-        >
-          {render()}
-        </HomeSection>
-      ))}
+      {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => {
+        const prevSection = HOME_SECTIONS[index - 1];
+        const hasDivider =
+          index > 1 && !fullBleed && prevSection?.key !== "marquee" && !prevSection?.fullBleed;
+        return (
+          <HomeSection key={key} fullBleed={fullBleed} hasDivider={hasDivider} animate={animate} index={index}>
+            {render()}
+          </HomeSection>
+        );
+      })}
     </main>
   );
 }

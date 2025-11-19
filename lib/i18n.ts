@@ -92,6 +92,7 @@ type SubscriptionPeekCopy = {
   badge: string;
   heading: string;
   body: string;
+  aiBody?: string;
   bundles: Array<{
     id: string;
     name: string;
@@ -431,6 +432,8 @@ export const translations: Record<Language, SiteCopy> = {
       badge: "Subscription Preview",
       heading: "Choose a starting mix, then tailor every week.",
       body: "Pick the bundle closest to your routine. Once you’re on the waitlist you can confirm, tweak, or skip each delivery in seconds.",
+      aiBody: "Our AI looks at your answers and suggests the calmest mix to keep glass in circulation for the week ahead.",
+      aiBody: "Our AI looks at your answers and suggests the calmest mix to keep glass in circulation for the week ahead.",
       bundles: [
         {
           id: "balanced",
@@ -843,6 +846,7 @@ export const translations: Record<Language, SiteCopy> = {
       badge: "معاينة الاشتراك",
       heading: "اختر المزيج كبداية ثم عدّله كل أسبوع.",
       body: "انتقِ الحزمة الأقرب لروتينك. بعد الانضمام إلى قائمة الانتظار يمكنك التأكيد أو التعديل أو التخطي في ثوانٍ.",
+      aiBody: "يقترح الذكاء الاصطناعي لدينا المزيج الأنسب لأسبوعك بناءً على عاداتك حتى يبقى الزجاج في الدورة بهدوء.",
       bundles: [
         {
           id: "balanced",

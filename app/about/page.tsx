@@ -1,6 +1,6 @@
 // app/about/page.tsx
 import type { Metadata, Viewport } from "next";
-import ScrollVideo from "@/components/ScrollVideo";
+import AboutPageContent from "./AboutPageContent";
 
 export const metadata: Metadata = {
   title: "About | Velah",
@@ -13,20 +13,5 @@ export const viewport: Viewport = {
 };
 
 export default function AboutPage() {
-  return (
-    <>
-      <div className="-mt-16 sm:-mt-20">
-        <ScrollVideo
-          src="/videos/velah_animation.mp4"
-          showCue={false}
-          showFades={false}
-          transformOnScroll={false}
-          backgroundColor="#fff"
-          minHeight="160vh"
-        />
-      </div>
-
-      <main className="section-shell py-24 sm:py-32" />
-    </>
-  );
+  return <AboutPageContent />;
 }

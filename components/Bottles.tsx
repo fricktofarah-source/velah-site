@@ -2,11 +2,26 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const revealProps = (delay = 0) => ({
+  initial: { opacity: 0, y: 32 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.35 },
+  transition: { duration: 0.9, ease, delay },
+});
 
 export default function Bottles() {
   const { t } = useLanguage();
   const bottles = t.bottles.items;
+  const heroImages: Record<string, string> = {
+    "5g": "/about/5G_Invisiblebg.png",
+    "1l": "/about/1L_invisiblebg.png",
+    "500ml": "/about/500mL_invisiblebg.png",
+  };
 
   function addToPlan(key: typeof bottles[number]["key"]) {
     // Optional: preselect bottle for Subscription section to read
@@ -18,48 +33,57 @@ export default function Bottles() {
   }
 
   return (
-    <section
-      id="bottles"
-      className="section section-decor scroll-mt-24 sm:scroll-mt-32"
-      data-tone="oasis"
-    >
-      <div className="section-shell section-shell--wide">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-3xl font-semibold tracking-tight">{t.bottles.heading}</h2>
+    <section id="bottles" className="relative isolate overflow-hidden bg-white py-24 sm:py-32">
+      <div className="absolute inset-0 hidden bg-gradient-to-b from-white via-[#f4fbfc] to-white md:block" />
+      <div className="absolute -left-16 top-8 hidden h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(127,203,216,0.18),_transparent_65%)] blur-3xl md:block" />
+      <div className="absolute right-[-12%] bottom-0 hidden h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(148,163,184,0.18),_transparent_65%)] blur-[110px] md:block" />
+      <div className="absolute inset-x-0 top-24 mx-auto hidden h-64 w-[70%] rounded-full bg-white/50 blur-[140px] md:block" />
+      <div className="absolute inset-x-0 bottom-10 mx-auto hidden h-56 w-[80%] rounded-full bg-white/40 blur-[160px] md:block" />
+
+      <div className="section-shell section-shell--wide relative z-10">
+        <div className="text-center">
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            {t.bottles.heading}
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">{t.about.paragraphs[0]}</p>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bottles.map((b) => (
-            <article
+        <div
+          className="relative mt-16 flex gap-12 overflow-x-auto pb-8 pl-10 pr-24 md:grid md:grid-cols-3 md:gap-12 md:overflow-visible md:px-0 md:pb-0"
+          style={{ scrollSnapType: "x mandatory", scrollPaddingInline: "4.5rem" }}
+        >
+          {bottles.map((b, idx) => (
+            <motion.article
               key={b.key}
-              className="group rounded-3xl border bg-white/70 backdrop-blur p-6 sm:p-8 transition hover:-translate-y-1 hover:shadow-soft"
+              {...revealProps(idx * 0.08)}
+              className="group relative flex min-w-[78%] snap-center snap-always flex-col items-center gap-6 text-center md:min-w-0"
             >
-              <div className="grid grid-cols-[auto_1fr] md:grid-cols-[auto_1fr] gap-6 items-center">
-                <div className="relative h-48 w-36 sm:h-56 sm:w-48">
+              <div className="pointer-events-none absolute inset-x-0 top-8 z-[-1] h-56 w-full rounded-full bg-white/40 blur-3xl" />
+              <div className="relative flex w-full flex-col items-center">
+                <div className="pointer-events-none absolute bottom-0 h-20 w-40 rounded-full bg-slate-300/60 blur-[60px] sm:w-48" />
+                <div className="relative h-[420px] w-[220px] sm:h-[450px] sm:w-[240px]">
                   <Image
-                    src={b.img}
+                    src={heroImages[b.key] ?? b.img}
                     alt={b.name}
                     fill
-                    sizes="(min-width: 1024px) 12rem, (min-width: 768px) 12rem, 10rem"
-                    className="object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
+                    sizes="(min-width: 1024px) 16rem, (min-width: 768px) 15rem, 14rem"
+                    className="object-contain object-bottom drop-shadow-[0_45px_110px_rgba(15,23,42,0.25)] transition-transform duration-700 group-hover:scale-[1.03]"
                   />
                 </div>
-
-                <div>
-                  <h3 className="text-xl font-semibold">{b.name}</h3>
-                  <p className="mt-2 text-slate-600">{b.desc}</p>
-
-                  <div className="mt-5">
-                    <button
-                      onClick={() => addToPlan(b.key)}
-                      className="btn btn-primary h-10 px-4 rounded-full"
-                    >
-                      {t.bottles.addToPlan}
-                    </button>
-                  </div>
-                </div>
+                <div className="pointer-events-none absolute bottom-[-10px] h-16 w-40 rounded-full bg-gradient-to-r from-transparent via-slate-200/70 to-transparent blur-2xl sm:w-48" />
               </div>
-            </article>
+
+              <div className="space-y-3">
+                <h3 className="text-2xl font-semibold text-slate-900">{b.name}</h3>
+                <p className="text-base leading-relaxed text-slate-600">{b.desc}</p>
+                <button
+                  onClick={() => addToPlan(b.key)}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200/70 bg-white/50 px-6 py-2 text-sm font-semibold text-slate-900 shadow-[0_15px_40px_rgba(15,23,42,0.12)] backdrop-blur"
+                >
+                  {t.bottles.addToPlan}
+                </button>
+              </div>
+            </motion.article>
           ))}
         </div>
       </div>

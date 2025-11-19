@@ -1,133 +1,107 @@
 // components/Hero.tsx
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-import { translations } from "@/lib/i18n";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, type ReactNode } from "react";
+import { ABOUT_COPY } from "@/lib/aboutCopy";
+import BottleCarouselStage from "@/components/BottleCarouselStage";
 import { useLanguage } from "./LanguageProvider";
 
-type Slide = { src: string; alt: string; position?: string };
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Hero() {
-  const { language, t } = useLanguage();
-  const heroCopy = t.hero;
-  const slides: Slide[] = heroCopy.slides?.length ? heroCopy.slides : translations.EN.hero.slides;
-  const revealClass = useMemo(
-    () =>
-      "transition-opacity duration-[700ms] ease-[cubic-bezier(.22,1,.36,1)] opacity-0 translate-y-6 animate-[heroReveal_0.7s_ease_0.1s_forwards]",
-    []
-  );
-
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setActive((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => window.clearInterval(id);
-  }, [slides.length]);
-
-  useEffect(() => {
-    setActive(0);
-  }, [language, slides.length]);
+  const { language } = useLanguage();
+  const copy = ABOUT_COPY[language].hero;
 
   return (
-    <section className="relative isolate bg-white pt-0 pb-16 sm:pb-20" aria-label="Velah reusable glass water service">
-      <style>{`
-        @keyframes heroReveal {
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-      {/* Full-width slider */}
-      <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden -mt-16 sm:-mt-20" dir="ltr">
-        <div className="relative aspect-[20/12] sm:aspect-[22/12] lg:aspect-[24/12]" dir="ltr" aria-live="polite">
-          <div
-            className="flex h-full w-full transition-transform duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] will-change-transform"
-            style={{ transform: `translateX(-${active * 100}%)` }}
-          >
-            {slides.map((slide, idx) => {
-              const isSvg = slide.src.toLowerCase().endsWith(".svg");
-              return (
-                <div key={`${slide.src}-${idx}`} className="relative h-full w-full shrink-0 min-w-full bg-black" aria-hidden={idx !== active}>
-                  <Image
-                    src={slide.src}
-                    alt={slide.alt}
-                    fill
-                    sizes="100vw"
-                    priority={idx === 0}
-                    className="object-cover object-center"
-                    style={{ objectPosition: slide.position ?? "50% 50%" }}
-                    unoptimized={isSvg}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    draggable={false}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex w-full items-end justify-between px-4 pb-6 sm:px-8 sm:pb-8">
-            <div
-              className={`${
-                language === "AR"
-                  ? "text-sm font-semibold text-white/80"
-                  : "text-xs font-semibold uppercase tracking-[0.26em] text-white/80"
-              }`}
-            >
-              {heroCopy.sliderLabel ?? "Velah"}
-            </div>
-            <div className="flex items-center gap-2 pointer-events-auto">
-              {slides.map((_, idx) => {
-                const isActive = idx === active;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    aria-label={`Show slide ${idx + 1}`}
-                    onClick={() => setActive(idx)}
-                    className={`h-2.5 rounded-full transition-all duration-300 focus-ring ${
-                      isActive ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"
-                    }`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
+    <section className="relative isolate overflow-hidden bg-gradient-to-b from-white via-[#f6fbfb] to-white pb-12 pt-0 sm:pb-24 sm:pt-8">
+      <div className="absolute inset-0">
+        <ScrollParallax amount={60} className="absolute inset-0">
+          <Image
+            src="/about/About_hero_bg.png"
+            alt="Velah hero desert background"
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+          />
+        </ScrollParallax>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-white" />
+        <ScrollParallax amount={30} className="absolute inset-x-0 top-0 flex justify-center opacity-70">
+          <div className="mt-8 h-32 w-[70%] rounded-full bg-white/40 blur-3xl" />
+        </ScrollParallax>
       </div>
-
-      {/* Hero content */}
-      <div className="mt-10 px-4 sm:px-6 sm:mt-14">
-        <div className={`${revealClass} mx-auto flex max-w-3xl flex-col items-center gap-5 text-center`}>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">
-              {heroCopy.badge}
-            </div>
-            <h1 className="mt-3 text-3xl sm:text-[2.75rem] font-semibold tracking-tight text-slate-900">
-              {heroCopy.heading}
-            </h1>
-            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              {heroCopy.body}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
-            <button
-              type="button"
-              className="btn btn-primary h-11 px-6 focus-ring"
-              onClick={() => {
-                window.dispatchEvent(new Event("velah:open-waitlist"));
-              }}
+      <div className="section-shell relative z-10">
+        <ScrollParallax amount={-55}>
+          <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.5fr)]">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease }}
+              className="space-y-6 text-center lg:text-left"
             >
-              {heroCopy.primaryCta}
-            </button>
-            <Link href="/#about" className="link-underline text-sm font-medium">
-              {heroCopy.secondaryCta}
-            </Link>
+              <h1 className="text-5xl font-semibold uppercase tracking-[0.35em] text-slate-900 sm:text-6xl lg:text-[4.2rem]">
+                Velah
+              </h1>
+              <h2 className="text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl lg:text-[2.75rem]">
+                {copy.heading}
+              </h2>
+              <p className="text-lg leading-relaxed text-slate-600 sm:text-xl">{copy.body}</p>
+              <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-500 lg:justify-start">
+                {copy.bullets.map((bullet, idx) => (
+                  <span key={bullet} className="inline-flex items-center gap-2">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        idx === 0 ? "bg-[var(--velah)]" : "bg-slate-300"
+                      }`}
+                    />
+                    {bullet}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, ease, delay: 0.1 }}
+              className="relative mx-auto flex w-full max-w-4xl flex-col items-center gap-6"
+            >
+              <BottleCarouselStage shots={copy.carouselShots} heightClass="h-[70vh] sm:h-[80vh]" showBackground={false} />
+              <div className="text-center text-sm text-slate-500">
+                {copy.scrollHint}
+                <motion.span
+                  className="mt-3 block text-lg text-slate-400"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  ↓
+                </motion.span>
+              </div>
+            </motion.div>
           </div>
-        </div>
+        </ScrollParallax>
       </div>
-
     </section>
   );
 }
+
+type ScrollParallaxProps = {
+  amount?: number;
+  className?: string;
+  children: ReactNode;
+};
+
+const ScrollParallax = ({ amount = 40, className, children }: ScrollParallaxProps) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [-amount, amount]);
+  return (
+    <motion.div ref={ref} style={{ y }} className={className}>
+      {children}
+    </motion.div>
+  );
+};

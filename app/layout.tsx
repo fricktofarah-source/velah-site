@@ -43,8 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <Navbar />
 
-          {/* Offset content so it never sits under the sticky navbar (mobile-first) */}
-          <main id="content" className="flex-1 pt-16 sm:pt-20">
+          <main id="content" className="flex-1">
             {children}
           </main>
 
