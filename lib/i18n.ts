@@ -433,7 +433,6 @@ export const translations: Record<Language, SiteCopy> = {
       heading: "Choose a starting mix, then tailor every week.",
       body: "Pick the bundle closest to your routine. Once you’re on the waitlist you can confirm, tweak, or skip each delivery in seconds.",
       aiBody: "Our AI looks at your answers and suggests the calmest mix to keep glass in circulation for the week ahead.",
-      aiBody: "Our AI looks at your answers and suggests the calmest mix to keep glass in circulation for the week ahead.",
       bundles: [
         {
           id: "balanced",
