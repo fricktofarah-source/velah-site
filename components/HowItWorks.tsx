@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
+import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
 
 const STEP_ICONS: Record<number, React.ReactElement> = {
   1: (
@@ -44,6 +45,7 @@ export default function HowItWorks() {
   const step = steps.find((s) => s.id === active) ?? steps[0];
   const stepCounterLabel = language === "AR" ? `الخطوة ${active} من ${steps.length}` : `Step ${active} of ${steps.length}`;
   const sectionRef = useRef<HTMLElement | null>(null);
+  const parallaxEnabled = useParallaxEnabled();
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
@@ -61,6 +63,70 @@ export default function HowItWorks() {
     setActive(steps[0]?.id ?? 1);
   }, [language, steps]);
 
+  const sectionContent = (
+    <>
+      <header className="text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{copy.tagline}</p>
+        <h2 id="how-title" className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          {copy.heading}
+        </h2>
+      </header>
+
+      <div className="mt-12 space-y-12">
+        <Timeline steps={steps} active={active} onSelect={setActive} />
+
+        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <motion.div
+            key={`story-${active}`}
+            initial={{ opacity: 0, y: 32 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease }}
+            className="space-y-6 text-center lg:text-left"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
+              <span className="text-[var(--velah)]">{STEP_ICONS[step.id]}</span>
+              {stepCounterLabel}
+            </div>
+            <h3 className="text-2xl font-semibold text-slate-900 sm:text-3xl">{step.title}</h3>
+            <p className="text-lg leading-relaxed text-slate-600">{step.body}</p>
+            <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-600 lg:justify-start">
+              {step.chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="inline-flex items-center rounded-full bg-white/70 px-4 py-1.5 font-medium shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+              <button
+                className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500"
+                onClick={() => setActive((active % steps.length) + 1)}
+              >
+                {copy.next}
+              </button>
+              <Link href="/subscription" className="btn btn-primary rounded-full px-6 py-3 text-sm font-semibold">
+                {copy.subscriptionCta}
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div
+            key={`scene-${active}`}
+            initial={{ opacity: 0, y: 32 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease, delay: 0.05 }}
+            className="relative overflow-hidden rounded-[3rem] border border-white/60 bg-white/30 p-8 shadow-[0_40px_120px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+          >
+            <div className="pointer-events-none absolute inset-x-6 top-4 h-40 rounded-[2rem] bg-white/40 blur-3xl" />
+            <StepScene stepId={step.id} visuals={visuals} />
+          </motion.div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <section
       ref={sectionRef}
@@ -68,81 +134,41 @@ export default function HowItWorks() {
       className="relative isolate overflow-hidden py-24 sm:py-32"
       aria-labelledby="how-title"
     >
-      <motion.div style={{ y: bgParallax }} className="absolute inset-0">
-        <Image
-          src="/about/Desert_camels_bg.png"
-          alt=""
-          fill
-          sizes="100vw"
-          priority={false}
-          className="object-cover object-center opacity-80 scale-x-[-1]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
-      </motion.div>
+      {parallaxEnabled ? (
+        <motion.div style={{ y: bgParallax }} className="absolute inset-0">
+          <Image
+            src="/about/Desert_camels_bg.png"
+            alt=""
+            fill
+            sizes="100vw"
+            priority={false}
+            className="object-cover object-center opacity-80 scale-x-[-1]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
+        </motion.div>
+      ) : (
+        <div className="absolute inset-0">
+          <Image
+            src="/about/Desert_camels_bg.png"
+            alt=""
+            fill
+            sizes="100vw"
+            priority={false}
+            className="object-cover object-center opacity-80 scale-x-[-1]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-x-0 top-16 mx-auto h-64 w-[80%] rounded-full bg-white/60 blur-[150px]" />
       <div className="pointer-events-none absolute left-[10%] top-12 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(127,203,216,0.18),_transparent_60%)] blur-3xl" />
       <div className="pointer-events-none absolute right-[5%] bottom-4 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(148,163,184,0.2),_transparent_65%)] blur-[120px]" />
-      <motion.div style={{ y: fgParallax }} className="section-shell relative z-10">
-        <header className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{copy.tagline}</p>
-          <h2 id="how-title" className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            {copy.heading}
-          </h2>
-        </header>
-
-        <div className="mt-12 space-y-12">
-          <Timeline steps={steps} active={active} onSelect={setActive} />
-
-          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <motion.div
-              key={`story-${active}`}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease }}
-              className="space-y-6 text-center lg:text-left"
-            >
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
-                <span className="text-[var(--velah)]">{STEP_ICONS[step.id]}</span>
-                {stepCounterLabel}
-              </div>
-              <h3 className="text-2xl font-semibold text-slate-900 sm:text-3xl">{step.title}</h3>
-              <p className="text-lg leading-relaxed text-slate-600">{step.body}</p>
-              <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-600 lg:justify-start">
-                {step.chips.map((chip) => (
-                  <span
-                    key={chip}
-                    className="inline-flex items-center rounded-full bg-white/70 px-4 py-1.5 font-medium shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-                <button
-                  className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500"
-                  onClick={() => setActive((active % steps.length) + 1)}
-                >
-                  {copy.next}
-                </button>
-                <Link href="/subscription" className="btn btn-primary rounded-full px-6 py-3 text-sm font-semibold">
-                  {copy.subscriptionCta}
-                </Link>
-              </div>
-            </motion.div>
-
-            <motion.div
-              key={`scene-${active}`}
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease, delay: 0.05 }}
-              className="relative overflow-hidden rounded-[3rem] border border-white/60 bg-white/30 p-8 shadow-[0_40px_120px_rgba(15,23,42,0.12)] backdrop-blur-xl"
-            >
-              <div className="pointer-events-none absolute inset-x-6 top-4 h-40 rounded-[2rem] bg-white/40 blur-3xl" />
-              <StepScene stepId={step.id} visuals={visuals} />
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
+      {parallaxEnabled ? (
+        <motion.div style={{ y: fgParallax }} className="section-shell relative z-10">
+          {sectionContent}
+        </motion.div>
+      ) : (
+        <div className="section-shell relative z-10">{sectionContent}</div>
+      )}
     </section>
   );
 }

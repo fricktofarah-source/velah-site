@@ -7,6 +7,7 @@ import { useRef, type ReactNode } from "react";
 import { ABOUT_COPY } from "@/lib/aboutCopy";
 import BottleCarouselStage from "@/components/BottleCarouselStage";
 import { useLanguage } from "./LanguageProvider";
+import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -93,12 +94,20 @@ type ScrollParallaxProps = {
 };
 
 const ScrollParallax = ({ amount = 40, className, children }: ScrollParallaxProps) => {
+  const parallaxEnabled = useParallaxEnabled();
   const ref = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
   const y = useTransform(scrollYProgress, [0, 1], [-amount, amount]);
+  if (!parallaxEnabled || amount === 0) {
+    return (
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+    );
+  }
   return (
     <motion.div ref={ref} style={{ y }} className={className}>
       {children}
