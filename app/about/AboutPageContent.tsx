@@ -8,9 +8,20 @@ import { animate, motion, useInView, useScroll, useTransform } from "framer-moti
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { ABOUT_COPY, type AboutCopy } from "@/lib/aboutCopy";
-import BottleCarouselStage from "@/components/BottleCarouselStage";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+const LOGO_OUTER_PATH =
+  "M373.8,396.3c44.65-3.5,85.61,15.16,118.21,44.19,3.75,3.33,16.86,18.6,20.51,18.5,2.11-.06,10.07-9.35,12.46-11.5,40-35.84,84.5-59.26,140.24-49.21,111.93,20.18,137.37,170.67,31.13,219.59-67.11,30.9-136.35-.55-184-49.79-38.96,34.81-82.78,65.27-137.9,61.97-151.93-9.09-151.64-221.91-.66-233.74";
+const LOGO_WAVE_PATH =
+  "M643,589h-14.5c-26.43,0-58.34-25.24-75.01-43.99-48.65-54.67-97.31-133.12-182.86-122.89-99.44,11.9-116.5,145.81-21.59,177.33,58.26,19.35,111.82-14.69,150.47-55.44,4-4.22,6.09-11.11,13.01-11.05,5.98.05,8.51,7.35,11.97,11.05,40.06,42.89,95.85,77.53,156.19,53.17,84.48-34.11,70.51-153.47-15.48-172.88-54.04-12.2-99.58,15.43-135.02,53.19,31.39,34.27,54.25,76.98,93.9,102.93l18.92,8.58";
+const LOGO_FULL_PATH = `${LOGO_OUTER_PATH}Z${LOGO_WAVE_PATH}Z`;
+
+const LOGO_SEGMENTS = [
+  { d: LOGO_OUTER_PATH, duration: 5 },
+  { d: LOGO_WAVE_PATH, duration: 3.5 },
+] as const;
+const LOGO_TOTAL_DURATION = LOGO_SEGMENTS.reduce((acc, segment) => acc + segment.duration, 0);
 
 type ScrollParallaxProps = {
   amount?: number;
@@ -123,61 +134,105 @@ const HeroSection = ({ copy }: { copy: AboutCopy["hero"] }) => {
       <div className="section-shell relative z-10">
         <ScrollParallax amount={-35}>
           <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.5fr)]">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease }}
-            className="space-y-6 text-center lg:text-left"
-          >
-            <div className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
-              {copy.badge}
-            </div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
-              {copy.heading}
-            </h1>
-            <p className="text-lg leading-relaxed text-slate-600 sm:text-xl">
-              {copy.body}
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-500 lg:justify-start">
-              {copy.bullets.map((bullet, idx) => (
-                <span key={bullet} className="inline-flex items-center gap-2">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      idx === 0 ? "bg-[var(--velah)]" : "bg-slate-300"
-                    }`}
-                  />
-                  {bullet}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.9, ease, delay: 0.1 }}
-            className="relative mx-auto flex w-full max-w-4xl flex-col items-center gap-6"
-          >
-            <BottleCarouselStage
-              shots={copy.carouselShots}
-              heightClass="h-[70vh] sm:h-[80vh]"
-              showBackground={false}
-              className="w-full"
-            />
-            <div className="text-center text-sm text-slate-500">
-              {copy.scrollHint}
-              <motion.span
-                className="mt-3 block text-lg text-slate-400"
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                ↓
-              </motion.span>
-            </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease }}
+              className="space-y-6 text-center lg:text-left"
+            >
+              <div className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
+                {copy.badge}
+              </div>
+              <h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
+                {copy.heading}
+              </h1>
+              <p className="text-lg leading-relaxed text-slate-600 sm:text-xl">
+                {copy.body}
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-500 lg:justify-start">
+                {copy.bullets.map((bullet, idx) => (
+                  <span key={bullet} className="inline-flex items-center gap-2">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${idx === 0 ? "bg-[var(--velah)]" : "bg-slate-300"}`}
+                    />
+                    {bullet}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, ease, delay: 0.1 }}
+              className="relative mx-auto flex w-full max-w-3xl flex-col items-center_gap-6"
+            >
+              <div className="relative flex h-[65vh] w-full items-center justify-center">
+                <motion.div
+                  className="absolute inset-x-10 top-1/2 h-28 -translate-y-1/2 rounded-full bg-white/35 blur-3xl"
+                  animate={{ opacity: [0.25, 0.55, 0.25], scaleX: [1, 1.12, 1] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute inset-8 flex items-center justify-center"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+                >
+                  <div className="h-[86%] w-[86%] rounded-full border border-white/20" />
+                </motion.div>
+                <AnimatedVelahLogo />
+              </div>
+              <div className="text-center text-sm text-slate-500">
+                {copy.scrollHint}
+                <motion.span
+                  className="mt-3 block text-lg text-slate-400"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  ↓
+                </motion.span>
+              </div>
+            </motion.div>
           </div>
         </ScrollParallax>
       </div>
     </section>
+  );
+};
+
+const AnimatedVelahLogo = () => {
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setIsReady(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+  return (
+    <motion.div
+      className="relative flex h-full w-full max-w-[420px] items-center justify-center drop-shadow-[0_35px_90px_rgba(15,23,42,0.18)]"
+      animate={{ y: [0, -12, 0], scale: [1, 1.012, 1], rotate: [0, 0.2, 0] }}
+      transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <motion.svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" className="w-full">
+        <motion.path
+          d={LOGO_FULL_PATH}
+          fill="none"
+          stroke="#0F172A"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          pathLength={1}
+          initial={{ strokeDasharray: 1, strokeDashoffset: 1 }}
+          animate={{ strokeDashoffset: isReady ? 0 : 1 }}
+          transition={{ duration: LOGO_TOTAL_DURATION, ease: "easeInOut" }}
+        />
+        <motion.path
+          d={LOGO_FULL_PATH}
+          fill="#0F172A"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isReady ? 1 : 0 }}
+          transition={{ delay: LOGO_TOTAL_DURATION - 1, duration: 1, ease: "easeInOut" }}
+        />
+      </motion.svg>
+    </motion.div>
   );
 };
 
