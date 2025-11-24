@@ -13,6 +13,7 @@ type Suggestion = {
 const GLASS_ML = 250;          // avg glass in ml
 const FIVE_GAL_LITERS = 18.9;  // 5 gallon in liters
 const L_TO_ML = 1000;
+const formatSizeLabel = (size: MixSize) => (size === "500mL" ? "500 mL" : size);
 
 const PRICE = {
   "500mL": 4,   // placeholder
@@ -256,10 +257,11 @@ export default function Subscription({ compact = false }: { compact?: boolean })
                 </div>
                 <div className="p-4 border-b sm:border-b-0 sm:border-r">
                   <div className="text-slate-500">Mix</div>
-                  <div className="mt-1 font-semibold">
+                  <div className="mt-1 font-semibold flex flex-col gap-1">
                     {suggestion.mix.map((m, i) => (
-                      <span key={i} className="inline-block mr-2">
-                        {m.qty}× {m.size === "500mL" ? "500 mL" : m.size}
+                      <span key={i}>
+                        {m.qty}× {formatSizeLabel(m.size)}{" "}
+                        <span className="text-xs text-slate-500">(AED {PRICE[m.size]} ea)</span>
                       </span>
                     ))}
                   </div>
@@ -280,6 +282,7 @@ export default function Subscription({ compact = false }: { compact?: boolean })
               {/* 5G */}
               <CounterRow
                 label="5 gallon (18.9L)"
+                price={`AED ${PRICE["5G"]} ea`}
                 value={fiveG}
                 onDec={() => step(setFiveG, -1)}
                 onInc={() => step(setFiveG, +1)}
@@ -288,6 +291,7 @@ export default function Subscription({ compact = false }: { compact?: boolean })
               {/* 1L */}
               <CounterRow
                 label="1 liter"
+                price={`AED ${PRICE["1L"]} ea`}
                 value={oneL}
                 onDec={() => step(setOneL, -1)}
                 onInc={() => step(setOneL, +1)}
@@ -296,6 +300,7 @@ export default function Subscription({ compact = false }: { compact?: boolean })
               {/* 500 mL */}
               <CounterRow
                 label="500 mL"
+                price={`AED ${PRICE["500mL"]} ea`}
                 value={fiveHund}
                 onDec={() => step(setFiveHund, -1)}
                 onInc={() => step(setFiveHund, +1)}
@@ -308,14 +313,20 @@ export default function Subscription({ compact = false }: { compact?: boolean })
               <div className="grid grid-cols-1 sm:grid-cols-3 text-sm">
                 <div className="p-4 border-b sm:border-b-0 sm:border-r">
                   <div className="text-slate-500">Your mix</div>
-                  <div className="mt-1 font-semibold">
+                  <div className="mt-1 font-semibold flex flex-col gap-1">
                     {[
-                      fiveG ? `${fiveG}× 5G` : "",
-                      oneL ? `${oneL}× 1L` : "",
-                      fiveHund ? `${fiveHund}× 500 mL` : "",
+                      fiveG ? { size: "5G" as MixSize, qty: fiveG } : null,
+                      oneL ? { size: "1L" as MixSize, qty: oneL } : null,
+                      fiveHund ? { size: "500mL" as MixSize, qty: fiveHund } : null,
                     ]
                       .filter(Boolean)
-                      .join(" • ") || "0 bottles"}
+                      .map((entry, idx) => (
+                        <span key={idx}>
+                          {entry!.qty}× {formatSizeLabel(entry!.size)}{" "}
+                          <span className="text-xs text-slate-500">(AED {PRICE[entry!.size]} ea)</span>
+                        </span>
+                      ))}
+                    {fiveG + oneL + fiveHund === 0 && <span>0 bottles</span>}
                   </div>
                 </div>
                 <div className="p-4 border-b sm:border-b-0 sm:border-r">
@@ -371,16 +382,21 @@ function CounterRow({
   onDec,
   onInc,
   onInput,
+  price,
 }: {
   label: string;
   value: number;
   onDec: () => void;
   onInc: () => void;
   onInput: (n: number) => void;
+  price?: string;
 }) {
   return (
     <div className="rounded-2xl border p-4">
-      <div className="text-sm text-slate-500">{label}</div>
+      <div className="text-sm text-slate-500 flex items-center justify-between gap-2">
+        <span>{label}</span>
+        {price && <span className="text-xs text-slate-400">{price}</span>}
+      </div>
       <div className="mt-2 flex items-center gap-3">
         <button type="button" className="h-9 w-9 rounded-full border hover:bg-slate-50" onClick={onDec} aria-label={`Decrease ${label}`}>
           −
