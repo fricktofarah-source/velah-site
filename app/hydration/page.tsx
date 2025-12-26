@@ -3,13 +3,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { dayKey } from "@/lib/app/hydration";
 import AddToHome from "../../components/AddToHome";
 import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
 
 /* ---------- helpers ---------- */
-const dayKey = (d = new Date()) => d.toISOString().slice(0, 10); // YYYY-MM-DD
 const clamp = (n: number, lo = 0, hi = 1_000_000) => Math.min(hi, Math.max(lo, n));
 const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
