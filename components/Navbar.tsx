@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
-import { useStandaloneMode } from "@/lib/useStandaloneMode";
 
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
@@ -213,7 +212,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const { isStandaloneDisplay } = useStandaloneMode();
   const navLinks = t.nav.navLinks;
   const allNavItems: Array<
     | { key: "about" | "sustainability" | "subscription" | "blog"; label: string; type: "section"; sectionId: string }
@@ -225,10 +223,7 @@ export default function Navbar() {
     { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
     { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
   ];
-  const standaloneNavKeys = new Set(["subscription", "hydration"]);
-  const visibleNavItems = isStandaloneDisplay
-    ? allNavItems.filter((item) => standaloneNavKeys.has(item.key))
-    : allNavItems;
+  const visibleNavItems = allNavItems;
   const waitlistCopy = t.nav.waitlistModal;
   const languageOptions = t.nav.languages;
   const currentLanguageLabel =
