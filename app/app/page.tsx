@@ -5,14 +5,13 @@ import AppHeader from "@/components/app/AppHeader";
 import ProgressRing from "@/components/app/ProgressRing";
 import RequireAuth from "@/components/app/RequireAuth";
 import { supabase } from "@/lib/supabaseClient";
-import { dayKey, enqueueEntry, loadQueue, removeQueued, type QueuedEntry } from "@/lib/app/hydration";
+import { dayKey, enqueueEntry, loadQueue, removeQueued, saveQueue, type QueuedEntry } from "@/lib/app/hydration";
 
 const quickAdds = [250, 500, 1000];
 
 type HydrationEntry = {
   key: string;
-  amount_ml: number;
-  logged_at: string;
+  intake_ml: number;
   day: string;
   pending?: boolean;
 };
@@ -54,8 +53,7 @@ function HomeContent() {
       const queue = loadQueue().filter((item) => item.user_id === userId);
       const queuedEntries: HydrationEntry[] = queue.map((item) => ({
         key: item.local_id,
-        amount_ml: item.amount_ml,
-        logged_at: item.logged_at,
+        intake_ml: item.amount_ml,
         day: item.day,
         pending: true,
       }));
@@ -78,40 +76,20 @@ function HomeContent() {
     start.setDate(start.getDate() - 6);
     const primaryQuery = supabase
       .from("hydration_entries")
-      .select("amount_ml,logged_at,day")
+      .select("intake_ml,day")
       .eq("user_id", userId)
       .gte("day", dayKey(start))
       .lte("day", today)
-      .order("logged_at", { ascending: false });
+      .order("day", { ascending: false });
 
-    let rows: { amount_ml: number; logged_at: string; day: string }[] | null = null;
+    let rows: { intake_ml: number; day: string }[] | null = null;
     let error: { message?: string } | null = null;
     const primary = await primaryQuery;
     if (primary.error) {
-      if (primary.error.message?.includes("amount_ml")) {
-        const fallback = await supabase
-          .from("hydration_entries")
-          .select("intake_ml,logged_at,day")
-          .eq("user_id", userId)
-          .gte("day", dayKey(start))
-          .lte("day", today)
-          .order("logged_at", { ascending: false });
-        if (fallback.error) {
-          error = fallback.error;
-        } else {
-          rows = (fallback.data || []).map((row: { intake_ml: number; logged_at: string; day: string }) => ({
-            amount_ml: row.intake_ml,
-            logged_at: row.logged_at,
-            day: row.day,
-          }));
-        }
-      } else {
-        error = primary.error;
-      }
+      error = primary.error;
     } else {
       rows = (primary.data || []).map((row) => ({
-        amount_ml: row.amount_ml,
-        logged_at: row.logged_at,
+        intake_ml: row.intake_ml,
         day: row.day,
       }));
     }
@@ -124,20 +102,21 @@ function HomeContent() {
     const queue = loadQueue().filter((item) => item.user_id === userId);
     const queuedEntries: HydrationEntry[] = queue.map((item) => ({
       key: item.local_id,
-      amount_ml: item.amount_ml,
-      logged_at: item.logged_at,
+      intake_ml: item.amount_ml,
       day: item.day,
       pending: true,
     }));
 
     const hydratedRows: HydrationEntry[] = (rows || []).map((row) => ({
-      key: `${row.day}-${row.logged_at}-${row.amount_ml}`,
-      amount_ml: row.amount_ml,
-      logged_at: row.logged_at,
+      key: row.day,
+      intake_ml: row.intake_ml,
       day: row.day,
     }));
 
-    setEntries([...hydratedRows, ...queuedEntries]);
+    const merged = new Map<string, HydrationEntry>();
+    hydratedRows.forEach((entry) => merged.set(entry.day, entry));
+    queuedEntries.forEach((entry) => merged.set(entry.day, entry));
+    setEntries([...merged.values()]);
     if (!error) setStatus(null);
   };
 
@@ -150,17 +129,19 @@ function HomeContent() {
   }, [today]);
 
   const todayTotal = useMemo(() => {
-    return entries.filter((entry) => entry.day === today).reduce((sum, entry) => sum + entry.amount_ml, 0);
+    return entries.filter((entry) => entry.day === today).reduce((sum, entry) => sum + entry.intake_ml, 0);
   }, [entries, today]);
 
   const recentEntries = useMemo(() => {
-    return [...entries].sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime()).slice(0, 3);
+    return [...entries]
+      .sort((a, b) => new Date(b.day).getTime() - new Date(a.day).getTime())
+      .slice(0, 3);
   }, [entries]);
 
   const weeklyTotals = useMemo(() => {
     const totals = new Map<string, number>();
     entries.forEach((entry) => {
-      totals.set(entry.day, (totals.get(entry.day) || 0) + entry.amount_ml);
+      totals.set(entry.day, entry.intake_ml);
     });
     return totals;
   }, [entries]);
@@ -199,68 +180,56 @@ function HomeContent() {
     const userId = data.session?.user.id;
     if (!userId) return;
 
+    const nextTotal = todayTotal + amount;
     const payload = {
       user_id: userId,
-      amount_ml: amount,
-      logged_at: new Date().toISOString(),
       day: today,
-      source: "quick-add",
+      intake_ml: nextTotal,
     };
 
     if (!navigator.onLine) {
-      const queued: QueuedEntry = { ...payload, local_id: crypto.randomUUID() };
-      enqueueEntry(queued);
-      setEntries((prev) => [{ ...payload, key: queued.local_id, pending: true }, ...prev]);
+      const queue = loadQueue();
+      const existing = queue.find((item) => item.day === today && item.user_id === userId);
+      const localId = existing?.local_id ?? crypto.randomUUID();
+      const queued: QueuedEntry = {
+        user_id: userId,
+        amount_ml: nextTotal,
+        logged_at: new Date().toISOString(),
+        day: today,
+        source: "total",
+        local_id: localId,
+      };
+      const nextQueue = queue.filter((item) => item.local_id !== localId && item.day !== today);
+      nextQueue.push(queued);
+      saveQueue(nextQueue);
+      setEntries((prev) => [
+        { key: localId, intake_ml: nextTotal, day: today, pending: true },
+        ...prev.filter((entry) => entry.day !== today),
+      ]);
       setStatus("Offline — added to queue. We will sync once you are back online.");
       return;
     }
 
-    const primaryInsert = await supabase
+    const { error: upsertError } = await supabase
       .from("hydration_entries")
-      .insert(payload)
-      .select("amount_ml,logged_at,day")
-      .single();
+      .upsert(payload, { onConflict: "user_id,day" });
 
-    let inserted = primaryInsert.data
-      ? { amount_ml: primaryInsert.data.amount_ml, logged_at: primaryInsert.data.logged_at, day: primaryInsert.data.day }
-      : null;
-    let insertError = primaryInsert.error;
-
-    if (insertError?.message?.includes("amount_ml")) {
-      const fallbackInsert = await supabase
-        .from("hydration_entries")
-        .insert({ ...payload, intake_ml: payload.amount_ml })
-        .select("intake_ml,logged_at,day")
-        .single();
-      if (fallbackInsert.error) {
-        insertError = fallbackInsert.error;
-      } else if (fallbackInsert.data) {
-        inserted = {
-          amount_ml: fallbackInsert.data.intake_ml,
-          logged_at: fallbackInsert.data.logged_at,
-          day: fallbackInsert.data.day,
-        };
-        insertError = null;
-      }
-    }
-
-    if (insertError || !inserted) {
-      const queued: QueuedEntry = { ...payload, local_id: crypto.randomUUID() };
+    if (upsertError) {
+      const queued: QueuedEntry = {
+        user_id: userId,
+        amount_ml: nextTotal,
+        logged_at: new Date().toISOString(),
+        day: today,
+        source: "total",
+        local_id: crypto.randomUUID(),
+      };
       enqueueEntry(queued);
-      setEntries((prev) => [{ ...payload, key: queued.local_id, pending: true }, ...prev]);
+      setEntries((prev) => [{ key: queued.local_id, intake_ml: nextTotal, day: today, pending: true }, ...prev]);
       setStatus("Could not reach Supabase. Entry queued for sync.");
       return;
     }
 
-    setEntries((prev) => [
-      {
-        key: `${inserted.day}-${inserted.logged_at}-${inserted.amount_ml}`,
-        amount_ml: inserted.amount_ml,
-        logged_at: inserted.logged_at,
-        day: inserted.day,
-      },
-      ...prev,
-    ]);
+    setEntries((prev) => [{ key: today, intake_ml: nextTotal, day: today }, ...prev.filter((entry) => entry.day !== today)]);
     setStatus(null);
   };
 
@@ -273,19 +242,15 @@ function HomeContent() {
       const queue = loadQueue().filter((item) => item.user_id === userId);
       if (queue.length === 0) return;
 
-      const payload = queue.map(({ local_id, ...rest }) => rest);
-      let syncError = null as { message?: string } | null;
+      const payload = queue.map((item) => ({
+        user_id: item.user_id,
+        day: item.day,
+        intake_ml: item.amount_ml,
+      }));
 
-      const primarySync = await supabase.from("hydration_entries").insert(payload);
-      if (primarySync.error) {
-        if (primarySync.error.message?.includes("amount_ml")) {
-          const fallbackPayload = payload.map((item) => ({ ...item, intake_ml: item.amount_ml }));
-          const fallbackSync = await supabase.from("hydration_entries").insert(fallbackPayload);
-          if (fallbackSync.error) syncError = fallbackSync.error;
-        } else {
-          syncError = primarySync.error;
-        }
-      }
+      const { error: syncError } = await supabase
+        .from("hydration_entries")
+        .upsert(payload, { onConflict: "user_id,day" });
 
       if (syncError) {
         setStatus("Still offline. Entries will sync automatically.");
@@ -388,9 +353,9 @@ function HomeContent() {
           {recentEntries.map((entry) => (
             <div key={entry.key} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
               <div>
-                <div className="text-base font-semibold text-slate-900">{entry.amount_ml} ml</div>
+                <div className="text-base font-semibold text-slate-900">{entry.intake_ml} ml</div>
                 <div className="text-xs text-slate-400">
-                  {new Date(entry.logged_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                  {new Date(entry.day).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
                   {entry.pending ? " · queued" : ""}
                 </div>
               </div>
