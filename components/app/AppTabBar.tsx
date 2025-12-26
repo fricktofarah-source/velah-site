@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BoxIcon, DropletIcon, HomeIcon, LoopIcon, UserIcon } from "./AppIcons";
+import { BoxIcon, HomeIcon, LoopIcon, UserIcon } from "./AppIcons";
 
 const tabs = [
   { href: "/app", label: "Home", icon: HomeIcon },
-  { href: "/app/hydration", label: "Hydration", icon: DropletIcon },
   { href: "/app/orders", label: "Orders", icon: BoxIcon },
   { href: "/app/loop", label: "Loop", icon: LoopIcon },
   { href: "/app/profile", label: "Profile", icon: UserIcon },

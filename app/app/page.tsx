@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AppHeader from "@/components/app/AppHeader";
 import ProgressRing from "@/components/app/ProgressRing";
@@ -32,6 +31,7 @@ function HomeContent() {
   const [entries, setEntries] = useState<HydrationEntry[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
+  const [customAmount, setCustomAmount] = useState("350");
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -49,6 +49,21 @@ function HomeContent() {
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user.id;
     if (!userId) return;
+
+    if (!navigator.onLine) {
+      const queue = loadQueue().filter((item) => item.user_id === userId);
+      const queuedEntries: HydrationEntry[] = queue.map((item) => ({
+        id: item.local_id,
+        amount_ml: item.amount_ml,
+        logged_at: item.logged_at,
+        day: item.day,
+        pending: true,
+      }));
+      if (!mounted.current) return;
+      setEntries(queuedEntries);
+      setStatus("Offline — showing queued entries only.");
+      return;
+    }
 
     const { data: profile } = await supabase
       .from("hydration_profiles")
@@ -71,7 +86,7 @@ function HomeContent() {
 
     if (!mounted.current) return;
     if (error) {
-      setStatus("Could not refresh hydration. Pull to retry.");
+      setStatus(error.message || "Could not refresh hydration. Pull to retry.");
     }
 
     const queue = loadQueue().filter((item) => item.user_id === userId);
@@ -84,6 +99,7 @@ function HomeContent() {
     }));
 
     setEntries([...(rows || []), ...queuedEntries]);
+    if (!error) setStatus(null);
   };
 
   useEffect(() => {
@@ -224,30 +240,20 @@ function HomeContent() {
               +{amount} ml
             </button>
           ))}
-          <Link href="/app/hydration" className="btn btn-primary h-10 rounded-full">
-            Log custom
-          </Link>
+          <div className="flex items-center gap-2">
+            <input
+              value={customAmount}
+              onChange={(event) => setCustomAmount(event.target.value)}
+              inputMode="numeric"
+              className="h-10 w-24 rounded-full border border-slate-200 px-3 text-sm"
+              placeholder="Custom"
+            />
+            <button onClick={() => addEntry(Number(customAmount || 0))} className="btn btn-primary h-10 rounded-full">
+              Add
+            </button>
+          </div>
         </div>
         <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
-      </div>
-
-      <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upcoming delivery</p>
-        <h3 className="mt-2 text-lg font-semibold text-slate-900">Thursday · 9–11am</h3>
-        <p className="mt-1 text-sm text-slate-500">We will message you when your driver is en route.</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="app-card p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Loop status</p>
-          <div className="mt-3 text-2xl font-semibold text-slate-900">8 out</div>
-          <div className="text-sm text-slate-500">5 returned</div>
-        </div>
-        <div className="app-card p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Next route</p>
-          <div className="mt-3 text-2xl font-semibold text-slate-900">Marina</div>
-          <div className="text-sm text-slate-500">Thu · 9–11am</div>
-        </div>
       </div>
 
       <div className="app-card p-5">
@@ -270,18 +276,24 @@ function HomeContent() {
             );
           })}
         </div>
-        <Link href="/app/hydration" className="mt-4 inline-flex text-sm font-medium text-slate-600 underline">
-          View full log
-        </Link>
       </div>
 
       <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Quick actions</p>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <Link href="/app/hydration" className="btn btn-ghost h-11 rounded-full">Hydration</Link>
-          <Link href="/app/orders" className="btn btn-ghost h-11 rounded-full">Orders</Link>
-          <Link href="/app/loop" className="btn btn-ghost h-11 rounded-full">Loop</Link>
-          <Link href="/app/profile" className="btn btn-ghost h-11 rounded-full">Profile</Link>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upcoming delivery</p>
+        <h3 className="mt-2 text-lg font-semibold text-slate-900">Thursday · 9–11am</h3>
+        <p className="mt-1 text-sm text-slate-500">We will message you when your driver is en route.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="app-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Loop status</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">8 out</div>
+          <div className="text-sm text-slate-500">5 returned</div>
+        </div>
+        <div className="app-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Next route</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">Marina</div>
+          <div className="text-sm text-slate-500">Thu · 9–11am</div>
         </div>
       </div>
 

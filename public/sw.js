@@ -1,7 +1,6 @@
 const CACHE_VERSION = "velah-app-v1";
 const APP_SHELL = [
   "/app",
-  "/app/hydration",
   "/app/orders",
   "/app/loop",
   "/app/profile",

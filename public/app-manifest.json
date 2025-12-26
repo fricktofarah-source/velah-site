@@ -24,9 +24,9 @@
   "shortcuts": [
     {
       "name": "Hydration",
-      "url": "/app/hydration",
-      "description": "Log water intake",
-      "short_name": "Hydration"
+      "url": "/app",
+      "description": "Open Velah app",
+      "short_name": "Velah"
     }
   ]
 }
