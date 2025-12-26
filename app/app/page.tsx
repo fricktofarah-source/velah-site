@@ -352,26 +352,25 @@ function HomeContent() {
             </button>
           </div>
         </div>
-        <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
-      </div>
-
-      <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Adjust total</p>
-        <div className="mt-3 flex items-center gap-2">
-          <input
-            value={adjustInput}
-            onChange={(event) => setAdjustInput(event.target.value)}
-            inputMode="numeric"
-            className="h-11 w-28 rounded-full border border-slate-200 px-3 text-sm"
-            placeholder="Set ml"
-          />
-          <button onClick={() => setTotal(Number(adjustInput || 0))} className="btn btn-ghost h-11 rounded-full">
-            Set total
-          </button>
-          <button onClick={() => setTotal(0)} className="btn btn-ghost h-11 rounded-full">
-            Reset
-          </button>
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Adjust total</p>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              value={adjustInput}
+              onChange={(event) => setAdjustInput(event.target.value)}
+              inputMode="numeric"
+              className="h-11 w-28 rounded-full border border-slate-200 px-3 text-sm"
+              placeholder="Set ml"
+            />
+            <button onClick={() => setTotal(Number(adjustInput || 0))} className="btn btn-ghost h-11 rounded-full">
+              Set total
+            </button>
+            <button onClick={() => setTotal(0)} className="btn btn-ghost h-11 rounded-full">
+              Reset
+            </button>
+          </div>
         </div>
+        <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
       </div>
 
       <div className="app-card p-5">
