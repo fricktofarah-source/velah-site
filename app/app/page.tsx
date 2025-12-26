@@ -31,6 +31,7 @@ function HomeContent() {
   const [status, setStatus] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
   const [customAmount, setCustomAmount] = useState("350");
+  const [adjustInput, setAdjustInput] = useState("");
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -233,6 +234,54 @@ function HomeContent() {
     setStatus(null);
   };
 
+  const setTotal = async (nextTotal: number) => {
+    if (!Number.isFinite(nextTotal) || nextTotal < 0) return;
+    const { data } = await supabase.auth.getSession();
+    const userId = data.session?.user.id;
+    if (!userId) return;
+
+    const payload = {
+      user_id: userId,
+      day: today,
+      intake_ml: nextTotal,
+    };
+
+    if (!navigator.onLine) {
+      const queue = loadQueue();
+      const existing = queue.find((item) => item.day === today && item.user_id === userId);
+      const localId = existing?.local_id ?? crypto.randomUUID();
+      const queued: QueuedEntry = {
+        user_id: userId,
+        amount_ml: nextTotal,
+        logged_at: new Date().toISOString(),
+        day: today,
+        source: "total",
+        local_id: localId,
+      };
+      const nextQueue = queue.filter((item) => item.local_id !== localId && item.day !== today);
+      nextQueue.push(queued);
+      saveQueue(nextQueue);
+      setEntries((prev) => [
+        { key: localId, intake_ml: nextTotal, day: today, pending: true },
+        ...prev.filter((entry) => entry.day !== today),
+      ]);
+      setStatus("Offline — total saved to queue. We will sync once you are back online.");
+      return;
+    }
+
+    const { error: upsertError } = await supabase
+      .from("hydration_entries")
+      .upsert(payload, { onConflict: "user_id,day" });
+
+    if (upsertError) {
+      setStatus("Could not update total. Try again.");
+      return;
+    }
+
+    setEntries((prev) => [{ key: today, intake_ml: nextTotal, day: today }, ...prev.filter((entry) => entry.day !== today)]);
+    setStatus(null);
+  };
+
   useEffect(() => {
     const syncQueue = async () => {
       if (!navigator.onLine) return;
@@ -304,6 +353,25 @@ function HomeContent() {
           </div>
         </div>
         <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
+      </div>
+
+      <div className="app-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Adjust total</p>
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            value={adjustInput}
+            onChange={(event) => setAdjustInput(event.target.value)}
+            inputMode="numeric"
+            className="h-11 w-28 rounded-full border border-slate-200 px-3 text-sm"
+            placeholder="Set ml"
+          />
+          <button onClick={() => setTotal(Number(adjustInput || 0))} className="btn btn-ghost h-11 rounded-full">
+            Set total
+          </button>
+          <button onClick={() => setTotal(0)} className="btn btn-ghost h-11 rounded-full">
+            Reset
+          </button>
+        </div>
       </div>
 
       <div className="app-card p-5">
