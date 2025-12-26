@@ -10,7 +10,7 @@ export function HomeIcon({ active: _active }: { active?: boolean }) {
     >
       <path d="M4 11.5 12 5l8 6.5" />
       <path d="M6.5 10.5V19a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-8.5" />
-      <path d="M10 19v-5h4v5" stroke={active ? "currentColor" : "currentColor"} />
+      <path d="M10 19v-5h4v5" />
     </svg>
   );
 }
