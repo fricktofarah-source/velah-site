@@ -4,7 +4,6 @@ import { type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import StandaloneDock from "./StandaloneDock";
 
 export default function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -30,7 +29,6 @@ export default function RootShell({ children }: { children: ReactNode }) {
       <main id="content" className="flex-1">
         {children}
       </main>
-      <StandaloneDock />
       <Footer />
     </>
   );

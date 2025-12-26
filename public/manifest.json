@@ -1,8 +1,8 @@
 {
-  "name": "Velah",
+  "name": "Velah App",
   "short_name": "Velah",
-  "description": "Hydration reimagined.",
-  "start_url": "/",
+  "description": "Velah hydration and delivery companion.",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FFFFFF",
@@ -24,8 +24,8 @@
   "shortcuts": [
     {
       "name": "Hydration",
-      "url": "/hydration",
-      "description": "Add water intake",
+      "url": "/app/hydration",
+      "description": "Log water intake",
       "short_name": "Hydration"
     }
   ]

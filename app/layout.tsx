@@ -2,14 +2,14 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { LanguageProvider } from "@/components/LanguageProvider";
-import StandaloneBodyClass from "@/components/StandaloneBodyClass";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import StandaloneRedirect from "@/components/app/StandaloneRedirect";
 import RootShell from "@/components/RootShell";
 
 export const metadata: Metadata = {
   title: "Velah",
   description: "Eco-luxury water in reusable glass gallons. Dubai & GCC.",
-  manifest: "/manifest.json",
+  manifest: "/app-manifest.json",
   icons: {
     icon: "/icon-192x192.png",
     apple: "/apple-touch-icon.png",
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <LanguageProvider>
           <ServiceWorkerRegister />
-          <StandaloneBodyClass />
+          <StandaloneRedirect />
           <RootShell>{children}</RootShell>
         </LanguageProvider>
       </body>

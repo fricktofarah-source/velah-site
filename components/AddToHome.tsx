@@ -1,6 +1,7 @@
 // components/AddToHome.tsx
 "use client";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void> };
@@ -10,6 +11,8 @@ const DISMISS_KEY = "velah_a2hs_dismissed_until";
 const INSTALLED_KEY = "velah_a2hs_installed";
 
 export default function AddToHome() {
+  const pathname = usePathname();
+  const isApp = pathname?.startsWith("/app") ?? false;
   const [show, setShow] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
@@ -59,7 +62,7 @@ export default function AddToHome() {
     };
   }, [isiOS, isStandalone]);
 
-  if (!show) return null;
+  if (!isApp || !show) return null;
 
   const dismiss = () => {
     // snooze for 14 days

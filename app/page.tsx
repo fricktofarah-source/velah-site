@@ -11,8 +11,6 @@ import ImpactStats from "@/components/ImpactStats";
 import BlogPreview from "@/components/BlogPreview";
 import { posts } from "@/lib/posts";
 import SectionReveal from "@/components/SectionReveal";
-import StandaloneHome from "@/components/StandaloneHome";
-import { useStandaloneMode } from "@/lib/useStandaloneMode";
 
 type SectionConfig = {
   key: string;
@@ -33,12 +31,6 @@ const HOME_SECTIONS: SectionConfig[] = [
 ];
 
 export default function HomePage() {
-  const { isStandaloneMobile } = useStandaloneMode();
-
-  if (isStandaloneMobile) {
-    return <StandaloneHome />;
-  }
-
   return (
     <main className="home-sections">
       {HOME_SECTIONS.map(({ key, render, fullBleed, animate }, index) => {
