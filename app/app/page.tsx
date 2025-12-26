@@ -10,7 +10,7 @@ import { dayKey, enqueueEntry, loadQueue, removeQueued, type QueuedEntry } from 
 const quickAdds = [250, 500, 1000];
 
 type HydrationEntry = {
-  id: string;
+  key: string;
   amount_ml: number;
   logged_at: string;
   day: string;
@@ -53,7 +53,7 @@ function HomeContent() {
     if (!navigator.onLine) {
       const queue = loadQueue().filter((item) => item.user_id === userId);
       const queuedEntries: HydrationEntry[] = queue.map((item) => ({
-        id: item.local_id,
+        key: item.local_id,
         amount_ml: item.amount_ml,
         logged_at: item.logged_at,
         day: item.day,
@@ -78,7 +78,7 @@ function HomeContent() {
     start.setDate(start.getDate() - 6);
     const { data: rows, error } = await supabase
       .from("hydration_entries")
-      .select("id,amount_ml,logged_at,day")
+      .select("amount_ml,logged_at,day")
       .eq("user_id", userId)
       .gte("day", dayKey(start))
       .lte("day", today)
@@ -91,14 +91,21 @@ function HomeContent() {
 
     const queue = loadQueue().filter((item) => item.user_id === userId);
     const queuedEntries: HydrationEntry[] = queue.map((item) => ({
-      id: item.local_id,
+      key: item.local_id,
       amount_ml: item.amount_ml,
       logged_at: item.logged_at,
       day: item.day,
       pending: true,
     }));
 
-    setEntries([...(rows || []), ...queuedEntries]);
+    const hydratedRows: HydrationEntry[] = (rows || []).map((row) => ({
+      key: `${row.day}-${row.logged_at}-${row.amount_ml}`,
+      amount_ml: row.amount_ml,
+      logged_at: row.logged_at,
+      day: row.day,
+    }));
+
+    setEntries([...hydratedRows, ...queuedEntries]);
     if (!error) setStatus(null);
   };
 
@@ -171,21 +178,33 @@ function HomeContent() {
     if (!navigator.onLine) {
       const queued: QueuedEntry = { ...payload, local_id: crypto.randomUUID() };
       enqueueEntry(queued);
-      setEntries((prev) => [{ ...payload, id: queued.local_id, pending: true }, ...prev]);
+      setEntries((prev) => [{ ...payload, key: queued.local_id, pending: true }, ...prev]);
       setStatus("Offline — added to queue. We will sync once you are back online.");
       return;
     }
 
-    const { error, data: inserted } = await supabase.from("hydration_entries").insert(payload).select("id,amount_ml,logged_at,day").single();
+    const { error, data: inserted } = await supabase
+      .from("hydration_entries")
+      .insert(payload)
+      .select("amount_ml,logged_at,day")
+      .single();
     if (error || !inserted) {
       const queued: QueuedEntry = { ...payload, local_id: crypto.randomUUID() };
       enqueueEntry(queued);
-      setEntries((prev) => [{ ...payload, id: queued.local_id, pending: true }, ...prev]);
+      setEntries((prev) => [{ ...payload, key: queued.local_id, pending: true }, ...prev]);
       setStatus("Could not reach Supabase. Entry queued for sync.");
       return;
     }
 
-    setEntries((prev) => [inserted, ...prev]);
+    setEntries((prev) => [
+      {
+        key: `${inserted.day}-${inserted.logged_at}-${inserted.amount_ml}`,
+        amount_ml: inserted.amount_ml,
+        logged_at: inserted.logged_at,
+        day: inserted.day,
+      },
+      ...prev,
+    ]);
     setStatus(null);
   };
 
@@ -301,7 +320,7 @@ function HomeContent() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Recent log</p>
         <div className="mt-4 space-y-3">
           {recentEntries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
+            <div key={entry.key} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
               <div>
                 <div className="text-base font-semibold text-slate-900">{entry.amount_ml} ml</div>
                 <div className="text-xs text-slate-400">

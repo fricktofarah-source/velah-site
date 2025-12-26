@@ -23,7 +23,7 @@ export default function AppTabBar() {
       aria-label="Velah app navigation"
       className="fixed left-1/2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 w-[min(420px,calc(100%-1.5rem))] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white/90 backdrop-blur px-2 py-2 shadow-[0_18px_40px_rgba(15,23,42,0.18)]"
     >
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-4 gap-1">
         {tabs.map(({ href, label, icon: Icon }) => {
           const isActive = href === "/app" ? pathname === "/app" : pathname.startsWith(href);
           return (
