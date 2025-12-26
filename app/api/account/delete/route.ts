@@ -10,6 +10,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
 }
 
+const SUPABASE_URL_VALUE = SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY_VALUE = SUPABASE_SERVICE_ROLE_KEY;
+
 export async function POST(req: Request) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.replace("Bearer ", "").trim();
@@ -18,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Missing auth token." }, { status: 401 });
   }
 
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  const admin = createClient(SUPABASE_URL_VALUE, SUPABASE_SERVICE_ROLE_KEY_VALUE, {
     auth: { persistSession: false },
   });
 
