@@ -76,13 +76,45 @@ function HomeContent() {
 
     const start = new Date();
     start.setDate(start.getDate() - 6);
-    const { data: rows, error } = await supabase
+    const primaryQuery = supabase
       .from("hydration_entries")
       .select("amount_ml,logged_at,day")
       .eq("user_id", userId)
       .gte("day", dayKey(start))
       .lte("day", today)
       .order("logged_at", { ascending: false });
+
+    let rows: { amount_ml: number; logged_at: string; day: string }[] | null = null;
+    let error: { message?: string } | null = null;
+    const primary = await primaryQuery;
+    if (primary.error) {
+      if (primary.error.message?.includes("amount_ml")) {
+        const fallback = await supabase
+          .from("hydration_entries")
+          .select("intake_ml,logged_at,day")
+          .eq("user_id", userId)
+          .gte("day", dayKey(start))
+          .lte("day", today)
+          .order("logged_at", { ascending: false });
+        if (fallback.error) {
+          error = fallback.error;
+        } else {
+          rows = (fallback.data || []).map((row: { intake_ml: number; logged_at: string; day: string }) => ({
+            amount_ml: row.intake_ml,
+            logged_at: row.logged_at,
+            day: row.day,
+          }));
+        }
+      } else {
+        error = primary.error;
+      }
+    } else {
+      rows = (primary.data || []).map((row) => ({
+        amount_ml: row.amount_ml,
+        logged_at: row.logged_at,
+        day: row.day,
+      }));
+    }
 
     if (!mounted.current) return;
     if (error) {
@@ -183,12 +215,36 @@ function HomeContent() {
       return;
     }
 
-    const { error, data: inserted } = await supabase
+    const primaryInsert = await supabase
       .from("hydration_entries")
       .insert(payload)
       .select("amount_ml,logged_at,day")
       .single();
-    if (error || !inserted) {
+
+    let inserted = primaryInsert.data
+      ? { amount_ml: primaryInsert.data.amount_ml, logged_at: primaryInsert.data.logged_at, day: primaryInsert.data.day }
+      : null;
+    let insertError = primaryInsert.error;
+
+    if (insertError?.message?.includes("amount_ml")) {
+      const fallbackInsert = await supabase
+        .from("hydration_entries")
+        .insert({ ...payload, intake_ml: payload.amount_ml })
+        .select("intake_ml,logged_at,day")
+        .single();
+      if (fallbackInsert.error) {
+        insertError = fallbackInsert.error;
+      } else if (fallbackInsert.data) {
+        inserted = {
+          amount_ml: fallbackInsert.data.intake_ml,
+          logged_at: fallbackInsert.data.logged_at,
+          day: fallbackInsert.data.day,
+        };
+        insertError = null;
+      }
+    }
+
+    if (insertError || !inserted) {
       const queued: QueuedEntry = { ...payload, local_id: crypto.randomUUID() };
       enqueueEntry(queued);
       setEntries((prev) => [{ ...payload, key: queued.local_id, pending: true }, ...prev]);
@@ -217,11 +273,21 @@ function HomeContent() {
       const queue = loadQueue().filter((item) => item.user_id === userId);
       if (queue.length === 0) return;
 
-      const { error } = await supabase
-        .from("hydration_entries")
-        .insert(queue.map(({ local_id, ...rest }) => rest));
+      const payload = queue.map(({ local_id, ...rest }) => rest);
+      let syncError = null as { message?: string } | null;
 
-      if (error) {
+      const primarySync = await supabase.from("hydration_entries").insert(payload);
+      if (primarySync.error) {
+        if (primarySync.error.message?.includes("amount_ml")) {
+          const fallbackPayload = payload.map((item) => ({ ...item, intake_ml: item.amount_ml }));
+          const fallbackSync = await supabase.from("hydration_entries").insert(fallbackPayload);
+          if (fallbackSync.error) syncError = fallbackSync.error;
+        } else {
+          syncError = primarySync.error;
+        }
+      }
+
+      if (syncError) {
         setStatus("Still offline. Entries will sync automatically.");
         return;
       }
