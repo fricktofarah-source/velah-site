@@ -22,6 +22,7 @@ type NavCopy = {
   joinWaitlist: string;
   signIn: string;
   signOut: string;
+  editProfile: string;
   waitlistModal: {
     title: string;
     emailLabel: string;
@@ -264,6 +265,7 @@ export const translations: Record<Language, SiteCopy> = {
       joinWaitlist: "Join waitlist",
       signIn: "Sign in",
       signOut: "Sign out",
+      editProfile: "Edit profile",
       waitlistModal: {
         title: "Join the Velah waitlist",
         emailLabel: "Email",
@@ -677,6 +679,7 @@ export const translations: Record<Language, SiteCopy> = {
       joinWaitlist: "انضم إلى قائمة الانتظار",
       signIn: "تسجيل الدخول",
       signOut: "تسجيل الخروج",
+      editProfile: "تعديل الملف الشخصي",
       waitlistModal: {
         title: "انضم إلى قائمة انتظار فيلا",
         emailLabel: "البريد الإلكتروني",

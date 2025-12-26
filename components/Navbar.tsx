@@ -453,6 +453,13 @@ export default function Navbar() {
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-40 rounded-xl border bg-white shadow-lg p-1 z-[60]">
+                    <Link
+                      href="/profile"
+                      className="block w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-sm"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {t.nav.editProfile}
+                    </Link>
                     <button
                       type="button"
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-sm"

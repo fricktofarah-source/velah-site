@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AppHeader from "@/components/app/AppHeader";
 import ProgressRing from "@/components/app/ProgressRing";
@@ -31,7 +32,6 @@ function HomeContent() {
   const [entries, setEntries] = useState<HydrationEntry[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
-  const [customAmount, setCustomAmount] = useState("350");
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -98,6 +98,10 @@ function HomeContent() {
     return entries.filter((entry) => entry.day === today).reduce((sum, entry) => sum + entry.amount_ml, 0);
   }, [entries, today]);
 
+  const recentEntries = useMemo(() => {
+    return [...entries].sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime()).slice(0, 3);
+  }, [entries]);
+
   const weeklyTotals = useMemo(() => {
     const totals = new Map<string, number>();
     entries.forEach((entry) => {
@@ -105,6 +109,17 @@ function HomeContent() {
     });
     return totals;
   }, [entries]);
+
+  const weekList = useMemo(() => {
+    const list: { day: string; total: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const key = dayKey(date);
+      list.push({ day: key, total: weeklyTotals.get(key) || 0 });
+    }
+    return list;
+  }, [weeklyTotals]);
 
   const streak = useMemo(() => {
     if (!goal) return 0;
@@ -195,10 +210,10 @@ function HomeContent() {
       ) : null}
 
       <div className="app-card p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Hydration</p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">{todayTotal} ml</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">{todayTotal} ml</h2>
             <p className="mt-1 text-sm text-slate-500">Goal {goal} ml</p>
           </div>
           <ProgressRing value={todayTotal} total={goal} />
@@ -209,21 +224,9 @@ function HomeContent() {
               +{amount} ml
             </button>
           ))}
-          <div className="flex items-center gap-2">
-            <input
-              value={customAmount}
-              onChange={(event) => setCustomAmount(event.target.value)}
-              inputMode="numeric"
-              className="h-10 w-24 rounded-full border border-slate-200 px-3 text-sm"
-              placeholder="Custom"
-            />
-            <button
-              onClick={() => addEntry(Number(customAmount || 0))}
-              className="btn btn-primary h-10 rounded-full"
-            >
-              Add
-            </button>
-          </div>
+          <Link href="/app/hydration" className="btn btn-primary h-10 rounded-full">
+            Log custom
+          </Link>
         </div>
         <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
       </div>
@@ -232,6 +235,75 @@ function HomeContent() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upcoming delivery</p>
         <h3 className="mt-2 text-lg font-semibold text-slate-900">Thursday · 9–11am</h3>
         <p className="mt-1 text-sm text-slate-500">We will message you when your driver is en route.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="app-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Loop status</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">8 out</div>
+          <div className="text-sm text-slate-500">5 returned</div>
+        </div>
+        <div className="app-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Next route</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">Marina</div>
+          <div className="text-sm text-slate-500">Thu · 9–11am</div>
+        </div>
+      </div>
+
+      <div className="app-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Weekly rhythm</p>
+        <div className="mt-4 grid grid-cols-7 gap-2">
+          {weekList.map((item) => {
+            const percent = goal ? Math.min(100, Math.round((item.total / goal) * 100)) : 0;
+            return (
+              <div key={item.day} className="flex flex-col items-center gap-2">
+                <div className="relative h-20 w-5 rounded-full bg-slate-100">
+                  <div
+                    className="absolute inset-x-0 bottom-0 rounded-full bg-[var(--velah)] transition-all"
+                    style={{ height: `${percent}%` }}
+                  />
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  {new Date(item.day).toLocaleDateString(undefined, { weekday: "short" })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <Link href="/app/hydration" className="mt-4 inline-flex text-sm font-medium text-slate-600 underline">
+          View full log
+        </Link>
+      </div>
+
+      <div className="app-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Quick actions</p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <Link href="/app/hydration" className="btn btn-ghost h-11 rounded-full">Hydration</Link>
+          <Link href="/app/orders" className="btn btn-ghost h-11 rounded-full">Orders</Link>
+          <Link href="/app/loop" className="btn btn-ghost h-11 rounded-full">Loop</Link>
+          <Link href="/app/profile" className="btn btn-ghost h-11 rounded-full">Profile</Link>
+        </div>
+      </div>
+
+      <div className="app-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Recent log</p>
+        <div className="mt-4 space-y-3">
+          {recentEntries.map((entry) => (
+            <div key={entry.id} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
+              <div>
+                <div className="text-base font-semibold text-slate-900">{entry.amount_ml} ml</div>
+                <div className="text-xs text-slate-400">
+                  {new Date(entry.logged_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                  {entry.pending ? " · queued" : ""}
+                </div>
+              </div>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                {new Date(entry.day).toLocaleDateString(undefined, { weekday: "short" })}
+              </span>
+            </div>
+          ))}
+          {entries.length === 0 ? <p className="text-sm text-slate-500">No entries yet.</p> : null}
+        </div>
       </div>
     </div>
   );
