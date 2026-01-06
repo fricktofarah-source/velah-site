@@ -10,10 +10,10 @@ export default function OrdersPage() {
         <AppHeader title="Orders" subtitle="Your deliveries and past orders." />
 
         <div className="app-card p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Current plan</p>
-          <h2 className="mt-2 text-lg font-semibold text-slate-900">Weekly delivery · 12L</h2>
-          <p className="mt-1 text-sm text-slate-500">Placeholder — connect to subscription data when ready.</p>
-          <a href="/subscription" className="btn btn-primary mt-4 h-10 rounded-full w-full">Manage plan</a>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Orders</p>
+          <h2 className="mt-2 text-lg font-semibold text-slate-900">Build your next order</h2>
+          <p className="mt-1 text-sm text-slate-500">Pricing and checkout are coming soon.</p>
+          <a href="/subscription" className="btn btn-primary mt-4 h-10 rounded-full w-full">Add to cart</a>
         </div>
 
         <div className="app-card p-5">

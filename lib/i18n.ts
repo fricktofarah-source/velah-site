@@ -238,7 +238,7 @@ export const translations: Record<Language, SiteCopy> = {
       navLinks: {
         about: "About",
         sustainability: "Sustainability",
-        subscription: "Subscription",
+        subscription: "AI plan",
         blog: "Blog",
         hydration: "My hydration",
       },
@@ -252,10 +252,10 @@ export const translations: Record<Language, SiteCopy> = {
         { kind: "section", id: "about", label: "About Velah" },
         { kind: "section", id: "bottles", label: "Available bottles" },
         { kind: "section", id: "how", label: "How Velah works" },
-        { kind: "section", id: "subscription", label: "Subscription plans" },
+        { kind: "section", id: "subscription", label: "AI plan" },
         { kind: "section", id: "sustainability", label: "Sustainability" },
         { kind: "section", id: "blog", label: "From the blog" },
-        { kind: "page", href: "/subscription", label: "Subscription overview" },
+        { kind: "page", href: "/subscription", label: "AI plan overview" },
         { kind: "page", href: "/about", label: "Learn about Velah" },
         { kind: "page", href: "/hydration", label: "My hydration" },
         { kind: "post", slug: "why-glass-better-water", label: "Why glass makes water taste better" },
@@ -555,7 +555,7 @@ export const translations: Record<Language, SiteCopy> = {
       companyLinks: [
         { label: "About", href: "/about" },
         { label: "Blog", href: "/blog" },
-        { label: "Subscription", href: "/subscription" },
+        { label: "AI plan", href: "/subscription" },
       ],
       supportTitle: "Support",
       supportLinks: [
@@ -652,7 +652,7 @@ export const translations: Record<Language, SiteCopy> = {
       navLinks: {
         about: "عن فيلا",
         sustainability: "الاستدامة",
-        subscription: "الاشتراك",
+        subscription: "خطة الذكاء",
         blog: "المدونة",
         hydration: "ترطيبي",
       },
@@ -666,10 +666,10 @@ export const translations: Record<Language, SiteCopy> = {
         { kind: "section", id: "about", label: "عن فيلا" },
         { kind: "section", id: "bottles", label: "العبوات المتاحة" },
         { kind: "section", id: "how", label: "كيف تعمل فيلا" },
-        { kind: "section", id: "subscription", label: "خطط الاشتراك" },
+        { kind: "section", id: "subscription", label: "خطة الذكاء" },
         { kind: "section", id: "sustainability", label: "الاستدامة" },
         { kind: "section", id: "blog", label: "من المدونة" },
-        { kind: "page", href: "/subscription", label: "نظرة عامة على الاشتراك" },
+        { kind: "page", href: "/subscription", label: "نظرة عامة على خطة الذكاء" },
         { kind: "page", href: "/about", label: "تعرّف على فيلا" },
         { kind: "page", href: "/hydration", label: "ترطيبي" },
         { kind: "post", slug: "why-glass-better-water", label: "لماذا يجعل الزجاج الماء ألذ" },
@@ -969,7 +969,7 @@ export const translations: Record<Language, SiteCopy> = {
       companyLinks: [
         { label: "عنّا", href: "/about" },
         { label: "المدونة", href: "/blog" },
-        { label: "الاشتراك", href: "/subscription" },
+        { label: "خطة الذكاء", href: "/subscription" },
       ],
       supportTitle: "الدعم",
       supportLinks: [
