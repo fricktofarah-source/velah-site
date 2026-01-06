@@ -27,21 +27,26 @@ export default function BlogIndex() {
 
         <div className="grid gap-6 md:grid-cols-3">
           {all.map((p) => (
-            <Link
-              key={p.slug}
-              href={`/blog/${p.slug}`}
-              className="card card-hover p-6 flex flex-col"
-              aria-label={p.title}
-            >
-              <h3 className="text-xl font-semibold">{p.title}</h3>
+            <article key={p.slug} className="card card-hover p-6 flex flex-col">
+              <h3 className="text-xl font-semibold">
+                <Link href={`/blog/${p.slug}`} className="focus-ring rounded-lg">
+                  {p.title}
+                </Link>
+              </h3>
               <p className="text-xs text-slate-500 mt-1">
                 {new Date(p.date).toLocaleDateString()}
               </p>
               <p className="text-slate-600 mt-3">{p.excerpt}</p>
-              <span className="mt-4 inline-flex items-center gap-1 nav-link">
-                Read more →
-              </span>
-            </Link>
+              <div className="mt-4">
+                <Link href={`/blog/${p.slug}`} className="inline-block group focus-ring rounded-xl">
+                  <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+                    <span>Read more</span>
+                    <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+                  </span>
+                </Link>
+              </div>
+            </article>
           ))}
         </div>
       </div>
