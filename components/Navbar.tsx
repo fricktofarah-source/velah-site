@@ -58,15 +58,7 @@ export default function Navbar() {
     setOpenSuggest(false);
     setSearchOpen(false);
     setActiveIdx(-1);
-    if (s.kind === "section") {
-      if (pathname === "/") {
-        document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        router.push(`/#${s.id}`);
-      }
-    } else if (s.kind === "page") {
-      router.push(s.href);
-    } else if (s.kind === "post") {
+    if (s.kind === "post") {
       router.push(`/blog/${s.slug}`);
     }
   }
