@@ -99,7 +99,7 @@ export default function OrderBuilder() {
   const fadeUp = {
     initial: reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0 : 0.2, ease: "easeOut" },
+    transition: { duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   };
   const [userId, setUserId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
