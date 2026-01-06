@@ -17,17 +17,28 @@ export default function ContactForm() {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      const user = data.session?.user;
-      if (!user?.email) return;
-      const fullName = (user.user_metadata?.full_name as string) || "";
+    const applyUser = (user?: { email?: string | null; user_metadata?: { full_name?: string | null } } | null) => {
+      if (!mounted || !user?.email) return;
+      const fullName = user.user_metadata?.full_name ?? "";
       setEmail(user.email);
       setName(fullName);
       setUseAccount(true);
+    };
+
+    const load = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      applyUser(sessionData.session?.user ?? null);
+      const { data: userData } = await supabase.auth.getUser();
+      applyUser(userData.user ?? null);
+    };
+
+    load().catch(() => null);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      applyUser(session?.user ?? null);
     });
     return () => {
       mounted = false;
+      listener.subscription.unsubscribe();
     };
   }, []);
 
