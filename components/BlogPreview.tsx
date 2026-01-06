@@ -30,8 +30,12 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
             {copy.heading}
           </h2>
-          <Link href="/blog" className="nav-link">
-            {copy.allPosts}
+          <Link href="/blog" className="inline-block group focus-ring rounded-xl">
+            <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+              <span>{copy.allPosts}</span>
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+            </span>
           </Link>
         </div>
 
@@ -61,12 +65,12 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
                 </h3>
                 <p className="mt-2 text-slate-600 flex-1">{displayExcerpt}</p>
                 <div className="mt-auto pt-4">
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="hover-parent inline-flex items-center gap-2 text-sm font-medium text-slate-900"
-                  >
-                    <span className="link-underline-tight">{copy.readMore}</span>
-                    <span aria-hidden>→</span>
+                  <Link href={`/blog/${post.slug}`} className="inline-block group focus-ring rounded-xl">
+                    <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+                      <span>{copy.readMore}</span>
+                      <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                      <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+                    </span>
                   </Link>
                 </div>
               </article>
@@ -75,11 +79,12 @@ export default function BlogPreview({ posts }: BlogPreviewProps) {
         </div>
 
         <div className="sm:hidden mt-4">
-          <Link
-            href="/blog"
-            className="btn btn-primary h-11 w-full rounded-full"
-          >
-            {copy.mobileButton}
+          <Link href="/blog" className="inline-block group focus-ring rounded-xl">
+            <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+              <span>{copy.mobileButton}</span>
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+            </span>
           </Link>
         </div>
       </div>
