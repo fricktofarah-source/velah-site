@@ -443,10 +443,10 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setLangMenuOpen((prev) => !prev)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 hover:bg-slate-100 focus-ring"
+                className="inline-flex h-9 w-9 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
                 aria-label={`${t.nav.languageAria}: ${currentLanguageLabel}`}
               >
-                <svg aria-hidden viewBox="0 0 24 24" className="h-4.5 w-4.5 text-slate-600">
+                <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 text-slate-600">
                   <g fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="9" />
                     <path d="M3.9 9.5h16.2M3.9 14.5h16.2" />
@@ -485,10 +485,10 @@ export default function Navbar() {
 
             <Link
               href="/cart"
-              className="relative inline-flex h-9 w-9 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
+              className="relative inline-flex h-10 w-10 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
               aria-label="Cart"
             >
-              <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5">
+              <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6">
                 <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M6 8h12l-1 11H7L6 8Z" />
                   <path d="M9 8a3 3 0 0 1 6 0" />

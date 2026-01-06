@@ -23,8 +23,6 @@ type Suggestion = {
   text: string;
 };
 
-type Preference = "any" | "only-5g" | "only-1l" | "only-500";
-
 const bottleMeta: Record<BottleSize, { label: string; packSize: number }> = {
   "5G": { label: "5G bottle", packSize: 1 },
   "1L": { label: "1L bottle", packSize: 1 },
@@ -39,37 +37,40 @@ function toPacks(qty: number) {
   return Math.max(0, Math.ceil(qty / 6));
 }
 
-function suggestMix(weeklyLiters: number, preference: Preference): CartItem[] {
+function suggestMix(weeklyLiters: number, allowedSizes: BottleSize[]): CartItem[] {
   let need = Math.max(0, Math.round(weeklyLiters * L_TO_ML));
   const mix: Record<BottleSize, number> = { "5G": 0, "1L": 0, "500mL": 0 };
   const fiveGml = Math.round(FIVE_GAL_LITERS * L_TO_ML);
+  const allow = new Set(allowedSizes.length ? allowedSizes : (["5G", "1L", "500mL"] as BottleSize[]));
 
-  if (preference === "only-5g") {
+  if (allow.has("5G") && weeklyLiters >= 10) {
+    const base = weeklyLiters >= 20 ? Math.floor(need / fiveGml) : 1;
+    mix["5G"] = Math.max(allow.size === 1 ? 1 : 0, base);
+    need = Math.max(0, need - mix["5G"] * fiveGml);
+  } else if (allow.size === 1 && allow.has("5G")) {
     mix["5G"] = Math.max(1, Math.ceil(need / fiveGml));
-  } else if (preference === "only-1l") {
-    mix["1L"] = Math.max(1, Math.ceil(need / 1000));
-  } else if (preference === "only-500") {
-    const bottles = Math.max(1, Math.ceil(need / 500));
-    mix["500mL"] = toPacks(bottles);
-  } else {
-    if (weeklyLiters >= 20) {
-      mix["5G"] = Math.floor(need / fiveGml);
-      need -= mix["5G"] * fiveGml;
-    } else if (weeklyLiters >= 10) {
-      mix["5G"] = 1;
-      need = Math.max(0, need - fiveGml);
-    }
+    need = 0;
+  }
 
-    if (need > 0) {
+  if (need > 0 && allow.has("1L")) {
+    if (allow.size === 1) {
+      mix["1L"] = Math.max(1, Math.ceil(need / 1000));
+      need = 0;
+    } else {
       mix["1L"] = Math.floor(need / 1000);
       need -= mix["1L"] * 1000;
     }
+  }
 
-    if (need > 0) {
-      const bottles = Math.ceil(need / 500);
-      mix["500mL"] = toPacks(bottles);
-      need = 0;
-    }
+  if (need > 0 && allow.has("500mL")) {
+    const bottles = Math.max(1, Math.ceil(need / 500));
+    mix["500mL"] = toPacks(bottles);
+    need = 0;
+  }
+
+  if (need > 0 && allow.has("1L")) {
+    mix["1L"] = Math.max(mix["1L"], Math.ceil(need / 1000));
+    need = 0;
   }
 
   return (Object.entries(mix) as [BottleSize, number][])
@@ -109,8 +110,12 @@ export default function OrderBuilder() {
   const [people, setPeople] = useState(2);
   const [glassesPerPerson, setGlassesPerPerson] = useState(8);
   const [cooking, setCooking] = useState(false);
-  const [sparkling, setSparkling] = useState(false);
-  const [preference, setPreference] = useState<Preference>("any");
+  const [preferredSizes, setPreferredSizes] = useState<BottleSize[]>(["5G", "1L", "500mL"]);
+  const [selection, setSelection] = useState<Record<BottleSize, number>>({
+    "5G": 0,
+    "1L": 0,
+    "500mL": 0,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -171,31 +176,36 @@ export default function OrderBuilder() {
     }
   };
 
-  const updateItem = (size: BottleSize, delta: number) => {
-    const next = cart.map((item) => {
-      if (item.size !== size) return item;
-      const nextQty = Math.max(0, item.qty + delta);
-      return { ...item, qty: nextQty };
-    });
-    const existing = next.find((item) => item.size === size);
-    if (!existing) {
-      next.push({ size, qty: Math.max(0, delta) });
-    }
-    const cleaned = next.filter((item) => item.qty > 0);
-    persistCart(cleaned.map((item) => ({ ...item, qty: Math.max(0, item.qty) })));
+  const updateSelection = (size: BottleSize, delta: number) => {
+    setSelection((prev) => ({ ...prev, [size]: Math.max(0, prev[size] + delta) }));
+  };
+
+  const mergeIntoCart = (items: CartItem[]) => {
+    const next = new Map<BottleSize, number>();
+    cart.forEach((item) => next.set(item.size, (next.get(item.size) ?? 0) + item.qty));
+    items.forEach((item) => next.set(item.size, (next.get(item.size) ?? 0) + item.qty));
+    return Array.from(next.entries()).map(([size, qty]) => ({ size, qty }));
   };
 
   const applyRecommendation = (mix: CartItem[]) => {
-    persistCart(mix);
+    persistCart(mergeIntoCart(mix));
+  };
+
+  const addSelectionToCart = () => {
+    const additions = (Object.entries(selection) as [BottleSize, number][])
+      .filter(([, qty]) => qty > 0)
+      .map(([size, qty]) => ({ size, qty }));
+    if (additions.length === 0) return;
+    persistCart(mergeIntoCart(additions));
+    setSelection({ "5G": 0, "1L": 0, "500mL": 0 });
   };
 
   const suggestion: Suggestion = useMemo(() => {
     let dailyLiters = people * glassesPerPerson * (GLASS_ML / 1000);
     if (cooking) dailyLiters += people * 0.3;
-    if (sparkling) dailyLiters += people * 0.2;
 
     const weeklyLiters = Math.ceil(dailyLiters * 7 * 10) / 10;
-    const mix = suggestMix(weeklyLiters, preference);
+    const mix = suggestMix(weeklyLiters, preferredSizes);
 
     const text =
       weeklyLiters >= 20
@@ -214,14 +224,10 @@ export default function OrderBuilder() {
     return rounded;
   }, [suggestion.weeklyLiters]);
 
-  const cartSummary = useMemo(() => {
-    const totalLiters = cart.reduce((sum, item) => {
-      if (item.size === "5G") return sum + item.qty * FIVE_GAL_LITERS;
-      if (item.size === "1L") return sum + item.qty * 1;
-      return sum + item.qty * 6 * 0.5;
-    }, 0);
-    return { totalLiters };
-  }, [cart]);
+  const selectedCount = useMemo(
+    () => Object.values(selection).reduce((sum, qty) => sum + qty, 0),
+    [selection]
+  );
 
   return (
     <div className="space-y-10">
@@ -261,30 +267,52 @@ export default function OrderBuilder() {
                 <input type="checkbox" checked={cooking} onChange={(e) => setCooking(e.target.checked)} />
                 Cooking or tea
               </label>
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={sparkling} onChange={(e) => setSparkling(e.target.checked)} />
-                Also sparkling
-              </label>
             </div>
 
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Bottle preference</div>
               <div className="mt-2 grid gap-2 text-sm">
                 <label className="inline-flex items-center gap-2">
-                  <input type="radio" name="pref" checked={preference === "any"} onChange={() => setPreference("any")} />
-                  No preference (mix all)
+                  <input
+                    type="checkbox"
+                    checked={preferredSizes.includes("5G")}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...preferredSizes, "5G"]
+                        : preferredSizes.filter((size) => size !== "5G");
+                      if (next.length === 0) return;
+                      setPreferredSizes(next);
+                    }}
+                  />
+                  5G bottles
                 </label>
                 <label className="inline-flex items-center gap-2">
-                  <input type="radio" name="pref" checked={preference === "only-5g"} onChange={() => setPreference("only-5g")} />
-                  Only 5G bottles
+                  <input
+                    type="checkbox"
+                    checked={preferredSizes.includes("1L")}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...preferredSizes, "1L"]
+                        : preferredSizes.filter((size) => size !== "1L");
+                      if (next.length === 0) return;
+                      setPreferredSizes(next);
+                    }}
+                  />
+                  1L bottles
                 </label>
                 <label className="inline-flex items-center gap-2">
-                  <input type="radio" name="pref" checked={preference === "only-1l"} onChange={() => setPreference("only-1l")} />
-                  Only 1L bottles
-                </label>
-                <label className="inline-flex items-center gap-2">
-                  <input type="radio" name="pref" checked={preference === "only-500"} onChange={() => setPreference("only-500")} />
-                  Only 500 mL (6-packs)
+                  <input
+                    type="checkbox"
+                    checked={preferredSizes.includes("500mL")}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...preferredSizes, "500mL"]
+                        : preferredSizes.filter((size) => size !== "500mL");
+                      if (next.length === 0) return;
+                      setPreferredSizes(next);
+                    }}
+                  />
+                  500 mL (6-packs)
                 </label>
               </div>
             </div>
@@ -307,17 +335,26 @@ export default function OrderBuilder() {
             <div className="text-xs text-slate-500">Weekly total: {weeklyLitersLabel} L</div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => applyRecommendation(suggestion.mix)}
-            className="btn btn-primary mt-6 h-11 w-full rounded-full"
-          >
-            Add recommendation to cart
-          </button>
+          <div className="mt-6 grid gap-3">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="btn btn-ghost h-11 w-full rounded-full"
+            >
+              Edit AI plan
+            </button>
+            <button
+              type="button"
+              onClick={() => applyRecommendation(suggestion.mix)}
+              className="btn btn-primary h-11 w-full rounded-full"
+            >
+              Add AI plan to cart
+            </button>
+          </div>
         </div>
       </motion.section>
 
-      <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: reduceMotion ? 0 : 0.05 }} className="grid gap-6 md:grid-cols-[1.1fr_.9fr]">
+      <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: reduceMotion ? 0 : 0.05 }}>
         <div className="card p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Individual bottles</h3>
@@ -336,17 +373,17 @@ export default function OrderBuilder() {
                   <button
                     type="button"
                     className="btn btn-ghost h-9 w-9 rounded-full"
-                    onClick={() => updateItem(size, -1)}
+                    onClick={() => updateSelection(size, -1)}
                   >
                     −
                   </button>
                   <span className="text-sm font-semibold text-slate-900">
-                    {cart.find((item) => item.size === size)?.qty ?? 0}
+                    {selection[size]}
                   </span>
                   <button
                     type="button"
                     className="btn btn-ghost h-9 w-9 rounded-full"
-                    onClick={() => updateItem(size, 1)}
+                    onClick={() => updateSelection(size, 1)}
                   >
                     +
                   </button>
@@ -354,39 +391,20 @@ export default function OrderBuilder() {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="card p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Your cart</h3>
-            {loadingCart ? <span className="text-xs text-slate-400">Loading</span> : null}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="text-xs text-slate-500">
+              Selected: <span className="text-slate-900 font-semibold">{selectedCount}</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary h-11 rounded-full px-6"
+              onClick={addSelectionToCart}
+              disabled={selectedCount === 0}
+            >
+              Add bottles to cart
+            </button>
           </div>
-          <div className="mt-4 space-y-3">
-            {cart.length === 0 ? (
-              <p className="text-sm text-slate-500">Your cart is empty. Add a recommendation or bottles.</p>
-            ) : (
-              cart.map((item) => (
-                <div key={item.size} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-700">{formatSizeLabel(item.size)}</span>
-                  <span className="text-sm font-semibold text-slate-900">{item.qty}</span>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600">
-            Estimated volume: {cartSummary.totalLiters.toFixed(1)} L
-          </div>
-          <button type="button" className="btn btn-primary mt-4 h-11 w-full rounded-full" disabled={cart.length === 0}>
-            Add to cart
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost mt-3 h-10 w-full rounded-full"
-            onClick={() => persistCart([])}
-            disabled={cart.length === 0}
-          >
-            Clear cart
-          </button>
+          {loadingCart ? <div className="mt-3 text-xs text-slate-400">Syncing cart…</div> : null}
         </div>
       </motion.section>
     </div>

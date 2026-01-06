@@ -120,40 +120,40 @@ export default function CartPage() {
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Your cart</h1>
       <p className="mt-2 text-sm text-slate-600">Pricing is coming soon. You can build your order now.</p>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_.8fr]">
+      <div className="mt-10 grid gap-10 md:grid-cols-[1.2fr_.8fr]">
         <div className="space-y-4">
           {loading ? (
             <div className="text-sm text-slate-500">Loading cart…</div>
           ) : cart.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 p-6 text-sm text-slate-600">
-              Your cart is empty. Build an AI plan or add bottles.
-            </div>
+            <div className="text-sm text-slate-600">Your cart is empty. Build an AI plan or add bottles.</div>
           ) : (
-            cart.map((item) => (
-              <div key={item.size} className="rounded-2xl border border-slate-200 p-5 flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-base font-semibold text-slate-900">{bottleMeta[item.size].label}</div>
-                  <div className="text-xs text-slate-500">{bottleMeta[item.size].note}</div>
+            <div className="divide-y divide-slate-200 border-t border-slate-200">
+              {cart.map((item) => (
+                <div key={item.size} className="flex items-center justify-between gap-4 py-4">
+                  <div>
+                    <div className="text-base font-semibold text-slate-900">{bottleMeta[item.size].label}</div>
+                    <div className="text-xs text-slate-500">{bottleMeta[item.size].note}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="btn btn-ghost h-9 w-9 rounded-full" onClick={() => updateItem(item.size, -1)}>
+                      −
+                    </button>
+                    <span className="text-sm font-semibold text-slate-900 min-w-[1.5rem] text-center">{item.qty}</span>
+                    <button className="btn btn-ghost h-9 w-9 rounded-full" onClick={() => updateItem(item.size, 1)}>
+                      +
+                    </button>
+                    <button className="btn btn-ghost h-9 rounded-full px-3" onClick={() => removeItem(item.size)}>
+                      Remove
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="btn btn-ghost h-9 w-9 rounded-full" onClick={() => updateItem(item.size, -1)}>
-                    −
-                  </button>
-                  <span className="text-sm font-semibold text-slate-900 min-w-[1.5rem] text-center">{item.qty}</span>
-                  <button className="btn btn-ghost h-9 w-9 rounded-full" onClick={() => updateItem(item.size, 1)}>
-                    +
-                  </button>
-                  <button className="btn btn-ghost h-9 rounded-full px-3" onClick={() => removeItem(item.size)}>
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 p-6 h-fit">
-          <div className="flex items-center justify-between">
+        <div className="h-fit">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <span className="text-sm text-slate-500">Items</span>
             <span className="text-sm font-semibold text-slate-900">{totalItems}</span>
           </div>
