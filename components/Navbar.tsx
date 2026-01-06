@@ -44,7 +44,7 @@ export default function Navbar() {
   const emailRef = useRef<HTMLInputElement | null>(null);
 
   // -------- Suggestions data --------
-  const baseList = t.nav.suggestions;
+  const baseList = t.nav.suggestions.filter((s) => s.kind === "post");
 
   const defaults = baseList.slice(0, 5);
   const filtered = baseList.filter((s) =>
