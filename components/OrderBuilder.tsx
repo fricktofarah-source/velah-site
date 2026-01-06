@@ -215,7 +215,7 @@ export default function OrderBuilder() {
         : "Light usage. Smaller bottles keep it flexible.";
 
     return { weeklyLiters, mix, text };
-  }, [people, glassesPerPerson, cooking, sparkling, preference]);
+  }, [people, glassesPerPerson, cooking, preferredSizes]);
 
   const weeklyLitersLabel = useMemo(() => {
     const rounded = Number.isInteger(suggestion.weeklyLiters)
