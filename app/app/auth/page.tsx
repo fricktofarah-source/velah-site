@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AppHeader from "@/components/app/AppHeader";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const modes = ["sign-in", "sign-up", "magic"] as const;
 
@@ -13,6 +14,8 @@ type Mode = (typeof modes)[number];
 type Status = { kind: "idle" | "loading" | "success" | "error"; message?: string };
 
 export default function AuthPage() {
+  const { t } = useLanguage();
+  const copy = t.app.auth;
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
@@ -29,10 +32,10 @@ export default function AuthPage() {
   const isBusy = status.kind === "loading";
 
   const helper = useMemo(() => {
-    if (mode === "magic") return "We will email you a secure sign-in link.";
-    if (mode === "sign-up") return "Create a Velah account in seconds.";
-    return "Sign in to your Velah account.";
-  }, [mode]);
+    if (mode === "magic") return copy.helperMagic;
+    if (mode === "sign-up") return copy.helperSignUp;
+    return copy.helperSignIn;
+  }, [mode, copy]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,7 +45,7 @@ export default function AuthPage() {
       if (mode === "sign-in") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        setStatus({ kind: "success", message: "Welcome back." });
+        setStatus({ kind: "success", message: copy.statusWelcome });
         router.replace("/app");
         return;
       }
@@ -53,7 +56,7 @@ export default function AuthPage() {
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (error) throw error;
-        setStatus({ kind: "success", message: "Check your inbox for the sign-in link." });
+        setStatus({ kind: "success", message: copy.statusMagic });
         return;
       }
 
@@ -63,17 +66,17 @@ export default function AuthPage() {
         body: JSON.stringify({ email, password, name }),
       });
       const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Could not create your account.");
-      setStatus({ kind: "success", message: "Check your email to confirm your account." });
+      if (!res.ok || !json?.ok) throw new Error(json?.error || copy.statusError);
+      setStatus({ kind: "success", message: copy.statusConfirm });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Something went wrong.";
+      const message = error instanceof Error ? error.message : copy.statusError;
       setStatus({ kind: "error", message });
     }
   };
 
   return (
     <div className="space-y-6">
-      <AppHeader title="Sign in" subtitle={helper} />
+      <AppHeader title={copy.title} subtitle={helper} />
 
       <div className="app-card p-4">
         <div className="grid grid-cols-3 gap-2">
@@ -89,7 +92,7 @@ export default function AuthPage() {
                 mode === item ? "bg-slate-900 text-white" : "border border-slate-200 text-slate-500"
               }`}
             >
-              {item === "sign-in" ? "Sign in" : item === "sign-up" ? "Create" : "Magic"}
+              {item === "sign-in" ? copy.tabSignIn : item === "sign-up" ? copy.tabSignUp : copy.tabMagic}
             </button>
           ))}
         </div>
@@ -98,7 +101,7 @@ export default function AuthPage() {
       <form onSubmit={handleSubmit} className="app-card p-5 space-y-4">
         {mode === "sign-up" ? (
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Name</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel}</span>
             <input
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
               value={name}
@@ -108,7 +111,7 @@ export default function AuthPage() {
           </label>
         ) : null}
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.emailLabel}</span>
           <input
             type="email"
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
@@ -119,7 +122,7 @@ export default function AuthPage() {
         </label>
         {mode !== "magic" ? (
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Password</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.passwordLabel}</span>
             <input
               type="password"
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
@@ -134,7 +137,13 @@ export default function AuthPage() {
           disabled={isBusy}
           className="btn btn-primary h-12 w-full rounded-full text-base disabled:opacity-60"
         >
-          {isBusy ? "Please wait" : mode === "sign-in" ? "Sign in" : mode === "magic" ? "Send link" : "Create account"}
+          {isBusy
+            ? copy.submitLoading
+            : mode === "sign-in"
+            ? copy.submitSignIn
+            : mode === "magic"
+            ? copy.submitMagic
+            : copy.submitSignUp}
         </button>
         {status.kind !== "idle" ? (
           <p className={`text-sm ${status.kind === "error" ? "text-red-500" : "text-slate-600"}`}>
@@ -144,8 +153,8 @@ export default function AuthPage() {
       </form>
 
       <div className="text-center text-xs text-slate-400">
-        By continuing you agree to Velah’s
-        <Link href="/" className="ml-1 underline">Terms</Link>.
+        {copy.termsPrefix}
+        <Link href="/" className="ml-1 underline">{copy.termsLink}</Link>.
       </div>
     </div>
   );

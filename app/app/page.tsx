@@ -6,6 +6,7 @@ import ProgressRing from "@/components/app/ProgressRing";
 import RequireAuth from "@/components/app/RequireAuth";
 import { supabase } from "@/lib/supabaseClient";
 import { dayKey, enqueueEntry, loadQueue, removeQueued, saveQueue, type QueuedEntry } from "@/lib/app/hydration";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const quickAdds = [250, 500, 1000];
 
@@ -25,6 +26,8 @@ export default function AppHome() {
 }
 
 function HomeContent() {
+  const { t } = useLanguage();
+  const copy = t.app.home;
   const today = dayKey();
   const [goal, setGoal] = useState(2000);
   const [entries, setEntries] = useState<HydrationEntry[]>([]);
@@ -60,7 +63,7 @@ function HomeContent() {
       }));
       if (!mounted.current) return;
       setEntries(queuedEntries);
-      setStatus("Offline — showing queued entries only.");
+      setStatus(copy.statusOfflineOnly);
       return;
     }
 
@@ -97,7 +100,7 @@ function HomeContent() {
 
     if (!mounted.current) return;
     if (error) {
-      setStatus(error.message || "Could not refresh hydration. Pull to retry.");
+      setStatus(error.message || copy.statusRefreshFail);
     }
 
     const queue = loadQueue().filter((item) => item.user_id === userId);
@@ -123,7 +126,7 @@ function HomeContent() {
 
   useEffect(() => {
     const mounted = { current: true };
-    refresh(mounted).catch(() => setStatus("Could not load hydration right now."));
+    refresh(mounted).catch(() => setStatus(copy.statusLoadFail));
     return () => {
       mounted.current = false;
     };
@@ -207,7 +210,7 @@ function HomeContent() {
         { key: localId, intake_ml: nextTotal, day: today, pending: true },
         ...prev.filter((entry) => entry.day !== today),
       ]);
-      setStatus("Offline — added to queue. We will sync once you are back online.");
+      setStatus(copy.statusOfflineQueued);
       return;
     }
 
@@ -226,7 +229,7 @@ function HomeContent() {
       };
       enqueueEntry(queued);
       setEntries((prev) => [{ key: queued.local_id, intake_ml: nextTotal, day: today, pending: true }, ...prev]);
-      setStatus("Could not reach Supabase. Entry queued for sync.");
+      setStatus(copy.statusSupabaseQueued);
       return;
     }
 
@@ -265,7 +268,7 @@ function HomeContent() {
         { key: localId, intake_ml: nextTotal, day: today, pending: true },
         ...prev.filter((entry) => entry.day !== today),
       ]);
-      setStatus("Offline — total saved to queue. We will sync once you are back online.");
+      setStatus(copy.statusOfflineSaved);
       return;
     }
 
@@ -274,7 +277,7 @@ function HomeContent() {
       .upsert(payload, { onConflict: "user_id,day" });
 
     if (upsertError) {
-      setStatus("Could not update total. Try again.");
+      setStatus(copy.statusUpdateFail);
       return;
     }
 
@@ -302,21 +305,24 @@ function HomeContent() {
         .upsert(payload, { onConflict: "user_id,day" });
 
       if (syncError) {
-        setStatus("Still offline. Entries will sync automatically.");
+        setStatus(copy.statusStillOffline);
         return;
       }
 
       queue.forEach((item) => removeQueued(item.local_id));
       await refresh({ current: true });
-      setStatus("Queued hydration synced.");
+      setStatus(copy.statusSynced);
     };
 
-    syncQueue().catch(() => setStatus("Queued hydration will sync once online."));
+    syncQueue().catch(() => setStatus(copy.statusSyncQueued));
   }, [online]);
 
   return (
     <div className="space-y-6">
-      <AppHeader title="Today" subtitle={new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })} />
+      <AppHeader
+        title={copy.title}
+        subtitle={new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+      />
 
       {status ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
@@ -327,16 +333,20 @@ function HomeContent() {
       <div className="app-card p-6">
         <div className="flex items-center justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Hydration</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">{todayTotal} ml</h2>
-            <p className="mt-1 text-sm text-slate-500">Goal {goal} ml</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.hydrationLabel}</p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+              {todayTotal} {copy.unitMl}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {copy.goalLabel} {goal} {copy.unitMl}
+            </p>
           </div>
           <ProgressRing value={todayTotal} total={goal} />
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           {quickAdds.map((amount) => (
             <button key={amount} onClick={() => addEntry(amount)} className="btn btn-ghost h-10 rounded-full">
-              +{amount} ml
+              +{amount} {copy.unitMl}
             </button>
           ))}
           <div className="flex items-center gap-2">
@@ -345,36 +355,36 @@ function HomeContent() {
               onChange={(event) => setCustomAmount(event.target.value)}
               inputMode="numeric"
               className="h-10 w-24 rounded-full border border-slate-200 px-3 text-sm"
-              placeholder="Custom"
+              placeholder={copy.customPlaceholder}
             />
             <button onClick={() => addEntry(Number(customAmount || 0))} className="btn btn-primary h-10 rounded-full">
-              Add
+              {copy.addCta}
             </button>
           </div>
         </div>
         <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Adjust total</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.adjustLabel}</p>
           <div className="mt-3 flex items-center gap-2">
             <input
               value={adjustInput}
               onChange={(event) => setAdjustInput(event.target.value)}
               inputMode="numeric"
               className="h-11 w-28 rounded-full border border-slate-200 px-3 text-sm"
-              placeholder="Set ml"
+              placeholder={copy.setPlaceholder}
             />
             <button onClick={() => setTotal(Number(adjustInput || 0))} className="btn btn-ghost h-11 rounded-full">
-              Set total
+              {copy.setCta}
             </button>
             <button onClick={() => setTotal(0)} className="btn btn-ghost h-11 rounded-full">
-              Reset
+              {copy.resetCta}
             </button>
           </div>
         </div>
-        <div className="mt-4 text-xs text-slate-400">Streak: {streak} day{streak === 1 ? "" : "s"}</div>
+        <div className="mt-4 text-xs text-slate-400">{copy.streakLabel(streak)}</div>
       </div>
 
       <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Weekly rhythm</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.weeklyLabel}</p>
         <div className="mt-4 grid grid-cols-7 gap-2">
           {weekList.map((item) => {
             const percent = goal ? Math.min(100, Math.round((item.total / goal) * 100)) : 0;
@@ -396,34 +406,36 @@ function HomeContent() {
       </div>
 
       <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upcoming delivery</p>
-        <h3 className="mt-2 text-lg font-semibold text-slate-900">Thursday · 9–11am</h3>
-        <p className="mt-1 text-sm text-slate-500">We will message you when your driver is en route.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.upcomingLabel}</p>
+        <h3 className="mt-2 text-lg font-semibold text-slate-900">{copy.upcomingSlot}</h3>
+        <p className="mt-1 text-sm text-slate-500">{copy.upcomingNote}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="app-card p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Loop status</p>
-          <div className="mt-3 text-2xl font-semibold text-slate-900">8 out</div>
-          <div className="text-sm text-slate-500">5 returned</div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.loopLabel}</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">{copy.loopOut}</div>
+          <div className="text-sm text-slate-500">{copy.loopReturned}</div>
         </div>
         <div className="app-card p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Next route</p>
-          <div className="mt-3 text-2xl font-semibold text-slate-900">Marina</div>
-          <div className="text-sm text-slate-500">Thu · 9–11am</div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.nextRouteLabel}</p>
+          <div className="mt-3 text-2xl font-semibold text-slate-900">{copy.nextRouteName}</div>
+          <div className="text-sm text-slate-500">{copy.nextRouteSlot}</div>
         </div>
       </div>
 
       <div className="app-card p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Recent log</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{copy.recentLabel}</p>
         <div className="mt-4 space-y-3">
           {recentEntries.map((entry) => (
             <div key={entry.key} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
               <div>
-                <div className="text-base font-semibold text-slate-900">{entry.intake_ml} ml</div>
+                <div className="text-base font-semibold text-slate-900">
+                  {entry.intake_ml} {copy.unitMl}
+                </div>
                 <div className="text-xs text-slate-400">
                   {new Date(entry.day).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                  {entry.pending ? " · queued" : ""}
+                  {entry.pending ? copy.queuedSuffix : ""}
                 </div>
               </div>
               <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
@@ -431,7 +443,7 @@ function HomeContent() {
               </span>
             </div>
           ))}
-          {entries.length === 0 ? <p className="text-sm text-slate-500">No entries yet.</p> : null}
+          {entries.length === 0 ? <p className="text-sm text-slate-500">{copy.emptyLog}</p> : null}
         </div>
       </div>
     </div>

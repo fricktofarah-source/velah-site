@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const CART_KEY = "velah:order-cart";
 
@@ -11,12 +12,6 @@ type BottleSize = "5G" | "1L" | "500mL";
 type CartItem = {
   size: BottleSize;
   qty: number;
-};
-
-const bottleMeta: Record<BottleSize, { label: string; note: string }> = {
-  "5G": { label: "5G bottle", note: "Single bottle" },
-  "1L": { label: "1L bottle", note: "Single bottle" },
-  "500mL": { label: "500 mL (6-pack)", note: "Sold in packs of 6" },
 };
 
 function loadLocalCart(): CartItem[] {
@@ -37,6 +32,13 @@ function saveLocalCart(items: CartItem[]) {
 }
 
 export default function CartPage() {
+  const { t } = useLanguage();
+  const copy = t.cart;
+  const bottleMeta: Record<BottleSize, { label: string; note: string }> = {
+    "5G": { label: copy.bottleLabels.fiveG, note: copy.bottleLabels.singleNote },
+    "1L": { label: copy.bottleLabels.oneL, note: copy.bottleLabels.singleNote },
+    "500mL": { label: copy.bottleLabels.fiveHund, note: copy.bottleLabels.packNote },
+  };
   const [userId, setUserId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,16 +118,16 @@ export default function CartPage() {
 
   return (
     <main className="container mx-auto max-w-4xl px-4 py-16">
-      <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Cart</div>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Your cart</h1>
-      <p className="mt-2 text-sm text-slate-600">Pricing is coming soon. You can build your order now.</p>
+      <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{copy.label}</div>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{copy.title}</h1>
+      <p className="mt-2 text-sm text-slate-600">{copy.subtitle}</p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-[1.2fr_.8fr]">
         <div className="space-y-4">
           {loading ? (
-            <div className="text-sm text-slate-500">Loading cart…</div>
+            <div className="text-sm text-slate-500">{copy.loading}</div>
           ) : cart.length === 0 ? (
-            <div className="text-sm text-slate-600">Your cart is empty. Build an AI plan or add bottles.</div>
+            <div className="text-sm text-slate-600">{copy.empty}</div>
           ) : (
             <div className="divide-y divide-slate-200 border-t border-slate-200">
               {cart.map((item) => (
@@ -143,33 +145,33 @@ export default function CartPage() {
                       +
                     </button>
                     <button className="btn btn-ghost h-9 rounded-full px-3" onClick={() => removeItem(item.size)}>
-                      Remove
-                    </button>
-                  </div>
+                    {copy.removeCta}
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )}
         </div>
 
         <div className="h-fit">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-sm text-slate-500">Items</span>
+            <span className="text-sm text-slate-500">{copy.itemsLabel}</span>
             <span className="text-sm font-semibold text-slate-900">{totalItems}</span>
           </div>
-          <div className="mt-4 text-xs text-slate-500">Pricing will appear once orders open.</div>
+          <div className="mt-4 text-xs text-slate-500">{copy.pricingNote}</div>
           <button className="btn btn-primary h-11 w-full rounded-full mt-6" disabled>
-            Checkout (coming soon)
+            {copy.checkoutCta}
           </button>
           <button
             className="btn btn-ghost h-10 w-full rounded-full mt-3"
             onClick={() => persistCart([])}
             disabled={cart.length === 0}
           >
-            Clear cart
+            {copy.clearCta}
           </button>
           <Link href="/subscription" className="mt-4 inline-flex text-sm font-medium text-slate-600 underline">
-            Build AI plan →
+            {copy.buildPlanCta}
           </Link>
         </div>
       </div>

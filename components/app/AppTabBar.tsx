@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BoxIcon, HomeIcon, LoopIcon, UserIcon } from "./AppIcons";
-
-const tabs = [
-  { href: "/app", label: "Home", icon: HomeIcon },
-  { href: "/app/orders", label: "Orders", icon: BoxIcon },
-  { href: "/app/loop", label: "Loop", icon: LoopIcon },
-  { href: "/app/profile", label: "Profile", icon: UserIcon },
-];
+import { useLanguage } from "@/components/LanguageProvider";
 
 const hiddenRoutes = new Set(["/app/onboarding", "/app/auth"]);
 
 export default function AppTabBar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+  const tabs = [
+    { href: "/app", label: t.app.nav.home, icon: HomeIcon },
+    { href: "/app/orders", label: t.app.nav.orders, icon: BoxIcon },
+    { href: "/app/loop", label: t.app.nav.loop, icon: LoopIcon },
+    { href: "/app/profile", label: t.app.nav.profile, icon: UserIcon },
+  ];
 
   if (!pathname || hiddenRoutes.has(pathname)) return null;
 

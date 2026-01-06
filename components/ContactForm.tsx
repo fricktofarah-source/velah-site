@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ContactForm() {
+  const { t } = useLanguage();
+  const copy = t.contactForm;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -56,12 +59,12 @@ export default function ContactForm() {
     >
       {useAccount ? (
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Sending as <span className="font-medium text-slate-900">{name || "Velah member"}</span> · {email}
+          {copy.sendingAs(name || copy.memberFallback, email)}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Name</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel}</span>
             <input
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
               value={name}
@@ -70,7 +73,7 @@ export default function ContactForm() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.emailLabel}</span>
             <input
               type="email"
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
@@ -93,7 +96,7 @@ export default function ContactForm() {
         />
       </label>
       <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Your message</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.messageLabel}</span>
         <textarea
           className="mt-2 w-full min-h-[160px] rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
           value={message}
@@ -106,13 +109,13 @@ export default function ContactForm() {
         className="btn btn-primary h-12 w-full rounded-full"
         disabled={status === "sending"}
       >
-        {status === "sending" ? "Sending..." : "Send"}
+        {status === "sending" ? copy.sending : copy.send}
       </button>
       {status === "success" ? (
-        <p className="text-sm text-slate-600">Message received. We will reply shortly.</p>
+        <p className="text-sm text-slate-600">{copy.success}</p>
       ) : null}
       {status === "error" ? (
-        <p className="text-sm text-red-500">Could not send. Please try again.</p>
+        <p className="text-sm text-red-500">{copy.error}</p>
       ) : null}
     </form>
   );

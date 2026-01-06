@@ -1,4 +1,9 @@
+"use client";
+
+import { useLanguage } from "@/components/LanguageProvider";
+
 export default function Loading() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="flex flex-col items-center gap-6">
@@ -7,7 +12,7 @@ export default function Loading() {
         </div>
         <div className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Velah</p>
-          <p className="mt-2 text-sm text-slate-500">Preparing your ritual</p>
+          <p className="mt-2 text-sm text-slate-500">{t.app.loading.label}</p>
         </div>
       </div>
     </div>

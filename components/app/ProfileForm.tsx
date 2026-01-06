@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AppLoader from "./AppLoader";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function ProfileForm() {
+  const { t } = useLanguage();
+  const copy = t.app.profile;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [hasSession, setHasSession] = useState(false);
@@ -26,7 +29,7 @@ export default function ProfileForm() {
       const { data } = await supabase.auth.getSession();
       const user = data.session?.user;
       if (!user) {
-        setStatus("Sign in to manage your profile.");
+        setStatus(copy.signedOut);
         setLoading(false);
         return;
       }
@@ -59,7 +62,7 @@ export default function ProfileForm() {
 
     load().catch(() => {
       if (mounted) {
-        setStatus("Could not load profile.");
+        setStatus(copy.statusLoadFail);
         setLoading(false);
       }
     });
@@ -74,7 +77,7 @@ export default function ProfileForm() {
     const user = data.session?.user;
     if (!user) return;
 
-    setStatus("Saving…");
+    setStatus(copy.statusSaving);
     const { error } = await supabase.from("user_profiles").upsert(
       {
         user_id: user.id,
@@ -90,11 +93,11 @@ export default function ProfileForm() {
     );
 
     if (error) {
-      setStatus("Could not save profile.");
+      setStatus(copy.statusSaveFail);
       return;
     }
 
-    setStatus("Profile updated.");
+    setStatus(copy.statusSaved);
   };
 
   const handleLogout = async () => {
@@ -103,10 +106,10 @@ export default function ProfileForm() {
   };
 
   const handleDelete = async () => {
-    const sure = window.confirm("Delete your account? This cannot be undone.");
+    const sure = window.confirm(copy.deleteConfirm);
     if (!sure) return;
 
-    setStatus("Deleting account…");
+    setStatus(copy.statusDelete);
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     const res = await fetch("/api/account/delete", {
@@ -114,7 +117,7 @@ export default function ProfileForm() {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     if (!res.ok) {
-      setStatus("Could not delete account.");
+      setStatus(copy.statusDeleteFail);
       return;
     }
 
@@ -122,7 +125,7 @@ export default function ProfileForm() {
     router.replace("/app/auth");
   };
 
-  if (loading) return <AppLoader label="Loading profile" />;
+  if (loading) return <AppLoader label={copy.loadingLabel} />;
   if (!hasSession) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
@@ -135,7 +138,7 @@ export default function ProfileForm() {
     <div className="space-y-6">
       <div className="app-card p-5 space-y-4">
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Name</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
             value={name}
@@ -143,7 +146,7 @@ export default function ProfileForm() {
           />
         </label>
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.emailLabel}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-400"
             value={email}
@@ -151,7 +154,7 @@ export default function ProfileForm() {
           />
         </label>
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Phone</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.phoneLabel}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
             value={phone}
@@ -161,27 +164,27 @@ export default function ProfileForm() {
       </div>
 
       <div className="app-card p-5 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Address</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.addressLabel}</p>
         <label className="block">
-          <span className="sr-only">Address line 1</span>
+          <span className="sr-only">{copy.addressLine1}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            placeholder="Street, building"
+            placeholder={copy.addressLine1}
             value={addressLine1}
             onChange={(event) => setAddressLine1(event.target.value)}
           />
         </label>
         <label className="block">
-          <span className="sr-only">Address line 2</span>
+          <span className="sr-only">{copy.addressLine2}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            placeholder="Apartment, floor"
+            placeholder={copy.addressLine2}
             value={addressLine2}
             onChange={(event) => setAddressLine2(event.target.value)}
           />
         </label>
         <label className="block">
-          <span className="sr-only">City</span>
+          <span className="sr-only">{copy.cityLabel}</span>
           <input
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
             value={city}
@@ -191,9 +194,9 @@ export default function ProfileForm() {
       </div>
 
       <div className="app-card p-5 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Notifications</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.notificationsLabel}</p>
         <label className="flex items-center justify-between">
-          <span className="text-sm text-slate-600">Hydration reminders</span>
+          <span className="text-sm text-slate-600">{copy.hydrationReminders}</span>
           <input
             type="checkbox"
             checked={hydrationReminders}
@@ -201,7 +204,7 @@ export default function ProfileForm() {
           />
         </label>
         <label className="flex items-center justify-between">
-          <span className="text-sm text-slate-600">Delivery reminders</span>
+          <span className="text-sm text-slate-600">{copy.deliveryReminders}</span>
           <input
             type="checkbox"
             checked={deliveryReminders}
@@ -210,16 +213,16 @@ export default function ProfileForm() {
         </label>
       </div>
 
-      <button onClick={saveProfile} className="btn btn-primary h-12 w-full rounded-full">Save changes</button>
+      <button onClick={saveProfile} className="btn btn-primary h-12 w-full rounded-full">{copy.saveCta}</button>
 
       {status ? <p className="text-sm text-slate-500">{status}</p> : null}
 
       <div className="app-card p-5 space-y-3">
         <button onClick={handleLogout} className="btn btn-ghost h-11 w-full rounded-full">
-          Log out
+          {copy.logout}
         </button>
         <button onClick={handleDelete} className="btn btn-ghost h-11 w-full rounded-full text-red-500">
-          Delete account
+          {copy.delete}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const GLASS_ML = 250;
 const FIVE_GAL_LITERS = 18.9;
@@ -22,16 +23,6 @@ type Suggestion = {
   mix: CartItem[];
   text: string;
 };
-
-const bottleMeta: Record<BottleSize, { label: string; packSize: number }> = {
-  "5G": { label: "5G bottle", packSize: 1 },
-  "1L": { label: "1L bottle", packSize: 1 },
-  "500mL": { label: "500 mL (6-pack)", packSize: 6 },
-};
-
-function formatSizeLabel(size: BottleSize) {
-  return size === "500mL" ? "500 mL (6-pack)" : size;
-}
 
 function toPacks(qty: number) {
   return Math.max(0, Math.ceil(qty / 6));
@@ -96,6 +87,14 @@ function saveLocalCart(items: CartItem[]) {
 }
 
 export default function OrderBuilder() {
+  const { t } = useLanguage();
+  const copy = t.orderBuilder;
+  const bottleMeta: Record<BottleSize, { label: string; note: string; packSize: number }> = {
+    "5G": { label: copy.preferenceOptions.fiveG, note: copy.singleNote, packSize: 1 },
+    "1L": { label: copy.preferenceOptions.oneL, note: copy.singleNote, packSize: 1 },
+    "500mL": { label: copy.preferenceOptions.fiveHund, note: copy.packNote, packSize: 6 },
+  };
+  const formatSizeLabel = (size: BottleSize) => bottleMeta[size]?.label ?? size;
   const reduceMotion = useReducedMotion();
   const fadeUp = {
     initial: reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
@@ -212,13 +211,13 @@ export default function OrderBuilder() {
 
     const text =
       weeklyLiters >= 20
-        ? "High usage household. Mostly 5G with top-ups."
+        ? copy.suggestionHigh
         : weeklyLiters >= 10
-        ? "Balanced usage. One 5G plus smaller bottles."
-        : "Light usage. Smaller bottles keep it flexible.";
+        ? copy.suggestionMid
+        : copy.suggestionLow;
 
     return { weeklyLiters, mix, text };
-  }, [people, glassesPerPerson, cooking, preferredSizes]);
+  }, [people, glassesPerPerson, cooking, preferredSizes, copy]);
 
   const weeklyLitersLabel = useMemo(() => {
     const rounded = Number.isInteger(suggestion.weeklyLiters)
@@ -237,14 +236,14 @@ export default function OrderBuilder() {
       <motion.section {...fadeUp} className="grid gap-6 md:grid-cols-[1.1fr_.9fr]">
         <div className="card p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">AI weekly recommendation</h2>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Weekly</span>
+          <h2 className="text-xl font-semibold">{copy.aiTitle}</h2>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.aiBadge}</span>
           </div>
-          <p className="mt-2 text-sm text-slate-600">Tell us about your routine and we’ll suggest a weekly order.</p>
+          <p className="mt-2 text-sm text-slate-600">{copy.aiIntro}</p>
 
           <div className="mt-4 grid gap-4">
             <label className="text-sm">
-              Household size
+              {copy.householdLabel}
               <input
                 type="number"
                 min={1}
@@ -255,7 +254,7 @@ export default function OrderBuilder() {
             </label>
 
             <label className="text-sm">
-              Glasses per person per day
+              {copy.glassesLabel}
               <input
                 type="number"
                 min={1}
@@ -268,12 +267,12 @@ export default function OrderBuilder() {
             <div className="flex flex-wrap items-center gap-4">
               <label className="inline-flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={cooking} onChange={(e) => setCooking(e.target.checked)} />
-                Cooking or tea
+                {copy.cookingLabel}
               </label>
             </div>
 
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Bottle preference</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.preferenceLabel}</div>
               <div className="mt-2 grid gap-2 text-sm">
                 <label className="inline-flex items-center gap-2">
                   <input
@@ -287,7 +286,7 @@ export default function OrderBuilder() {
                       setPreferredSizes(next);
                     }}
                   />
-                  5G bottles
+                  {copy.preferenceOptions.fiveG}
                 </label>
                 <label className="inline-flex items-center gap-2">
                   <input
@@ -301,7 +300,7 @@ export default function OrderBuilder() {
                       setPreferredSizes(next);
                     }}
                   />
-                  1L bottles
+                  {copy.preferenceOptions.oneL}
                 </label>
                 <label className="inline-flex items-center gap-2">
                   <input
@@ -315,17 +314,17 @@ export default function OrderBuilder() {
                       setPreferredSizes(next);
                     }}
                   />
-                  500 mL (6-packs)
+                  {copy.preferenceOptions.fiveHund}
                 </label>
               </div>
             </div>
 
-            <p className="text-xs text-slate-500">Pricing is coming soon. You can still build your cart today.</p>
+            <p className="text-xs text-slate-500">{copy.pricingNote}</p>
           </div>
         </div>
 
         <div className="card p-6">
-          <h3 className="text-lg font-semibold">Suggested weekly mix</h3>
+          <h3 className="text-lg font-semibold">{copy.suggestedTitle}</h3>
           <p className="mt-2 text-sm text-slate-600">{suggestion.text}</p>
 
           <div className="mt-4 space-y-3">
@@ -335,7 +334,9 @@ export default function OrderBuilder() {
                 <span className="text-sm font-semibold text-slate-900">{item.qty}</span>
               </div>
             ))}
-            <div className="text-xs text-slate-500">Weekly total: {weeklyLitersLabel} L</div>
+            <div className="text-xs text-slate-500">
+              {copy.weeklyTotalLabel}: {weeklyLitersLabel} L
+            </div>
           </div>
 
           <div className="mt-6 grid gap-3">
@@ -344,7 +345,7 @@ export default function OrderBuilder() {
               onClick={() => applyRecommendation(suggestion.mix)}
               className="btn btn-primary h-11 w-full rounded-full"
             >
-              Add AI plan to cart
+              {copy.addPlanCta}
             </button>
           </div>
         </div>
@@ -354,7 +355,7 @@ export default function OrderBuilder() {
         <div className="fixed right-6 bottom-6 z-40 w-[18rem] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-sm font-semibold text-slate-900">Added to cart</div>
+              <div className="text-sm font-semibold text-slate-900">{copy.toastTitle}</div>
               <div className="mt-1 space-y-1 text-xs text-slate-500">
                 {cartNotice.map((item) => (
                   <div key={item.size}>
@@ -378,10 +379,10 @@ export default function OrderBuilder() {
               className="text-xs font-semibold text-slate-500 hover:text-slate-700"
               onClick={() => setCartNotice(null)}
             >
-              Continue
+              {copy.toastContinue}
             </button>
             <a href="/cart" className="text-xs font-semibold text-slate-700 underline">
-              View cart →
+              {copy.toastViewCart}
             </a>
           </div>
         </div>
@@ -390,8 +391,8 @@ export default function OrderBuilder() {
       <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: reduceMotion ? 0 : 0.05 }}>
         <div className="card p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Individual bottles</h3>
-            <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Order based</span>
+            <h3 className="text-lg font-semibold">{copy.individualTitle}</h3>
+            <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{copy.individualBadge}</span>
           </div>
           <div className="mt-4 grid gap-3">
             {(["5G", "1L", "500mL"] as BottleSize[]).map((size) => (
@@ -399,7 +400,7 @@ export default function OrderBuilder() {
                 <div>
                   <div className="text-sm font-semibold text-slate-900">{bottleMeta[size].label}</div>
                   <div className="text-xs text-slate-500">
-                    {size === "500mL" ? "Sold in packs of 6" : "Single bottle"}
+                    {bottleMeta[size].note}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -426,7 +427,7 @@ export default function OrderBuilder() {
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div className="text-xs text-slate-500">
-              Selected: <span className="text-slate-900 font-semibold">{selectedCount}</span>
+              {copy.selectedLabel}: <span className="text-slate-900 font-semibold">{selectedCount}</span>
             </div>
             <button
               type="button"
@@ -434,10 +435,10 @@ export default function OrderBuilder() {
               onClick={addSelectionToCart}
               disabled={selectedCount === 0}
             >
-              Add bottles to cart
+              {copy.addBottlesCta}
             </button>
           </div>
-          {loadingCart ? <div className="mt-3 text-xs text-slate-400">Syncing cart…</div> : null}
+          {loadingCart ? <div className="mt-3 text-xs text-slate-400">{copy.syncingLabel}</div> : null}
         </div>
       </motion.section>
     </div>

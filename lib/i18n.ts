@@ -63,7 +63,6 @@ type AboutCopy = {
 type BottleCopy = {
   heading: string;
   items: Array<{ key: "5g" | "1l" | "500ml"; name: string; desc: string; img: string }>;
-  addToPlan: string;
 };
 
 type HowItWorksCopy = {
@@ -171,42 +170,218 @@ type HydrationCopy = {
   streakStart: string;
 };
 
-type SubscriptionManagerCopy = {
-  badge: string;
+type OrderPageCopy = {
   title: string;
   description: string;
-  signInPrompt: string;
-  savingLabel: string;
-  currentPlan: string;
-  frequencyLabel: string;
-  deliveryDayLabel: string;
-  nextDeliveryLabel: string;
-  statusLabel: string;
-  statusActive: string;
-  statusPaused: string;
-  bottles: {
+};
+
+type OrderBuilderCopy = {
+  aiTitle: string;
+  aiBadge: string;
+  aiIntro: string;
+  householdLabel: string;
+  glassesLabel: string;
+  cookingLabel: string;
+  preferenceLabel: string;
+  preferenceOptions: {
     fiveG: string;
     oneL: string;
     fiveHund: string;
   };
-  frequencyField: string;
-  frequencyOptions: Record<"weekly" | "biweekly", string>;
-  deliveryDayField: string;
-  weekdays: Record<"monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday", string>;
-  notesLabel: string;
-  notesPlaceholder: string;
-  saveButton: string;
-  createButton: string;
-  pauseButton: string;
-  resumeButton: string;
-  skipButton: string;
-  applySuggestion: string;
-  signInCta: string;
-  errors: {
-    load: string;
-    save: string;
-    status: string;
-    skip: string;
+  pricingNote: string;
+  suggestedTitle: string;
+  suggestionHigh: string;
+  suggestionMid: string;
+  suggestionLow: string;
+  weeklyTotalLabel: string;
+  addPlanCta: string;
+  toastTitle: string;
+  toastContinue: string;
+  toastViewCart: string;
+  individualTitle: string;
+  individualBadge: string;
+  singleNote: string;
+  packNote: string;
+  selectedLabel: string;
+  addBottlesCta: string;
+  syncingLabel: string;
+};
+
+type CartCopy = {
+  label: string;
+  title: string;
+  subtitle: string;
+  loading: string;
+  empty: string;
+  itemsLabel: string;
+  pricingNote: string;
+  checkoutCta: string;
+  clearCta: string;
+  buildPlanCta: string;
+  removeCta: string;
+  bottleLabels: {
+    fiveG: string;
+    oneL: string;
+    fiveHund: string;
+    singleNote: string;
+    packNote: string;
+  };
+};
+
+type ContactCopy = {
+  label: string;
+  title: string;
+  subtitle: string;
+  whatsappLabel: string;
+  whatsappCta: string;
+  formTitle: string;
+  availability: string;
+};
+
+type ContactFormCopy = {
+  sendingAs: (name: string, email: string) => string;
+  memberFallback: string;
+  nameLabel: string;
+  emailLabel: string;
+  messageLabel: string;
+  sending: string;
+  send: string;
+  success: string;
+  error: string;
+};
+
+type FaqCopy = {
+  label: string;
+  title: string;
+  subtitle: string;
+  items: Array<{ q: string; a: string }>;
+  closing: string;
+};
+
+type PrivacyCopy = {
+  label: string;
+  title: string;
+  subtitle: string;
+  sections: Array<{ title: string; body: string }>;
+  updatedLabel: string;
+};
+
+type AppCopy = {
+  loading: {
+    label: string;
+  };
+  nav: {
+    home: string;
+    orders: string;
+    loop: string;
+    profile: string;
+  };
+  auth: {
+    title: string;
+    helperSignIn: string;
+    helperSignUp: string;
+    helperMagic: string;
+    tabSignIn: string;
+    tabSignUp: string;
+    tabMagic: string;
+    nameLabel: string;
+    emailLabel: string;
+    passwordLabel: string;
+    submitSignIn: string;
+    submitSignUp: string;
+    submitMagic: string;
+    submitLoading: string;
+    statusWelcome: string;
+    statusMagic: string;
+    statusConfirm: string;
+    statusError: string;
+    termsPrefix: string;
+    termsLink: string;
+  };
+  home: {
+    title: string;
+    statusRefreshFail: string;
+    statusLoadFail: string;
+    statusOfflineOnly: string;
+    statusOfflineQueued: string;
+    statusOfflineSaved: string;
+    statusSupabaseQueued: string;
+    statusUpdateFail: string;
+    statusStillOffline: string;
+    statusSynced: string;
+    statusSyncQueued: string;
+    hydrationLabel: string;
+    goalLabel: string;
+    unitMl: string;
+    customPlaceholder: string;
+    addCta: string;
+    adjustLabel: string;
+    setPlaceholder: string;
+    setCta: string;
+    resetCta: string;
+    streakLabel: (days: number) => string;
+    weeklyLabel: string;
+    upcomingLabel: string;
+    upcomingSlot: string;
+    upcomingNote: string;
+    loopLabel: string;
+    loopOut: string;
+    loopReturned: string;
+    nextRouteLabel: string;
+    nextRouteName: string;
+    nextRouteSlot: string;
+    recentLabel: string;
+    queuedSuffix: string;
+    emptyLog: string;
+  };
+  orders: {
+    title: string;
+    subtitle: string;
+    cardLabel: string;
+    cardTitle: string;
+    cardNote: string;
+    addToCart: string;
+    upcomingLabel: string;
+    pastLabel: string;
+    pastEmpty: string;
+    statusScheduled: string;
+    statusPlanned: string;
+  };
+  loop: {
+    title: string;
+    subtitle: string;
+    bottlesOut: string;
+    returned: string;
+    instructionsLabel: string;
+    instructions: string[];
+    pickupLabel: string;
+    pickupNote: string;
+  };
+  profile: {
+    title: string;
+    subtitle: string;
+    loadingLabel: string;
+    signedOut: string;
+    nameLabel: string;
+    emailLabel: string;
+    phoneLabel: string;
+    addressLabel: string;
+    addressLine1: string;
+    addressLine2: string;
+    cityLabel: string;
+    notificationsLabel: string;
+    hydrationReminders: string;
+    deliveryReminders: string;
+    saveCta: string;
+    statusSaving: string;
+    statusSaved: string;
+    statusLoadFail: string;
+    statusSaveFail: string;
+    statusDelete: string;
+    statusDeleteFail: string;
+    logout: string;
+    delete: string;
+    deleteConfirm: string;
   };
 };
 
@@ -224,7 +399,14 @@ type SiteCopy = {
   blog: BlogCopy;
   footer: FooterCopy;
   hydration: HydrationCopy;
-  subscriptionManager: SubscriptionManagerCopy;
+  orderPage: OrderPageCopy;
+  orderBuilder: OrderBuilderCopy;
+  cart: CartCopy;
+  contact: ContactCopy;
+  contactForm: ContactFormCopy;
+  faq: FaqCopy;
+  privacy: PrivacyCopy;
+  app: AppCopy;
 };
 
 export const translations: Record<Language, SiteCopy> = {
@@ -359,7 +541,6 @@ export const translations: Record<Language, SiteCopy> = {
           img: "/assets/velah_bottle_500ml.png",
         },
       ],
-      addToPlan: "Add to plan",
     },
     howItWorks: {
       heading: "How Velah works",
@@ -587,53 +768,258 @@ export const translations: Record<Language, SiteCopy> = {
       streakKeepGoing: "Keep meeting your goal to extend it.",
       streakStart: "Hit today's goal to start a streak.",
     },
-    subscriptionManager: {
-      badge: "Manage",
-      title: "Your Velah subscription",
-      description: "Adjust deliveries, pause when you travel, or tweak bottle counts at any time.",
-      signInPrompt: "Sign in from the top navigation to create or edit your subscription.",
-      savingLabel: "Saving…",
-      currentPlan: "Current plan",
-      frequencyLabel: "Frequency",
-      deliveryDayLabel: "Delivery day",
-      nextDeliveryLabel: "Next delivery",
-      statusLabel: "Status",
-      statusActive: "Active",
-      statusPaused: "Paused",
-      bottles: {
+    orderPage: {
+      title: "Order Velah",
+      description:
+        "Build a one-time order with our AI weekly recommendation. Adjust quantities or add individual bottles, then add to cart.",
+    },
+    orderBuilder: {
+      aiTitle: "AI weekly recommendation",
+      aiBadge: "Weekly",
+      aiIntro: "Tell us about your routine and we’ll suggest a weekly order.",
+      householdLabel: "Household size",
+      glassesLabel: "Glasses per person per day",
+      cookingLabel: "Cooking or tea",
+      preferenceLabel: "Bottle preference",
+      preferenceOptions: {
         fiveG: "5G bottles",
         oneL: "1L bottles",
-        fiveHund: "500 mL bottles",
+        fiveHund: "500 mL (6-packs)",
       },
-      frequencyField: "Delivery frequency",
-      frequencyOptions: {
-        weekly: "Every week",
-        biweekly: "Every other week",
+      pricingNote: "Pricing is coming soon. You can still build your cart today.",
+      suggestedTitle: "Suggested weekly mix",
+      suggestionHigh: "High usage household. Mostly 5G with top-ups.",
+      suggestionMid: "Balanced usage. One 5G plus smaller bottles.",
+      suggestionLow: "Light usage. Smaller bottles keep it flexible.",
+      weeklyTotalLabel: "Weekly total",
+      addPlanCta: "Add AI plan to cart",
+      toastTitle: "Added to cart",
+      toastContinue: "Continue",
+      toastViewCart: "View cart →",
+      individualTitle: "Individual bottles",
+      individualBadge: "Order based",
+      singleNote: "Single bottle",
+      packNote: "Sold in packs of 6",
+      selectedLabel: "Selected",
+      addBottlesCta: "Add bottles to cart",
+      syncingLabel: "Syncing cart…",
+    },
+    cart: {
+      label: "Cart",
+      title: "Your cart",
+      subtitle: "Pricing is coming soon. You can build your order now.",
+      loading: "Loading cart…",
+      empty: "Your cart is empty. Build an AI plan or add bottles.",
+      itemsLabel: "Items",
+      pricingNote: "Pricing will appear once orders open.",
+      checkoutCta: "Checkout (coming soon)",
+      clearCta: "Clear cart",
+      buildPlanCta: "Build AI plan →",
+      removeCta: "Remove",
+      bottleLabels: {
+        fiveG: "5G bottle",
+        oneL: "1L bottle",
+        fiveHund: "500 mL (6-pack)",
+        singleNote: "Single bottle",
+        packNote: "Sold in packs of 6",
       },
-      deliveryDayField: "Delivery day",
-      weekdays: {
-        monday: "Monday",
-        tuesday: "Tuesday",
-        wednesday: "Wednesday",
-        thursday: "Thursday",
-        friday: "Friday",
-        saturday: "Saturday",
-        sunday: "Sunday",
+    },
+    contact: {
+      label: "Contact",
+      title: "Talk to Velah",
+      subtitle: "Send a message or WhatsApp us and we will reply quickly.",
+      whatsappLabel: "WhatsApp",
+      whatsappCta: "Message on WhatsApp",
+      formTitle: "Send a message",
+      availability: "Available Monday to Friday, 9am to 6pm Dubai time.",
+    },
+    contactForm: {
+      sendingAs: (name, email) => `Sending as ${name} · ${email}`,
+      memberFallback: "Velah member",
+      nameLabel: "Name",
+      emailLabel: "Email",
+      messageLabel: "Your message",
+      sending: "Sending...",
+      send: "Send",
+      success: "Message received. We will reply shortly.",
+      error: "Could not send. Please try again.",
+    },
+    faq: {
+      label: "FAQ",
+      title: "Frequently asked questions",
+      subtitle: "Everything you need to know about Velah delivery, bottles, and the return loop.",
+      items: [
+        {
+          q: "How does delivery work?",
+          a: "We deliver on set Dubai routes and share a confirmed window ahead of time. You can manage your plan in your account once subscriptions open.",
+        },
+        {
+          q: "What sizes are available?",
+          a: "Velah is delivered in reusable glass gallons and smaller bottles for daily use. Mix and match to fit your week.",
+        },
+        {
+          q: "How do returns work?",
+          a: "Rinse, cap, and leave bottles at your doorstep during your pickup window. We collect and loop them back into circulation.",
+        },
+        {
+          q: "Is there a deposit?",
+          a: "Yes. Glass is durable and reusable, so we place a refundable deposit on bottles to keep the loop closed.",
+        },
+        {
+          q: "Where do you deliver?",
+          a: "We serve Dubai today with GCC expansion planned. If your area is not listed, join the waitlist for updates.",
+        },
+        {
+          q: "How do I contact support?",
+          a: "Message us from the contact page or on WhatsApp and we will respond quickly during Dubai hours.",
+        },
+      ],
+      closing: "Still have questions? Visit the contact page and we will get back to you quickly.",
+    },
+    privacy: {
+      label: "Privacy",
+      title: "Privacy policy",
+      subtitle: "We keep data minimal and only collect what we need to run the service.",
+      sections: [
+        {
+          title: "What we collect",
+          body: "When you create an account we store your email, name, and delivery details you provide.",
+        },
+        {
+          title: "How we use it",
+          body: "We use your data to manage deliveries, bottle returns, hydration tracking, and support requests.",
+        },
+        {
+          title: "Cookies",
+          body: "We do not use tracking cookies. Essential session storage may be used to keep you signed in.",
+        },
+        {
+          title: "Your choices",
+          body: "You can request data updates or deletion by contacting founder@drinkvelah.com.",
+        },
+      ],
+      updatedLabel: "Last updated: Sep 2025",
+    },
+    app: {
+      loading: {
+        label: "Preparing your ritual",
       },
-      notesLabel: "Notes for the driver",
-      notesPlaceholder: "e.g., call when arriving, leave with concierge",
-      saveButton: "Update plan",
-      createButton: "Create plan",
-      pauseButton: "Pause",
-      resumeButton: "Resume",
-      skipButton: "Skip next delivery",
-      applySuggestion: "Apply suggestion",
-      signInCta: "Need an account? Join the waitlist and we'll invite you once service opens.",
-      errors: {
-        load: "Unable to load subscription. Please try again.",
-        save: "Could not save subscription. Please try again.",
-        status: "Unable to update status.",
-        skip: "Unable to skip the next delivery.",
+      nav: {
+        home: "Home",
+        orders: "Orders",
+        loop: "Loop",
+        profile: "Profile",
+      },
+      auth: {
+        title: "Sign in",
+        helperSignIn: "Sign in to your Velah account.",
+        helperSignUp: "Create a Velah account in seconds.",
+        helperMagic: "We will email you a secure sign-in link.",
+        tabSignIn: "Sign in",
+        tabSignUp: "Create",
+        tabMagic: "Magic",
+        nameLabel: "Name",
+        emailLabel: "Email",
+        passwordLabel: "Password",
+        submitSignIn: "Sign in",
+        submitSignUp: "Create account",
+        submitMagic: "Send link",
+        submitLoading: "Please wait",
+        statusWelcome: "Welcome back.",
+        statusMagic: "Check your inbox for the sign-in link.",
+        statusConfirm: "Check your email to confirm your account.",
+        statusError: "Something went wrong.",
+        termsPrefix: "By continuing you agree to Velah’s",
+        termsLink: "Terms",
+      },
+      home: {
+        title: "Today",
+        statusRefreshFail: "Could not refresh hydration. Pull to retry.",
+        statusLoadFail: "Could not load hydration right now.",
+        statusOfflineOnly: "Offline — showing queued entries only.",
+        statusOfflineQueued: "Offline — added to queue. We will sync once you are back online.",
+        statusOfflineSaved: "Offline — total saved to queue. We will sync once you are back online.",
+        statusSupabaseQueued: "Could not reach Supabase. Entry queued for sync.",
+        statusUpdateFail: "Could not update total. Try again.",
+        statusStillOffline: "Still offline. Entries will sync automatically.",
+        statusSynced: "Queued hydration synced.",
+        statusSyncQueued: "Queued hydration will sync once online.",
+        hydrationLabel: "Hydration",
+        goalLabel: "Goal",
+        unitMl: "ml",
+        customPlaceholder: "Custom",
+        addCta: "Add",
+        adjustLabel: "Adjust total",
+        setPlaceholder: "Set ml",
+        setCta: "Set total",
+        resetCta: "Reset",
+        streakLabel: (days) => `Streak: ${days} day${days === 1 ? "" : "s"}`,
+        weeklyLabel: "Weekly rhythm",
+        upcomingLabel: "Upcoming delivery",
+        upcomingSlot: "Thursday · 9–11am",
+        upcomingNote: "We will message you when your driver is en route.",
+        loopLabel: "Loop status",
+        loopOut: "8 out",
+        loopReturned: "5 returned",
+        nextRouteLabel: "Next route",
+        nextRouteName: "Marina",
+        nextRouteSlot: "Thu · 9–11am",
+        recentLabel: "Recent log",
+        queuedSuffix: " · queued",
+        emptyLog: "No entries yet.",
+      },
+      orders: {
+        title: "Orders",
+        subtitle: "Your deliveries and past orders.",
+        cardLabel: "Orders",
+        cardTitle: "Build your next order",
+        cardNote: "Pricing and checkout are coming soon.",
+        addToCart: "Add to cart",
+        upcomingLabel: "Upcoming",
+        pastLabel: "Past orders",
+        pastEmpty: "No orders yet. Your history will appear here.",
+        statusScheduled: "Scheduled",
+        statusPlanned: "Planned",
+      },
+      loop: {
+        title: "Loop",
+        subtitle: "Track returns and keep glass in circulation.",
+        bottlesOut: "Bottles out",
+        returned: "Returned",
+        instructionsLabel: "Return instructions",
+        instructions: [
+          "Rinse bottles and cap them firmly.",
+          "Place them by your entryway before the pickup window.",
+          "We will confirm pickup completion in the Orders tab.",
+        ],
+        pickupLabel: "Pickup scheduling",
+        pickupNote: "QR check-in and scheduling are coming soon.",
+      },
+      profile: {
+        title: "Profile",
+        subtitle: "Keep your details up to date.",
+        loadingLabel: "Loading profile",
+        signedOut: "Sign in to manage your profile.",
+        nameLabel: "Name",
+        emailLabel: "Email",
+        phoneLabel: "Phone",
+        addressLabel: "Address",
+        addressLine1: "Street, building",
+        addressLine2: "Apartment, floor",
+        cityLabel: "City",
+        notificationsLabel: "Notifications",
+        hydrationReminders: "Hydration reminders",
+        deliveryReminders: "Delivery reminders",
+        saveCta: "Save changes",
+        statusSaving: "Saving…",
+        statusSaved: "Profile updated.",
+        statusLoadFail: "Could not load profile.",
+        statusSaveFail: "Could not save profile.",
+        statusDelete: "Deleting account…",
+        statusDeleteFail: "Could not delete account.",
+        logout: "Log out",
+        delete: "Delete account",
+        deleteConfirm: "Delete your account? This cannot be undone.",
       },
     },
   },
@@ -768,7 +1154,6 @@ export const translations: Record<Language, SiteCopy> = {
           img: "/assets/velah_bottle_500ml.png",
         },
       ],
-      addToPlan: "أضف إلى خطتك",
     },
     howItWorks: {
       heading: "كيف تعمل فيلا",
@@ -996,53 +1381,258 @@ export const translations: Record<Language, SiteCopy> = {
       streakKeepGoing: "واصل تحقيق هدفك لتحافظ على السلسلة.",
       streakStart: "حقق هدف اليوم لبدء السلسلة.",
     },
-    subscriptionManager: {
-      badge: "إدارة",
-      title: "اشتراكك في فيلا",
-      description: "عدّل مواعيد التوصيل، أوقفها أثناء السفر، أو غيّر أعداد القوارير في أي وقت.",
-      signInPrompt: "سجّل الدخول من أعلى الصفحة لإنشاء أو تعديل اشتراكك.",
-      savingLabel: "جارٍ الحفظ…",
-      currentPlan: "الخطة الحالية",
-      frequencyLabel: "التكرار",
-      deliveryDayLabel: "يوم التوصيل",
-      nextDeliveryLabel: "التوصيل القادم",
-      statusLabel: "الحالة",
-      statusActive: "نشط",
-      statusPaused: "موقوف مؤقتًا",
-      bottles: {
+    orderPage: {
+      title: "اطلب فيلا",
+      description:
+        "أنشئ طلبًا لمرة واحدة مع توصية أسبوعية من الذكاء الاصطناعي. عدّل الكميات أو أضف عبوات منفردة، ثم أضف إلى السلة.",
+    },
+    orderBuilder: {
+      aiTitle: "توصية أسبوعية بالذكاء الاصطناعي",
+      aiBadge: "أسبوعي",
+      aiIntro: "أخبرنا عن روتينك وسنقترح طلبًا أسبوعيًا.",
+      householdLabel: "عدد أفراد المنزل",
+      glassesLabel: "أكواب لكل شخص يوميًا",
+      cookingLabel: "الطبخ أو الشاي",
+      preferenceLabel: "تفضيل العبوات",
+      preferenceOptions: {
         fiveG: "قوارير ٥ جالون",
         oneL: "قوارير ١ لتر",
-        fiveHund: "قوارير ٥٠٠ مل",
+        fiveHund: "٥٠٠ مل (باك ٦)",
       },
-      frequencyField: "وتيرة التوصيل",
-      frequencyOptions: {
-        weekly: "كل أسبوع",
-        biweekly: "كل أسبوعين",
+      pricingNote: "الأسعار قريبًا. يمكنك بناء سلتك الآن.",
+      suggestedTitle: "المزيج الأسبوعي المقترح",
+      suggestionHigh: "استهلاك مرتفع. معظمها ٥ جالون مع إضافات.",
+      suggestionMid: "استهلاك متوازن. ٥ جالون مع عبوات أصغر.",
+      suggestionLow: "استهلاك خفيف. عبوات أصغر لمرونة أكبر.",
+      weeklyTotalLabel: "الإجمالي الأسبوعي",
+      addPlanCta: "أضف خطة الذكاء إلى السلة",
+      toastTitle: "تمت الإضافة إلى السلة",
+      toastContinue: "متابعة",
+      toastViewCart: "عرض السلة →",
+      individualTitle: "عبوات منفردة",
+      individualBadge: "حسب الطلب",
+      singleNote: "عبوة واحدة",
+      packNote: "تباع في باك ٦",
+      selectedLabel: "المحدد",
+      addBottlesCta: "أضف العبوات إلى السلة",
+      syncingLabel: "جارٍ مزامنة السلة…",
+    },
+    cart: {
+      label: "السلة",
+      title: "سلتك",
+      subtitle: "الأسعار قريبًا. يمكنك بناء طلبك الآن.",
+      loading: "جارٍ تحميل السلة…",
+      empty: "سلتك فارغة. أنشئ خطة ذكاء أو أضف عبوات.",
+      itemsLabel: "العناصر",
+      pricingNote: "ستظهر الأسعار عند فتح الطلبات.",
+      checkoutCta: "الدفع (قريبًا)",
+      clearCta: "تفريغ السلة",
+      buildPlanCta: "أنشئ خطة الذكاء →",
+      removeCta: "إزالة",
+      bottleLabels: {
+        fiveG: "قارورة ٥ جالون",
+        oneL: "قارورة ١ لتر",
+        fiveHund: "٥٠٠ مل (باك ٦)",
+        singleNote: "عبوة واحدة",
+        packNote: "تباع في باك ٦",
       },
-      deliveryDayField: "يوم التوصيل",
-      weekdays: {
-        monday: "الاثنين",
-        tuesday: "الثلاثاء",
-        wednesday: "الأربعاء",
-        thursday: "الخميس",
-        friday: "الجمعة",
-        saturday: "السبت",
-        sunday: "الأحد",
+    },
+    contact: {
+      label: "تواصل",
+      title: "تحدث مع فيلا",
+      subtitle: "أرسل رسالة أو راسلنا عبر واتساب وسنرد سريعًا.",
+      whatsappLabel: "واتساب",
+      whatsappCta: "راسلنا على واتساب",
+      formTitle: "أرسل رسالة",
+      availability: "متاح من الاثنين إلى الجمعة، ٩ صباحًا إلى ٦ مساءً بتوقيت دبي.",
+    },
+    contactForm: {
+      sendingAs: (name, email) => `جارٍ الإرسال باسم ${name} · ${email}`,
+      memberFallback: "عضو فيلا",
+      nameLabel: "الاسم",
+      emailLabel: "البريد الإلكتروني",
+      messageLabel: "رسالتك",
+      sending: "جارٍ الإرسال...",
+      send: "إرسال",
+      success: "تم استلام الرسالة. سنرد قريبًا.",
+      error: "تعذر الإرسال. حاول مرة أخرى.",
+    },
+    faq: {
+      label: "الأسئلة الشائعة",
+      title: "الأسئلة الشائعة",
+      subtitle: "كل ما تحتاج معرفته عن توصيل فيلا والعبوات وحلقة الإرجاع.",
+      items: [
+        {
+          q: "كيف يعمل التوصيل؟",
+          a: "نوصّل ضمن مسارات دبي المحددة ونشارك نافذة مؤكدة مسبقًا. يمكنك إدارة خطتك من حسابك عندما تفتح الاشتراكات.",
+        },
+        {
+          q: "ما الأحجام المتاحة؟",
+          a: "تصل فيلا في جالونات زجاج قابلة لإعادة الاستخدام وعبوات أصغر للاستخدام اليومي. امزج بينها بما يناسب أسبوعك.",
+        },
+        {
+          q: "كيف تتم الإرجاعات؟",
+          a: "اشطف القوارير وأغلقها ثم اتركها عند بابك خلال نافذة الاستلام. نجمعها ونعيدها للدورة.",
+        },
+        {
+          q: "هل يوجد إيداع؟",
+          a: "نعم. الزجاج متين وقابل لإعادة الاستخدام لذلك نضع إيداعًا قابلًا للاسترداد للحفاظ على الحلقة.",
+        },
+        {
+          q: "أين توصلون؟",
+          a: "نخدم دبي حاليًا مع خطط توسع في الخليج. إذا لم تكن منطقتك ضمن القائمة، انضم لقائمة الانتظار.",
+        },
+        {
+          q: "كيف أتواصل مع الدعم؟",
+          a: "راسلنا من صفحة التواصل أو عبر واتساب وسنرد سريعًا خلال ساعات دبي.",
+        },
+      ],
+      closing: "لديك أسئلة أخرى؟ زر صفحة التواصل وسنعود إليك بسرعة.",
+    },
+    privacy: {
+      label: "الخصوصية",
+      title: "سياسة الخصوصية",
+      subtitle: "نحافظ على البيانات في الحد الأدنى ونجمع ما نحتاجه فقط لتشغيل الخدمة.",
+      sections: [
+        {
+          title: "ما نجمعه",
+          body: "عند إنشاء الحساب نخزّن بريدك الإلكتروني واسمك وتفاصيل التوصيل التي تقدمها.",
+        },
+        {
+          title: "كيف نستخدمها",
+          body: "نستخدم بياناتك لإدارة التوصيل وإرجاع القوارير وتتبع الترطيب وطلبات الدعم.",
+        },
+        {
+          title: "الكوكيز",
+          body: "لا نستخدم كوكيز تتبع. قد نستخدم تخزينًا أساسيًا للجلسة لإبقائك مسجّلًا.",
+        },
+        {
+          title: "خياراتك",
+          body: "يمكنك طلب تحديث بياناتك أو حذفها عبر التواصل على founder@drinkvelah.com.",
+        },
+      ],
+      updatedLabel: "آخر تحديث: سبتمبر 2025",
+    },
+    app: {
+      loading: {
+        label: "نحضّر طقسك",
       },
-      notesLabel: "ملاحظات للسائق",
-      notesPlaceholder: "مثال: اتصل عند الوصول أو سلّم للكونسيرج",
-      saveButton: "حدّث الخطة",
-      createButton: "أنشئ الخطة",
-      pauseButton: "أوقف مؤقتًا",
-      resumeButton: "استأنف",
-      skipButton: "تخط التوصيل القادم",
-      applySuggestion: "طبّق الاقتراح",
-      signInCta: "بحاجة إلى حساب؟ انضم إلى قائمة الانتظار وسندعوك عند فتح الخدمة.",
-      errors: {
-        load: "تعذّر تحميل الاشتراك. حاول مرة أخرى.",
-        save: "تعذّر حفظ الاشتراك. حاول مرة أخرى.",
-        status: "تعذّر تحديث الحالة.",
-        skip: "تعذّر تخطي التوصيل القادم.",
+      nav: {
+        home: "الرئيسية",
+        orders: "الطلبات",
+        loop: "الحلقة",
+        profile: "الملف الشخصي",
+      },
+      auth: {
+        title: "تسجيل الدخول",
+        helperSignIn: "سجّل الدخول إلى حساب فيلا.",
+        helperSignUp: "أنشئ حساب فيلا خلال ثوانٍ.",
+        helperMagic: "سنرسل لك رابط دخول آمن عبر البريد.",
+        tabSignIn: "دخول",
+        tabSignUp: "إنشاء",
+        tabMagic: "رابط",
+        nameLabel: "الاسم",
+        emailLabel: "البريد الإلكتروني",
+        passwordLabel: "كلمة المرور",
+        submitSignIn: "دخول",
+        submitSignUp: "إنشاء حساب",
+        submitMagic: "إرسال الرابط",
+        submitLoading: "يرجى الانتظار",
+        statusWelcome: "مرحبًا بعودتك.",
+        statusMagic: "تحقق من بريدك لرابط الدخول.",
+        statusConfirm: "تحقق من بريدك لتأكيد الحساب.",
+        statusError: "حدث خطأ ما.",
+        termsPrefix: "بالمتابعة فإنك توافق على",
+        termsLink: "الشروط",
+      },
+      home: {
+        title: "اليوم",
+        statusRefreshFail: "تعذر تحديث الترطيب. اسحب لإعادة المحاولة.",
+        statusLoadFail: "تعذر تحميل الترطيب الآن.",
+        statusOfflineOnly: "غير متصل — عرض الإدخالات المعلقة فقط.",
+        statusOfflineQueued: "غير متصل — تمت الإضافة للطابور. سنزامن عند الاتصال.",
+        statusOfflineSaved: "غير متصل — تم حفظ الإجمالي في الطابور. سنزامن عند الاتصال.",
+        statusSupabaseQueued: "تعذر الاتصال بسوبابيز. تمت إضافة الإدخال للطابور.",
+        statusUpdateFail: "تعذر تحديث الإجمالي. حاول مرة أخرى.",
+        statusStillOffline: "لا تزال غير متصل. ستتم المزامنة تلقائيًا.",
+        statusSynced: "تمت مزامنة الترطيب المعلّق.",
+        statusSyncQueued: "سيتم مزامنة الترطيب المعلّق عند الاتصال.",
+        hydrationLabel: "الترطيب",
+        goalLabel: "الهدف",
+        unitMl: "مل",
+        customPlaceholder: "مخصص",
+        addCta: "أضف",
+        adjustLabel: "ضبط الإجمالي",
+        setPlaceholder: "أدخل مل",
+        setCta: "تعيين الإجمالي",
+        resetCta: "إعادة تعيين",
+        streakLabel: (days) => `السلسلة: ${days} يوم`,
+        weeklyLabel: "الإيقاع الأسبوعي",
+        upcomingLabel: "التوصيل القادم",
+        upcomingSlot: "الخميس · ٩–١١ صباحًا",
+        upcomingNote: "سنرسل رسالة عند انطلاق السائق.",
+        loopLabel: "حالة الحلقة",
+        loopOut: "٨ خارج",
+        loopReturned: "٥ عادت",
+        nextRouteLabel: "المسار التالي",
+        nextRouteName: "مارينا",
+        nextRouteSlot: "الخميس · ٩–١١ صباحًا",
+        recentLabel: "السجل الأخير",
+        queuedSuffix: " · معلق",
+        emptyLog: "لا توجد إدخالات بعد.",
+      },
+      orders: {
+        title: "الطلبات",
+        subtitle: "توصيلاتك وطلباتك السابقة.",
+        cardLabel: "الطلبات",
+        cardTitle: "ابنِ طلبك القادم",
+        cardNote: "الأسعار والدفع قريبًا.",
+        addToCart: "أضف إلى السلة",
+        upcomingLabel: "القادمة",
+        pastLabel: "الطلبات السابقة",
+        pastEmpty: "لا توجد طلبات بعد. سيظهر السجل هنا.",
+        statusScheduled: "مجدول",
+        statusPlanned: "مخطط",
+      },
+      loop: {
+        title: "الحلقة",
+        subtitle: "تتبع الإرجاع وأبقِ الزجاج في الدورة.",
+        bottlesOut: "عبوات خارج",
+        returned: "مرتجعة",
+        instructionsLabel: "تعليمات الإرجاع",
+        instructions: [
+          "اشطف القوارير وأغلقها بإحكام.",
+          "ضعها عند المدخل قبل نافذة الاستلام.",
+          "سنؤكد اكتمال الاستلام في تبويب الطلبات.",
+        ],
+        pickupLabel: "جدولة الاستلام",
+        pickupNote: "رمز QR والجدولة قريبًا.",
+      },
+      profile: {
+        title: "الملف الشخصي",
+        subtitle: "حدّث معلوماتك أولاً بأول.",
+        loadingLabel: "جارٍ تحميل الملف",
+        signedOut: "سجّل الدخول لإدارة ملفك.",
+        nameLabel: "الاسم",
+        emailLabel: "البريد الإلكتروني",
+        phoneLabel: "الهاتف",
+        addressLabel: "العنوان",
+        addressLine1: "الشارع، المبنى",
+        addressLine2: "الشقة، الطابق",
+        cityLabel: "المدينة",
+        notificationsLabel: "الإشعارات",
+        hydrationReminders: "تذكيرات الترطيب",
+        deliveryReminders: "تذكيرات التوصيل",
+        saveCta: "حفظ التغييرات",
+        statusSaving: "جارٍ الحفظ…",
+        statusSaved: "تم تحديث الملف.",
+        statusLoadFail: "تعذر تحميل الملف.",
+        statusSaveFail: "تعذر حفظ الملف.",
+        statusDelete: "جارٍ حذف الحساب…",
+        statusDeleteFail: "تعذر حذف الحساب.",
+        logout: "تسجيل الخروج",
+        delete: "حذف الحساب",
+        deleteConfirm: "حذف حسابك؟ لا يمكن التراجع.",
       },
     },
   },
