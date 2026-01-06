@@ -165,11 +165,6 @@ type HydrationCopy = {
   resetToday: string;
   historyHeading: string;
   unitMl: string;
-  pushPrompt: {
-    title: string;
-    description: string;
-    button: string;
-  };
   streakLabel: string;
   streakValue: (days: number) => string;
   streakKeepGoing: string;
@@ -587,11 +582,6 @@ export const translations: Record<Language, SiteCopy> = {
       resetToday: "Reset today",
       historyHeading: "Last 7 days",
       unitMl: "ml",
-      pushPrompt: {
-        title: "Stay on track",
-        description: "Enable gentle nudges when your hydration streak slips or when it's time for a refill.",
-        button: "Enable alerts",
-      },
       streakLabel: "Hydration streak",
       streakValue: (days) => `${days} day${days === 1 ? "" : "s"}`,
       streakKeepGoing: "Keep meeting your goal to extend it.",
@@ -1001,11 +991,6 @@ export const translations: Record<Language, SiteCopy> = {
       resetToday: "إعادة تعيين اليوم",
       historyHeading: "آخر ٧ أيام",
       unitMl: "مل",
-      pushPrompt: {
-        title: "ابق على المسار",
-        description: "فعّل التذكيرات اللطيفة عندما يتراجع معدل الترطيب أو يحين وقت إعادة التعبئة.",
-        button: "فعّل التنبيهات",
-      },
       streakLabel: "سلسلة الترطيب",
       streakValue: (days) => `${days} يوم`,
       streakKeepGoing: "واصل تحقيق هدفك لتحافظ على السلسلة.",

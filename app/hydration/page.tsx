@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { dayKey } from "@/lib/app/hydration";
 import AddToHome from "../../components/AddToHome";
-import PushNotificationsPrompt from "@/components/PushNotificationsPrompt";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
 
@@ -246,14 +245,6 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
           <div className="h-14 w-14 shrink-0 rounded-2xl bg-white border border-slate-200 shadow-inner flex items-center justify-center text-[var(--velah)] text-2xl font-semibold">
             {streak}
           </div>
-        </div>
-
-        <div className="sm:hidden mt-6">
-          <PushNotificationsPrompt
-            title={t.hydration.pushPrompt.title}
-            description={t.hydration.pushPrompt.description}
-            buttonLabel={t.hydration.pushPrompt.button}
-          />
         </div>
 
         {/* PROGRESS RING */}
