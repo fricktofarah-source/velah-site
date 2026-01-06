@@ -404,9 +404,9 @@ export default function Navbar() {
                   aria-label="Search suggestions"
                   onMouseDown={(e) => e.preventDefault()} /* keep focus while clicking */
                 >
-                  {(query.trim() ? filtered : defaults).map((s, i) => (
-                    <button
-                      key={s.kind === "section" ? `sec-${s.id}` : s.kind === "page" ? `pg-${s.href}` : `post-${s.slug}`}
+                    {(query.trim() ? filtered : defaults).map((s, i) => (
+                      <button
+                        key={`post-${s.slug}`}
                       role="option"
                       aria-selected={i === activeIdx}
                       className={`w-full text-left px-3 py-2.5 flex items-center justify-between gap-3 ${
