@@ -559,9 +559,9 @@ export const translations: Record<Language, SiteCopy> = {
       ],
       supportTitle: "Support",
       supportLinks: [
-        { label: "FAQs", href: "#" },
+        { label: "FAQs", href: "/faq" },
         { label: "Contact", href: "/contact" },
-        { label: "Privacy", href: "#" },
+        { label: "Privacy", href: "/privacy" },
       ],
       followTitle: "Follow",
       copyright: (year) => `© ${year} Velah. All rights reserved.`,
@@ -973,9 +973,9 @@ export const translations: Record<Language, SiteCopy> = {
       ],
       supportTitle: "الدعم",
       supportLinks: [
-        { label: "الأسئلة الشائعة", href: "#" },
+        { label: "الأسئلة الشائعة", href: "/faq" },
         { label: "اتصل بنا", href: "/contact" },
-        { label: "الخصوصية", href: "#" },
+        { label: "الخصوصية", href: "/privacy" },
       ],
       followTitle: "تابعنا",
       copyright: (year) => `© ${year} فيلا. جميع الحقوق محفوظة.`,

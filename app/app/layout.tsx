@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "Velah hydration app",
   manifest: "/app-manifest.json",
   appleWebApp: {
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
 };
 
