@@ -1,4 +1,4 @@
-const CACHE_VERSION = "velah-app-v1";
+const CACHE_VERSION = "velah-app-v2";
 const APP_SHELL = [
   "/app",
   "/app/orders",
@@ -48,13 +48,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const isNextAsset = url.pathname.startsWith("/_next/");
+  const isScript = url.pathname.endsWith(".js");
   const isStatic =
-    url.pathname.startsWith("/_next/") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".jpg") ||
     url.pathname.endsWith(".svg") ||
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js");
+    url.pathname.endsWith(".css");
+
+  if (isNextAsset || isScript) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   if (isStatic) {
     event.respondWith(

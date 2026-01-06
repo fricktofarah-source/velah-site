@@ -560,7 +560,7 @@ export const translations: Record<Language, SiteCopy> = {
       supportTitle: "Support",
       supportLinks: [
         { label: "FAQs", href: "#" },
-        { label: "Contact", href: "#" },
+        { label: "Contact", href: "/contact" },
         { label: "Privacy", href: "#" },
       ],
       followTitle: "Follow",
@@ -974,7 +974,7 @@ export const translations: Record<Language, SiteCopy> = {
       supportTitle: "الدعم",
       supportLinks: [
         { label: "الأسئلة الشائعة", href: "#" },
-        { label: "اتصل بنا", href: "#" },
+        { label: "اتصل بنا", href: "/contact" },
         { label: "الخصوصية", href: "#" },
       ],
       followTitle: "تابعنا",

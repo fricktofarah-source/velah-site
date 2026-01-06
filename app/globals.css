@@ -223,6 +223,15 @@ a, button, [role='button'] { cursor: pointer; }
 
   /* Accessible tap targets for small icons/buttons */
   .tap { @apply min-h-[44px] min-w-[44px]; }
+
+  .contact-reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: contact-reveal 0.35s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .contact-reveal--2 { animation-delay: 0.05s; }
+  .contact-reveal--3 { animation-delay: 0.1s; }
+  .contact-reveal--4 { animation-delay: 0.15s; }
 }
 
 /* --- Handy utilities --- */
@@ -276,6 +285,19 @@ a, button, [role='button'] { cursor: pointer; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .focus-ring { @apply outline-none focus-visible:ring-2 focus-visible:ring-[var(--velah)] focus-visible:ring-offset-2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+@keyframes contact-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Muted helper (kept for existing usage) --- */
