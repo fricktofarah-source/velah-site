@@ -23,15 +23,6 @@ export default function Bottles() {
     "500ml": "/about/500mL_invisiblebg.png",
   };
 
-  function addToPlan(key: typeof bottles[number]["key"]) {
-    // Optional: preselect bottle for Subscription section to read
-    try {
-      localStorage.setItem("velah:preselect", key);
-    } catch {}
-    // Smooth scroll to subscription
-    document.getElementById("subscription")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   return (
     <section id="bottles" className="relative isolate overflow-hidden bg-white py-24 sm:py-32">
       <div className="absolute inset-0 hidden bg-gradient-to-b from-white via-[#f4fbfc] to-white md:block" />
@@ -76,12 +67,6 @@ export default function Bottles() {
               <div className="space-y-3">
                 <h3 className="text-2xl font-semibold text-slate-900">{b.name}</h3>
                 <p className="text-base leading-relaxed text-slate-600">{b.desc}</p>
-                <button
-                  onClick={() => addToPlan(b.key)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-200/70 bg-white/50 px-6 py-2 text-sm font-semibold text-slate-900 shadow-[0_15px_40px_rgba(15,23,42,0.12)] backdrop-blur"
-                >
-                  {t.bottles.addToPlan}
-                </button>
               </div>
             </motion.article>
           ))}

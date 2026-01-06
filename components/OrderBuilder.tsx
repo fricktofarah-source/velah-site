@@ -116,6 +116,7 @@ export default function OrderBuilder() {
     "1L": 0,
     "500mL": 0,
   });
+  const [cartNotice, setCartNotice] = useState<CartItem[] | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -189,6 +190,7 @@ export default function OrderBuilder() {
 
   const applyRecommendation = (mix: CartItem[]) => {
     persistCart(mergeIntoCart(mix));
+    setCartNotice(mix);
   };
 
   const addSelectionToCart = () => {
@@ -198,6 +200,7 @@ export default function OrderBuilder() {
     if (additions.length === 0) return;
     persistCart(mergeIntoCart(additions));
     setSelection({ "5G": 0, "1L": 0, "500mL": 0 });
+    setCartNotice(additions);
   };
 
   const suggestion: Suggestion = useMemo(() => {
@@ -338,13 +341,6 @@ export default function OrderBuilder() {
           <div className="mt-6 grid gap-3">
             <button
               type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="btn btn-ghost h-11 w-full rounded-full"
-            >
-              Edit AI plan
-            </button>
-            <button
-              type="button"
               onClick={() => applyRecommendation(suggestion.mix)}
               className="btn btn-primary h-11 w-full rounded-full"
             >
@@ -353,6 +349,43 @@ export default function OrderBuilder() {
           </div>
         </div>
       </motion.section>
+
+      {cartNotice && (
+        <div className="fixed right-6 bottom-6 z-40 w-[18rem] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">Added to cart</div>
+              <div className="mt-1 space-y-1 text-xs text-slate-500">
+                {cartNotice.map((item) => (
+                  <div key={item.size}>
+                    {formatSizeLabel(item.size)} × {item.qty}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCartNotice(null)}
+              className="text-slate-400 hover:text-slate-700"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+              onClick={() => setCartNotice(null)}
+            >
+              Continue
+            </button>
+            <a href="/cart" className="text-xs font-semibold text-slate-700 underline">
+              View cart →
+            </a>
+          </div>
+        </div>
+      )}
 
       <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: reduceMotion ? 0 : 0.05 }}>
         <div className="card p-6">
