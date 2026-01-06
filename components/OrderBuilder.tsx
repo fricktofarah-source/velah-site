@@ -277,9 +277,9 @@ export default function OrderBuilder() {
                     type="checkbox"
                     checked={preferredSizes.includes("5G")}
                     onChange={(e) => {
-                      const next = e.target.checked
+                      const next = (e.target.checked
                         ? [...preferredSizes, "5G"]
-                        : preferredSizes.filter((size) => size !== "5G");
+                        : preferredSizes.filter((size) => size !== "5G")) as BottleSize[];
                       if (next.length === 0) return;
                       setPreferredSizes(next);
                     }}
@@ -291,9 +291,9 @@ export default function OrderBuilder() {
                     type="checkbox"
                     checked={preferredSizes.includes("1L")}
                     onChange={(e) => {
-                      const next = e.target.checked
+                      const next = (e.target.checked
                         ? [...preferredSizes, "1L"]
-                        : preferredSizes.filter((size) => size !== "1L");
+                        : preferredSizes.filter((size) => size !== "1L")) as BottleSize[];
                       if (next.length === 0) return;
                       setPreferredSizes(next);
                     }}
@@ -305,9 +305,9 @@ export default function OrderBuilder() {
                     type="checkbox"
                     checked={preferredSizes.includes("500mL")}
                     onChange={(e) => {
-                      const next = e.target.checked
+                      const next = (e.target.checked
                         ? [...preferredSizes, "500mL"]
-                        : preferredSizes.filter((size) => size !== "500mL");
+                        : preferredSizes.filter((size) => size !== "500mL")) as BottleSize[];
                       if (next.length === 0) return;
                       setPreferredSizes(next);
                     }}
