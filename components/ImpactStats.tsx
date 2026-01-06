@@ -71,7 +71,7 @@ export default function ImpactStats() {
 
 const Content = ({ stats, copy }: { stats: ImpactCopy["stats"]; copy: ImpactCopy }) => (
   <>
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-medium">
           {copy.badge}
@@ -82,14 +82,16 @@ const Content = ({ stats, copy }: { stats: ImpactCopy["stats"]; copy: ImpactCopy
         <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl lg:max-w-[32rem]">
           {copy.body}
         </p>
+        <div className="mt-5">
+          <Link href="/sustainability" className="inline-block group focus-ring rounded-xl">
+            <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+              <span>{copy.cta}</span>
+              <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+            </span>
+          </Link>
+        </div>
       </div>
-      <Link href="/sustainability" className="inline-block group focus-ring rounded-xl">
-        <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
-          <span>{copy.cta}</span>
-          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-          <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
-        </span>
-      </Link>
     </div>
 
     <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
