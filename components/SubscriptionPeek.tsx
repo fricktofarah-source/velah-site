@@ -79,16 +79,16 @@ export default function SubscriptionPeek() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
+              <Link href="/subscription" className="btn btn-primary h-11 rounded-full px-6">
+                {copy.exploreLink}
+              </Link>
               <button
                 type="button"
-                className="btn btn-primary h-11 rounded-full px-6"
+                className="btn btn-ghost h-11 rounded-full px-6 text-sm"
                 onClick={() => window.dispatchEvent(new Event("velah:open-waitlist"))}
               >
                 {copy.joinWaitlist}
               </button>
-              <Link href="/subscription" className="link-underline text-sm font-medium text-slate-700">
-                {copy.exploreLink}
-              </Link>
             </div>
           </div>
         </div>

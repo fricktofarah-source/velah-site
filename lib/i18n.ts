@@ -479,7 +479,7 @@ export const translations: Record<Language, SiteCopy> = {
       nextStepsHeadline: "Next steps",
       nextStepsBody: "Pick your area and we’ll notify you when ordering opens. You can build your cart in the meantime.",
       joinWaitlist: "Join the waitlist",
-      exploreLink: "Build your AI plan →",
+      exploreLink: "Build your AI plan",
     },
     impact: {
       badge: "Impact",
@@ -888,7 +888,7 @@ export const translations: Record<Language, SiteCopy> = {
       nextStepsHeadline: "الخطوات التالية",
       nextStepsBody: "اختر منطقتك وسنخبرك عند فتح الطلبات. يمكنك بناء السلة مسبقًا.",
       joinWaitlist: "انضم إلى قائمة الانتظار",
-      exploreLink: "أنشئ خطة الذكاء →",
+      exploreLink: "أنشئ خطة الذكاء",
     },
     impact: {
       badge: "الأثر",

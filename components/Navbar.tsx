@@ -484,15 +484,15 @@ export default function Navbar() {
             </div>
 
             <Link
-              href="/subscription"
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 hover:bg-slate-100 focus-ring"
+              href="/cart"
+              className="relative inline-flex h-9 w-9 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
               aria-label="Cart"
             >
-              <svg aria-hidden viewBox="0 0 24 24" className="h-4.5 w-4.5 text-slate-600">
-                <path
-                  fill="currentColor"
-                  d="M7 18a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4ZM6.2 6h14.5l-1.4 7.2a2 2 0 0 1-2 1.6H9a2 2 0 0 1-2-1.6L5.3 4H3V2h3a1 1 0 0 1 1 .8L7.6 6Z"
-                />
+              <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5">
+                <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 8h12l-1 11H7L6 8Z" />
+                  <path d="M9 8a3 3 0 0 1 6 0" />
+                </g>
               </svg>
               {cartCount > 0 ? (
                 <span className="absolute -right-1 -top-1 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-[var(--velah)] text-[10px] font-semibold text-slate-900 grid place-items-center">

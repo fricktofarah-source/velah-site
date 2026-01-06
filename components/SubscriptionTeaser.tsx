@@ -6,17 +6,16 @@ export default function SubscriptionTeaser() {
     <section id="subscriptionteaser" className="section scroll-mt-24 sm:scroll-mt-32 max-w-7xl mx-auto px-4 sm:px-6">
       <div className="card p-6 sm:p-8 grid md:grid-cols-2 gap-6 items-center">
         <div className="text-center md:text-left">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Subscription, made simple</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">AI plan, made simple</h2>
           <p className="mt-3 text-slate-600">
-            Pick your weekly mix of 5G, 1L, and 500 mL. Change or skip any week. Deposits are refunded when
-            bottles return.
+            Tell us about your week and start with an AI weekly recommendation. Adjust bottles and add the mix to cart.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3 md:justify-start">
             <Link href="/subscription" className="btn btn-primary h-11 rounded-full px-6">
-              Explore subscription
+              Build your AI plan
             </Link>
             <Link href="/about" className="link-underline text-sm font-medium">
-              How it works
+              See how it works
             </Link>
           </div>
         </div>
