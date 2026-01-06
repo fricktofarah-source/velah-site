@@ -61,21 +61,21 @@ export default function CartPage() {
     let active = true;
     const load = async () => {
       setLoading(true);
-      if (userId) {
-        const { data } = await supabase.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
-        const remoteItems = (data?.items as CartItem[] | null) || [];
-        const localItems = loadLocalCart();
-        if (remoteItems.length === 0 && localItems.length > 0) {
-          await supabase.from("order_carts").upsert({ user_id: userId, items: localItems }, { onConflict: "user_id" });
-          saveLocalCart([]);
-          if (active) setCart(localItems);
-        } else if (active) {
-          setCart(remoteItems);
-        }
-      } else if (active) {
-        setCart(loadLocalCart());
+      const localItems = loadLocalCart();
+      if (active) {
+        setCart(localItems);
+        setLoading(false);
       }
-      if (active) setLoading(false);
+      if (!userId) return;
+      const { data } = await supabase.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
+      const remoteItems = (data?.items as CartItem[] | null) || [];
+      if (remoteItems.length === 0 && localItems.length > 0) {
+        await supabase.from("order_carts").upsert({ user_id: userId, items: localItems }, { onConflict: "user_id" });
+        saveLocalCart([]);
+        if (active) setCart(localItems);
+      } else if (active) {
+        setCart(remoteItems);
+      }
     };
 
     load().catch(() => setLoading(false));
