@@ -71,6 +71,7 @@ type HowItWorksCopy = {
   steps: Array<{ id: number; title: string; body: string; chips: string[] }>;
   next: string;
   subscriptionCta: string;
+  aiPlanCta: string;
   visuals: {
     plan: Array<{ label: string; value: string }>;
     delivery: string[];
@@ -573,6 +574,7 @@ export const translations: Record<Language, SiteCopy> = {
       ],
       next: "Next →",
       subscriptionCta: "See subscription",
+      aiPlanCta: "Build your AI plan",
       visuals: {
         plan: [
           { label: "5 Gallon", value: "× 1" },
@@ -1186,6 +1188,7 @@ export const translations: Record<Language, SiteCopy> = {
       ],
       next: "التالي →",
       subscriptionCta: "استكشف الاشتراك",
+      aiPlanCta: "ابنِ خطة الذكاء",
       visuals: {
         plan: [
           { label: "٥ جالون", value: "× ١" },

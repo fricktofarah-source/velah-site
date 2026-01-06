@@ -107,7 +107,7 @@ export default function HowItWorks() {
                 {copy.next}
               </button>
               <Link href="/subscription" className="btn btn-primary rounded-full px-6 py-3 text-sm font-semibold">
-                {copy.subscriptionCta}
+                {copy.aiPlanCta}
               </Link>
             </div>
           </motion.div>

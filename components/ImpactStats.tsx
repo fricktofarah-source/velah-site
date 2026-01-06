@@ -83,8 +83,12 @@ const Content = ({ stats, copy }: { stats: ImpactCopy["stats"]; copy: ImpactCopy
           {copy.body}
         </p>
       </div>
-      <Link href="/sustainability" className="btn btn-primary h-11 rounded-full px-6">
-        {copy.cta}
+      <Link href="/sustainability" className="inline-block group focus-ring rounded-xl">
+        <span className="relative inline-flex items-center gap-2 text-slate-700 transition-colors group-hover:text-velah">
+          <span>{copy.cta}</span>
+          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <span className="absolute left-0 -bottom-0.5 h-[2px] w-0 bg-current transition-all duration-300 group-hover:w-full" />
+        </span>
       </Link>
     </div>
 
