@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
+import { posts } from "@/lib/posts";
 
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
@@ -44,7 +45,17 @@ export default function Navbar() {
   const emailRef = useRef<HTMLInputElement | null>(null);
 
   // -------- Suggestions data --------
-  const baseList = t.nav.suggestions.filter((s) => s.kind === "post");
+  const baseList = posts
+    .slice()
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
+    .map((post) => ({
+      kind: "post" as const,
+      slug: post.slug,
+      label:
+        language === "AR" && post.translations?.AR?.title
+          ? post.translations.AR.title
+          : post.title,
+    }));
 
   const defaults = baseList.slice(0, 5);
   const filtered = baseList.filter((s) =>
