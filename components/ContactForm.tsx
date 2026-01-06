@@ -69,9 +69,7 @@ export default function ContactForm() {
       }}
     >
       {useAccount ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          {copy.sendingAs(name || copy.memberFallback, email)}
-        </div>
+        <p className="text-sm text-slate-500">{copy.sendingAs(name || copy.memberFallback, email)}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
