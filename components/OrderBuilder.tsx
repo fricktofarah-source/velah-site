@@ -166,6 +166,9 @@ export default function OrderBuilder() {
     } else {
       saveLocalCart(items);
     }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cart:updated", { detail: items }));
+    }
   };
 
   const updateItem = (size: BottleSize, delta: number) => {

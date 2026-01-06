@@ -24,6 +24,7 @@ export default function Navbar() {
   const [isAuthed, setIsAuthed] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   // Routing
   const pathname = usePathname();
@@ -105,8 +106,36 @@ export default function Navbar() {
   }, [t.nav.waitlistModal.areaPlaceholder]);
 
   // Auth session + listener
+  function sumCart(items: Array<{ qty: number }> | null | undefined) {
+    if (!items?.length) return 0;
+    return items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+  }
+
+  function readLocalCartCount() {
+    if (typeof window === "undefined") return 0;
+    const raw = window.localStorage.getItem("velah:order-cart");
+    if (!raw) return 0;
+    try {
+      const parsed = JSON.parse(raw);
+      return sumCart(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return 0;
+    }
+  }
+
+  async function loadCartCount(userId?: string | null) {
+    if (userId) {
+      const { data } = await supabase.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
+      setCartCount(sumCart((data?.items as Array<{ qty: number }> | null) ?? []));
+      return;
+    }
+    setCartCount(readLocalCartCount());
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    let active = true;
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active) return;
       const session = data.session;
       setIsAuthed(!!session);
       const emailFromSession = session?.user?.email ?? null;
@@ -114,8 +143,10 @@ export default function Navbar() {
       const fullName =
         typeof metadata?.full_name === "string" ? metadata.full_name : null;
       setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
+      await loadCartCount(session?.user?.id ?? null);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!active) return;
       setIsAuthed(!!session);
       const emailFromSession = session?.user?.email ?? null;
       const metadata = session?.user?.user_metadata as { full_name?: string } | undefined;
@@ -123,8 +154,29 @@ export default function Navbar() {
         typeof metadata?.full_name === "string" ? metadata.full_name : null;
       setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
       setMenuOpen(false);
+      await loadCartCount(session?.user?.id ?? null);
     });
-    return () => sub.subscription.unsubscribe();
+
+    const onCartUpdate = (event: Event) => {
+      const detail = (event as CustomEvent).detail as Array<{ qty: number }> | undefined;
+      if (detail) {
+        setCartCount(sumCart(detail));
+      } else {
+        loadCartCount(null);
+      }
+    };
+
+    window.addEventListener("cart:updated", onCartUpdate as EventListener);
+
+    const onStorage = () => loadCartCount(null);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+      window.removeEventListener("cart:updated", onCartUpdate as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   // Global open-waitlist trigger (from Hero)
@@ -430,6 +482,24 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+
+            <Link
+              href="/subscription"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 hover:bg-slate-100 focus-ring"
+              aria-label="Cart"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4.5 w-4.5 text-slate-600">
+                <path
+                  fill="currentColor"
+                  d="M7 18a2 2 0 1 0 0 4a2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4a2 2 0 0 0 0-4ZM6.2 6h14.5l-1.4 7.2a2 2 0 0 1-2 1.6H9a2 2 0 0 1-2-1.6L5.3 4H3V2h3a1 1 0 0 1 1 .8L7.6 6Z"
+                />
+              </svg>
+              {cartCount > 0 ? (
+                <span className="absolute -right-1 -top-1 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-[var(--velah)] text-[10px] font-semibold text-slate-900 grid place-items-center">
+                  {cartCount}
+                </span>
+              ) : null}
+            </Link>
 
             {/* Account / Sign in (text-only) */}
             {isAuthed ? (
