@@ -590,39 +590,39 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {mobileMenuOpen ? (
-        <div
-          id="mobile-nav-menu"
-          className="md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200"
-        >
-          <div className="px-4 py-4 space-y-2">
-            {visibleNavItems.map((item) =>
-              item.type === "section" ? (
-                <button
-                  key={item.key}
-                  type="button"
-                  className="w-full text-left py-2 text-sm font-semibold text-slate-800"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    goSection(item.sectionId);
-                  }}
-                >
-                  {item.label}
-                </button>
-              ) : (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="block py-2 text-sm font-semibold text-slate-800"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              )
-            )}
-          </div>
+      <div
+        id="mobile-nav-menu"
+        className={`md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 transition-all duration-200 ease-out ${
+          mobileMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div className="px-4 py-4 space-y-2">
+          {visibleNavItems.map((item) =>
+            item.type === "section" ? (
+              <button
+                key={item.key}
+                type="button"
+                className="w-full text-left py-2 text-sm font-semibold text-slate-800"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  goSection(item.sectionId);
+                }}
+              >
+                {item.label}
+              </button>
+            ) : (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="block py-2 text-sm font-semibold text-slate-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            )
+          )}
         </div>
-      ) : null}
+      </div>
 
       {/* Waitlist modal */}
       {open && (
