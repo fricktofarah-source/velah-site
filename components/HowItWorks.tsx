@@ -159,8 +159,6 @@ export default function HowItWorks() {
           <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
         </div>
       )}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white via-white/70 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-white/70 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-16 mx-auto h-64 w-[80%] rounded-full bg-white/60 blur-[150px]" />
       <div className="pointer-events-none absolute left-[10%] top-12 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(127,203,216,0.18),_transparent_60%)] blur-3xl" />
       <div className="pointer-events-none absolute right-[5%] bottom-4 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(148,163,184,0.2),_transparent_65%)] blur-[120px]" />
