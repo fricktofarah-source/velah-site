@@ -26,6 +26,7 @@ export default function Navbar() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Routing
   const pathname = usePathname();
@@ -229,6 +230,19 @@ export default function Navbar() {
     if (langMenuOpen) document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [langMenuOpen]);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      const target = e.target as Node;
+      const menu = document.getElementById("mobile-nav-menu");
+      const button = document.getElementById("mobile-nav-button");
+      if (mobileMenuOpen && menu && !menu.contains(target) && button && !button.contains(target)) {
+        setMobileMenuOpen(false);
+      }
+    }
+    if (mobileMenuOpen) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [mobileMenuOpen]);
 
   // --- NEW: subtle hide-on-scroll, reveal on scroll-up (UI-only) ---
   const [hidden, setHidden] = useState(false);
@@ -504,6 +518,22 @@ export default function Navbar() {
               ) : null}
             </Link>
 
+            <button
+              id="mobile-nav-button"
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:text-slate-900 focus-ring md:hidden"
+              aria-label="Open navigation"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6">
+                <path
+                  fill="currentColor"
+                  d="M4 7.5h16v1.6H4zm0 6.8h16v1.6H4z"
+                />
+              </svg>
+            </button>
+
             {/* Account / Sign in (text-only) */}
             {isAuthed ? (
               <div className="relative">
@@ -559,6 +589,40 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+
+      {mobileMenuOpen ? (
+        <div
+          id="mobile-nav-menu"
+          className="md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200"
+        >
+          <div className="px-4 py-4 space-y-2">
+            {visibleNavItems.map((item) =>
+              item.type === "section" ? (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="w-full text-left py-2 text-sm font-semibold text-slate-800"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    goSection(item.sectionId);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className="block py-2 text-sm font-semibold text-slate-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      ) : null}
 
       {/* Waitlist modal */}
       {open && (
