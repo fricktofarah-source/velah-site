@@ -526,12 +526,23 @@ export default function Navbar() {
               aria-expanded={mobileMenuOpen}
               onClick={() => setMobileMenuOpen((prev) => !prev)}
             >
-              <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6">
-                <path
-                  fill="currentColor"
-                  d="M4 7.5h16v1.6H4zm0 6.8h16v1.6H4z"
+              <span className="relative h-5 w-5">
+                <span
+                  className={`absolute left-0 top-[5px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${
+                    mobileMenuOpen ? "translate-y-[5px] rotate-45" : ""
+                  }`}
                 />
-              </svg>
+                <span
+                  className={`absolute left-0 top-[10px] h-[2px] w-5 bg-current transition-opacity duration-200 ease-out ${
+                    mobileMenuOpen ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-[15px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${
+                    mobileMenuOpen ? "-translate-y-[5px] -rotate-45" : ""
+                  }`}
+                />
+              </span>
             </button>
 
             {/* Account / Sign in (text-only) */}
