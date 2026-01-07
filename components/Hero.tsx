@@ -28,6 +28,7 @@ export default function Hero() {
             className="object-cover"
           />
         </ScrollParallax>
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white via-white/70 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-white" />
         <ScrollParallax amount={30} className="absolute inset-x-0 top-0 flex justify-center opacity-70">
           <div className="mt-8 h-32 w-[70%] rounded-full bg-white/40 blur-3xl" />
