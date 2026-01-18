@@ -41,7 +41,7 @@ export default function ProfileForm() {
       setName(defaultName);
 
       const { data: profile } = await supabase
-        .from("user_profiles")
+        .from("profiles")
         .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -78,7 +78,7 @@ export default function ProfileForm() {
     if (!user) return;
 
     setStatus(copy.statusSaving);
-    const { error } = await supabase.from("user_profiles").upsert(
+    const { error } = await supabase.from("profiles").upsert(
       {
         user_id: user.id,
         full_name: name,

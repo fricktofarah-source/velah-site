@@ -5,7 +5,16 @@ import AppHeader from "@/components/app/AppHeader";
 import ProgressRing from "@/components/app/ProgressRing";
 import RequireAuth from "@/components/app/RequireAuth";
 import { supabase } from "@/lib/supabaseClient";
-import { dayKey, enqueueEntry, loadQueue, removeQueued, saveQueue, type QueuedEntry } from "@/lib/app/hydration";
+import {
+  dayKey,
+  enqueueEntry,
+  loadQueue,
+  loadTotals,
+  removeQueued,
+  saveQueue,
+  saveTotals,
+  type QueuedEntry,
+} from "@/lib/app/hydration";
 import { useLanguage } from "@/components/LanguageProvider";
 
 const quickAdds = [250, 500, 1000];
@@ -53,47 +62,56 @@ function HomeContent() {
     const userId = data.session?.user.id;
     if (!userId) return;
 
+    const queue = loadQueue().filter((item) => item.user_id === userId);
+    const pendingByDay = new Map<string, number>();
+    queue.forEach((item) => {
+      pendingByDay.set(item.day, (pendingByDay.get(item.day) || 0) + item.amount_ml);
+    });
+
     if (!navigator.onLine) {
-      const queue = loadQueue().filter((item) => item.user_id === userId);
-      const queuedEntries: HydrationEntry[] = queue.map((item) => ({
-        key: item.local_id,
-        intake_ml: item.amount_ml,
-        day: item.day,
-        pending: true,
-      }));
+      const cachedTotals = loadTotals(userId);
+      const merged = new Map<string, HydrationEntry>();
+      Object.entries(cachedTotals).forEach(([day, total]) => {
+        const pending = pendingByDay.get(day) || 0;
+        merged.set(day, { key: day, intake_ml: total + pending, day, pending: pending !== 0 });
+      });
+      pendingByDay.forEach((pending, day) => {
+        if (merged.has(day)) return;
+        merged.set(day, { key: day, intake_ml: pending, day, pending: true });
+      });
       if (!mounted.current) return;
-      setEntries(queuedEntries);
+      setEntries([...merged.values()]);
       setStatus(copy.statusOfflineOnly);
       return;
     }
 
     const { data: profile } = await supabase
-      .from("hydration_profiles")
-      .select("goal_ml")
+      .from("profiles")
+      .select("hydration_goal_ml")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (!mounted.current) return;
-    if (profile?.goal_ml) setGoal(profile.goal_ml);
+    if (profile?.hydration_goal_ml) setGoal(profile.hydration_goal_ml);
 
     const start = new Date();
     start.setDate(start.getDate() - 6);
     const primaryQuery = supabase
-      .from("hydration_entries")
-      .select("intake_ml,day")
+      .from("hydration_daily_totals")
+      .select("total_ml,day")
       .eq("user_id", userId)
       .gte("day", dayKey(start))
       .lte("day", today)
       .order("day", { ascending: false });
 
-    let rows: { intake_ml: number; day: string }[] | null = null;
+    let rows: { total_ml: number; day: string }[] | null = null;
     let error: { message?: string } | null = null;
     const primary = await primaryQuery;
     if (primary.error) {
       error = primary.error;
     } else {
       rows = (primary.data || []).map((row) => ({
-        intake_ml: row.intake_ml,
+        total_ml: row.total_ml,
         day: row.day,
       }));
     }
@@ -103,23 +121,31 @@ function HomeContent() {
       setStatus(error.message || copy.statusRefreshFail);
     }
 
-    const queue = loadQueue().filter((item) => item.user_id === userId);
-    const queuedEntries: HydrationEntry[] = queue.map((item) => ({
-      key: item.local_id,
-      intake_ml: item.amount_ml,
-      day: item.day,
-      pending: true,
-    }));
-
     const hydratedRows: HydrationEntry[] = (rows || []).map((row) => ({
       key: row.day,
-      intake_ml: row.intake_ml,
+      intake_ml: row.total_ml,
       day: row.day,
     }));
 
+    const totalsMap: Record<string, number> = {};
+    hydratedRows.forEach((entry) => {
+      totalsMap[entry.day] = entry.intake_ml;
+    });
+    saveTotals(userId, totalsMap);
+
     const merged = new Map<string, HydrationEntry>();
-    hydratedRows.forEach((entry) => merged.set(entry.day, entry));
-    queuedEntries.forEach((entry) => merged.set(entry.day, entry));
+    hydratedRows.forEach((entry) => {
+      const pending = pendingByDay.get(entry.day) || 0;
+      merged.set(entry.day, {
+        ...entry,
+        intake_ml: entry.intake_ml + pending,
+        pending: pending !== 0,
+      });
+    });
+    pendingByDay.forEach((pending, day) => {
+      if (merged.has(day)) return;
+      merged.set(day, { key: day, intake_ml: pending, day, pending: true });
+    });
     setEntries([...merged.values()]);
     if (!error) setStatus(null);
   };
@@ -184,56 +210,55 @@ function HomeContent() {
     const userId = data.session?.user.id;
     if (!userId) return;
 
-    const nextTotal = todayTotal + amount;
     const payload = {
       user_id: userId,
       day: today,
-      intake_ml: nextTotal,
+      amount_ml: amount,
+      logged_at: new Date().toISOString(),
+      source: "app_home",
+      client_event_id: crypto.randomUUID(),
     };
 
     if (!navigator.onLine) {
       const queue = loadQueue();
-      const existing = queue.find((item) => item.day === today && item.user_id === userId);
-      const localId = existing?.local_id ?? crypto.randomUUID();
-      const queued: QueuedEntry = {
-        user_id: userId,
-        amount_ml: nextTotal,
-        logged_at: new Date().toISOString(),
-        day: today,
-        source: "total",
-        local_id: localId,
-      };
-      const nextQueue = queue.filter((item) => item.local_id !== localId && item.day !== today);
-      nextQueue.push(queued);
-      saveQueue(nextQueue);
-      setEntries((prev) => [
-        { key: localId, intake_ml: nextTotal, day: today, pending: true },
-        ...prev.filter((entry) => entry.day !== today),
-      ]);
+      const queued: QueuedEntry = payload;
+      queue.push(queued);
+      saveQueue(queue);
+      setEntries((prev) => {
+        const nextTotal = todayTotal + amount;
+        return [
+          { key: today, intake_ml: nextTotal, day: today, pending: true },
+          ...prev.filter((entry) => entry.day !== today),
+        ];
+      });
       setStatus(copy.statusOfflineQueued);
       return;
     }
 
-    const { error: upsertError } = await supabase
-      .from("hydration_entries")
-      .upsert(payload, { onConflict: "user_id,day" });
+    const { error: insertError } = await supabase.from("hydration_events").insert(payload);
 
-    if (upsertError) {
+    if (insertError) {
       const queued: QueuedEntry = {
         user_id: userId,
-        amount_ml: nextTotal,
-        logged_at: new Date().toISOString(),
+        amount_ml: amount,
+        logged_at: payload.logged_at,
         day: today,
-        source: "total",
-        local_id: crypto.randomUUID(),
+        source: payload.source,
+        client_event_id: payload.client_event_id,
       };
       enqueueEntry(queued);
-      setEntries((prev) => [{ key: queued.local_id, intake_ml: nextTotal, day: today, pending: true }, ...prev]);
+      setEntries((prev) => [
+        { key: today, intake_ml: todayTotal + amount, day: today, pending: true },
+        ...prev.filter((entry) => entry.day !== today),
+      ]);
       setStatus(copy.statusSupabaseQueued);
       return;
     }
 
-    setEntries((prev) => [{ key: today, intake_ml: nextTotal, day: today }, ...prev.filter((entry) => entry.day !== today)]);
+    setEntries((prev) => [
+      { key: today, intake_ml: todayTotal + amount, day: today },
+      ...prev.filter((entry) => entry.day !== today),
+    ]);
     setStatus(null);
   };
 
@@ -243,40 +268,33 @@ function HomeContent() {
     const userId = data.session?.user.id;
     if (!userId) return;
 
+    const delta = nextTotal - todayTotal;
+    if (delta === 0) return;
     const payload = {
       user_id: userId,
       day: today,
-      intake_ml: nextTotal,
+      amount_ml: delta,
+      logged_at: new Date().toISOString(),
+      source: "app_home",
+      client_event_id: crypto.randomUUID(),
     };
 
     if (!navigator.onLine) {
       const queue = loadQueue();
-      const existing = queue.find((item) => item.day === today && item.user_id === userId);
-      const localId = existing?.local_id ?? crypto.randomUUID();
-      const queued: QueuedEntry = {
-        user_id: userId,
-        amount_ml: nextTotal,
-        logged_at: new Date().toISOString(),
-        day: today,
-        source: "total",
-        local_id: localId,
-      };
-      const nextQueue = queue.filter((item) => item.local_id !== localId && item.day !== today);
-      nextQueue.push(queued);
-      saveQueue(nextQueue);
+      const queued: QueuedEntry = payload;
+      queue.push(queued);
+      saveQueue(queue);
       setEntries((prev) => [
-        { key: localId, intake_ml: nextTotal, day: today, pending: true },
+        { key: today, intake_ml: nextTotal, day: today, pending: true },
         ...prev.filter((entry) => entry.day !== today),
       ]);
       setStatus(copy.statusOfflineSaved);
       return;
     }
 
-    const { error: upsertError } = await supabase
-      .from("hydration_entries")
-      .upsert(payload, { onConflict: "user_id,day" });
+    const { error: insertError } = await supabase.from("hydration_events").insert(payload);
 
-    if (upsertError) {
+    if (insertError) {
       setStatus(copy.statusUpdateFail);
       return;
     }
@@ -297,19 +315,22 @@ function HomeContent() {
       const payload = queue.map((item) => ({
         user_id: item.user_id,
         day: item.day,
-        intake_ml: item.amount_ml,
+        amount_ml: item.amount_ml,
+        logged_at: item.logged_at,
+        source: item.source,
+        client_event_id: item.client_event_id,
       }));
 
       const { error: syncError } = await supabase
-        .from("hydration_entries")
-        .upsert(payload, { onConflict: "user_id,day" });
+        .from("hydration_events")
+        .upsert(payload, { onConflict: "user_id,client_event_id" });
 
       if (syncError) {
         setStatus(copy.statusStillOffline);
         return;
       }
 
-      queue.forEach((item) => removeQueued(item.local_id));
+      queue.forEach((item) => removeQueued(item.client_event_id));
       await refresh({ current: true });
       setStatus(copy.statusSynced);
     };

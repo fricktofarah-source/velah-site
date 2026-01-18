@@ -92,13 +92,13 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
      async function loadAuthed(uid: string) {
        // goal
        const { data: prof } = await supabase
-         .from("hydration_profiles")
-         .select("goal_ml")
+         .from("profiles")
+         .select("hydration_goal_ml")
          .eq("user_id", uid)
          .maybeSingle();
-       if (prof?.goal_ml) {
-         setGoal(prof.goal_ml);
-         setGoalInput(String(prof.goal_ml));
+       if (prof?.hydration_goal_ml) {
+         setGoal(prof.hydration_goal_ml);
+         setGoalInput(String(prof.hydration_goal_ml));
        } else {
          setGoal(null);
          setGoalInput("");
@@ -106,27 +106,27 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
        // today
        const { data: todayRow } = await supabase
-         .from("hydration_entries")
-         .select("intake_ml")
+         .from("hydration_daily_totals")
+         .select("total_ml")
          .eq("user_id", uid)
          .eq("day", today)
          .maybeSingle();
-       setIntake(todayRow?.intake_ml || 0);
-       setAdjustInput(todayRow?.intake_ml ? String(todayRow.intake_ml) : "");
+       setIntake(todayRow?.total_ml || 0);
+       setAdjustInput(todayRow?.total_ml ? String(todayRow.total_ml) : "");
 
        // last 7 days
        const start = new Date();
        start.setDate(start.getDate() - 6);
        const { data: rows } = await supabase
-         .from("hydration_entries")
-         .select("day,intake_ml")
+         .from("hydration_daily_totals")
+         .select("day,total_ml")
          .eq("user_id", uid)
          .gte("day", dayKey(start))
          .lte("day", today)
          .order("day", { ascending: true });
 
        const byDay = new Map<string, number>();
-       rows?.forEach((r) => byDay.set(r.day, r.intake_ml));
+       rows?.forEach((r) => byDay.set(r.day, r.total_ml));
        const list: HistoryItem[] = [];
        for (let i = 6; i >= 0; i--) {
          const d = new Date();
@@ -176,10 +176,6 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
          setAdjustInput("0");
          if (!session) {
            localStorage.setItem(`hydration:intake:${dayKey()}`, "0");
-         } else {
-           supabase
-             .from("hydration_entries")
-             .upsert({ user_id: session.user.id, day: dayKey(), intake_ml: 0 }, { onConflict: "user_id,day" });
          }
        }
      }, 60_000);
@@ -196,8 +192,8 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
        localStorage.setItem("hydration:goal", String(ml));
      } else {
        await supabase
-         .from("hydration_profiles")
-         .upsert({ user_id: session.user.id, goal_ml: ml }, { onConflict: "user_id" });
+         .from("profiles")
+         .upsert({ user_id: session.user.id, hydration_goal_ml: ml }, { onConflict: "user_id" });
      }
    }
 
@@ -208,9 +204,17 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
      if (!session) {
        localStorage.setItem(`hydration:intake:${today}`, String(v));
      } else {
-       await supabase
-         .from("hydration_entries")
-         .upsert({ user_id: session.user.id, day: today, intake_ml: v }, { onConflict: "user_id,day" });
+       const delta = v - intake;
+       if (delta !== 0) {
+         await supabase.from("hydration_events").insert({
+           user_id: session.user.id,
+           day: today,
+           amount_ml: delta,
+           logged_at: new Date().toISOString(),
+           source: "hydration_page",
+           client_event_id: crypto.randomUUID(),
+         });
+       }
      }
      // update history slot for today
      setHistory((h) => h.map((d) => (d.day === today ? { ...d, intake_ml: v } : d)));

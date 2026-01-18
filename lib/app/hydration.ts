@@ -1,5 +1,5 @@
 export type QueuedEntry = {
-  local_id: string;
+  client_event_id: string;
   user_id: string;
   amount_ml: number;
   logged_at: string;
@@ -8,6 +8,7 @@ export type QueuedEntry = {
 };
 
 const QUEUE_KEY = "velah:hydration:queue";
+const TOTALS_KEY = "velah:hydration:totals";
 
 export function dayKey(date = new Date()) {
   const tzOffset = date.getTimezoneOffset() * 60 * 1000;
@@ -38,8 +39,25 @@ export function enqueueEntry(entry: QueuedEntry) {
   return queue;
 }
 
-export function removeQueued(localId: string) {
-  const queue = loadQueue().filter((item) => item.local_id !== localId);
+export function removeQueued(clientEventId: string) {
+  const queue = loadQueue().filter((item) => item.client_event_id !== clientEventId);
   saveQueue(queue);
   return queue;
+}
+
+export function loadTotals(userId: string) {
+  if (typeof window === "undefined") return {};
+  const raw = window.localStorage.getItem(`${TOTALS_KEY}:${userId}`);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveTotals(userId: string, totals: Record<string, number>) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(`${TOTALS_KEY}:${userId}`, JSON.stringify(totals));
 }

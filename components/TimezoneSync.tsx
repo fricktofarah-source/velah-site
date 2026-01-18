@@ -17,7 +17,7 @@ export default function TimezoneSync() {
       try {
         const cached = window.localStorage.getItem(storageKey);
         if (cached === timeZone) return;
-        await supabase.from("hydration_profiles").upsert({ user_id: userId, time_zone: timeZone }, { onConflict: "user_id" });
+        await supabase.from("profiles").upsert({ user_id: userId, time_zone: timeZone }, { onConflict: "user_id" });
         window.localStorage.setItem(storageKey, timeZone);
       } catch (error) {
         console.warn("Failed to sync timezone", error);
@@ -40,4 +40,3 @@ export default function TimezoneSync() {
 
   return null;
 }
-
