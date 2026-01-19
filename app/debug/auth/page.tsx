@@ -9,6 +9,7 @@ type DebugState = {
   session: unknown;
   user: unknown;
   storage: unknown;
+  storageKeys: string[];
   refresh: unknown;
   errors?: { session?: string; user?: string; refresh?: string };
   error?: string;
@@ -37,14 +38,16 @@ export default function AuthDebugPage() {
     session: null,
     user: null,
     storage: null,
+    storageKeys: [],
     refresh: null,
   });
 
   const load = async () => {
-    setState({ status: "loading", session: null, user: null, storage: null, refresh: null });
+    setState({ status: "loading", session: null, user: null, storage: null, storageKeys: [], refresh: null });
     try {
       const ref = getProjectRef();
       const storageKey = ref ? `sb-${ref}-auth-token` : null;
+      const storageKeys = Object.keys(window.localStorage || {}).filter((key) => key.startsWith("sb-"));
       const storedRaw = storageKey ? window.localStorage.getItem(storageKey) : null;
       let stored: unknown = null;
       if (storedRaw) {
@@ -70,6 +73,7 @@ export default function AuthDebugPage() {
         session: session ?? null,
         user: userRes?.data?.user ?? null,
         storage: stored,
+        storageKeys,
         refresh: refreshRes?.data?.session ?? null,
         errors: {
           session: sessionRes?.error?.message,
@@ -83,6 +87,7 @@ export default function AuthDebugPage() {
         session: null,
         user: null,
         storage: null,
+        storageKeys: [],
         refresh: null,
         error: error instanceof Error ? error.message : "Unknown error",
       });
@@ -131,6 +136,13 @@ export default function AuthDebugPage() {
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Storage</div>
           <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
 {JSON.stringify(state.storage, null, 2)}
+          </pre>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Storage Keys</div>
+          <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
+{JSON.stringify(state.storageKeys, null, 2)}
           </pre>
         </div>
 
