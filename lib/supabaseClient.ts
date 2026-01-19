@@ -9,10 +9,31 @@ if (!url || !anon) {
   throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
 }
 
+const projectRef = (() => {
+  try {
+    return new URL(url).hostname.split(".")[0];
+  } catch {
+    return null;
+  }
+})();
+
+const storageKey = projectRef ? `sb-${projectRef}-auth-token` : undefined;
+
+const storage =
+  typeof window !== "undefined"
+    ? {
+        getItem: (key: string) => window.localStorage.getItem(key),
+        setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+        removeItem: (key: string) => window.localStorage.removeItem(key),
+      }
+    : undefined;
+
 export const supabase = createClient(url, anon, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage,
+    storageKey,
   },
 });
