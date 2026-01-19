@@ -12,15 +12,14 @@ export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | 
     // ignore and fall through
   }
 
-  const after = await supabase.auth.getSession();
-  if (after.data.session) return after.data.session;
-
   return await new Promise<Session | null>((resolve) => {
     let timeoutId: ReturnType<typeof setTimeout>;
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      clearTimeout(timeoutId);
-      listener.subscription.unsubscribe();
-      resolve(session ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        clearTimeout(timeoutId);
+        listener.subscription.unsubscribe();
+        resolve(session ?? null);
+      }
     });
 
     timeoutId = setTimeout(() => {
