@@ -41,7 +41,7 @@ export default function AuthDebugPage() {
   });
 
   const load = async () => {
-    setState({ status: "loading", session: null, user: null });
+    setState({ status: "loading", session: null, user: null, storage: null, refresh: null });
     try {
       const ref = getProjectRef();
       const storageKey = ref ? `sb-${ref}-auth-token` : null;
