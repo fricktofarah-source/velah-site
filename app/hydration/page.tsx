@@ -73,9 +73,23 @@ export default function HydrationPage() {
            }
          };
 
-         const { data } = await withTimeout(supabase.auth.getSession(), 8000);
+         let sessionUser: SessionLike = null;
+         try {
+           const { data } = await withTimeout(supabase.auth.getSession(), 3000);
+           sessionUser = data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null;
+         } catch {
+           // fall through
+         }
+         if (!sessionUser) {
+           try {
+             const { data } = await withTimeout(supabase.auth.getUser(), 3000);
+             sessionUser = data.user ? { user: { id: data.user.id, email: data.user.email } } : null;
+           } catch {
+             sessionUser = null;
+           }
+         }
          if (!isMounted) return;
-         setSession(data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null);
+         setSession(sessionUser);
        } catch (error) {
          console.warn("supabase.auth.getSession failed, falling back to guest mode", error);
          if (isMounted) setSession(null);
@@ -102,8 +116,7 @@ export default function HydrationPage() {
 
      async function loadAuthed(uid: string) {
        if (typeof navigator !== "undefined" && !navigator.onLine) {
-         loadGuest();
-         return;
+         throw new Error("Offline");
        }
 
        async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
@@ -196,11 +209,19 @@ export default function HydrationPage() {
 
      if (session?.user.id) {
        loadAuthed(session.user.id).catch((error) => {
-         console.warn("Failed to load hydration data for user, falling back to guest mode", error);
-         loadGuest();
+         console.warn("Failed to load hydration data for user", error);
+         setGoal(null);
+         setIntake(0);
+         setGoalInput("");
+         setAdjustInput("");
+         setHistory([]);
        });
-     } else {
-       loadGuest();
+     } else if (!loading) {
+       setGoal(null);
+       setIntake(0);
+       setGoalInput("");
+       setAdjustInput("");
+       setHistory([]);
      }
    }, [loading, session?.user.id, today]);
 

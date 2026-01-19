@@ -34,15 +34,30 @@ export default function ProfileForm() {
     }
   }
 
+  const getAuthedUser = async () => {
+    try {
+      const { data } = await withTimeout(supabase.auth.getSession(), 3000);
+      if (data.session?.user) return data.session.user;
+    } catch {
+      // fall through
+    }
+    try {
+      const { data } = await withTimeout(supabase.auth.getUser(), 3000);
+      if (data.user) return data.user;
+    } catch {
+      // fall through
+    }
+    return null;
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
-        const { data } = await withTimeout(supabase.auth.getSession(), 8000);
-        const user = data.session?.user;
+        const user = await getAuthedUser();
         if (!user) {
-          setStatus(copy.signedOut);
+          setStatus(copy.statusLoadFail);
           return;
         }
 
@@ -62,7 +77,7 @@ export default function ProfileForm() {
               },
               { onConflict: "user_id" }
             ),
-            8000
+            6000
           );
         } catch {
           // best-effort: continue even if the upsert fails
@@ -75,7 +90,7 @@ export default function ProfileForm() {
               .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
               .eq("user_id", user.id)
               .maybeSingle(),
-            8000
+            6000
           );
 
           if (!mounted) return;
@@ -165,7 +180,7 @@ export default function ProfileForm() {
   if (!hasSession) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
-        {status}
+        {status || copy.statusLoadFail}
       </div>
     );
   }
