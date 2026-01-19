@@ -52,24 +52,44 @@ export default function ProfileForm() {
         const defaultName = (user.user_metadata?.full_name as string) || "";
         setName(defaultName);
 
-        const { data: profile } = await withTimeout(
-          supabase
-            .from("profiles")
-            .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
-            .eq("user_id", user.id)
-            .maybeSingle(),
-          8000
-        );
+        try {
+          await withTimeout(
+            supabase.from("profiles").upsert(
+              {
+                user_id: user.id,
+                email: user.email || null,
+                full_name: defaultName || null,
+              },
+              { onConflict: "user_id" }
+            ),
+            8000
+          );
+        } catch {
+          // best-effort: continue even if the upsert fails
+        }
 
-        if (!mounted) return;
-        if (profile) {
-          setName(profile.full_name || defaultName);
-          setPhone(profile.phone || "");
-          setAddressLine1(profile.address_line1 || "");
-          setAddressLine2(profile.address_line2 || "");
-          setCity(profile.city || "Dubai");
-          setHydrationReminders(profile.pref_hydration_reminders ?? true);
-          setDeliveryReminders(profile.pref_delivery_reminders ?? true);
+        try {
+          const { data: profile } = await withTimeout(
+            supabase
+              .from("profiles")
+              .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
+              .eq("user_id", user.id)
+              .maybeSingle(),
+            8000
+          );
+
+          if (!mounted) return;
+          if (profile) {
+            setName(profile.full_name || defaultName);
+            setPhone(profile.phone || "");
+            setAddressLine1(profile.address_line1 || "");
+            setAddressLine2(profile.address_line2 || "");
+            setCity(profile.city || "Dubai");
+            setHydrationReminders(profile.pref_hydration_reminders ?? true);
+            setDeliveryReminders(profile.pref_delivery_reminders ?? true);
+          }
+        } catch {
+          if (mounted) setStatus(copy.statusLoadFail);
         }
       } finally {
         if (mounted) setLoading(false);
