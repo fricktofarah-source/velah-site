@@ -16,7 +16,7 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
  type HistoryItem = { day: string; intake_ml: number };
 
- export default function HydrationPage() {
+export default function HydrationPage() {
    const { t } = useLanguage();
    /* auth/session */
    const [session, setSession] = useState<SessionLike>(null);
@@ -90,12 +90,32 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
      if (loading) return;
 
      async function loadAuthed(uid: string) {
+       if (typeof navigator !== "undefined" && !navigator.onLine) {
+         loadGuest();
+         return;
+       }
+
+       const withTimeout = async <T,>(promise: Promise<T>, ms: number) => {
+         let timeoutId: ReturnType<typeof setTimeout> | null = null;
+         const timeoutPromise = new Promise<never>((_, reject) => {
+           timeoutId = setTimeout(() => reject(new Error("Hydration load timeout")), ms);
+         });
+         try {
+           return await Promise.race([promise, timeoutPromise]);
+         } finally {
+           if (timeoutId) clearTimeout(timeoutId);
+         }
+       };
+
        // goal
-       const { data: prof } = await supabase
-         .from("profiles")
-         .select("hydration_goal_ml")
-         .eq("user_id", uid)
-         .maybeSingle();
+       const { data: prof } = await withTimeout(
+         supabase
+           .from("profiles")
+           .select("hydration_goal_ml")
+           .eq("user_id", uid)
+           .maybeSingle(),
+         8000
+       );
        if (prof?.hydration_goal_ml) {
          setGoal(prof.hydration_goal_ml);
          setGoalInput(String(prof.hydration_goal_ml));
@@ -105,25 +125,31 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
        }
 
        // today
-       const { data: todayRow } = await supabase
-         .from("hydration_daily_totals")
-         .select("total_ml")
-         .eq("user_id", uid)
-         .eq("day", today)
-         .maybeSingle();
+       const { data: todayRow } = await withTimeout(
+         supabase
+           .from("hydration_daily_totals")
+           .select("total_ml")
+           .eq("user_id", uid)
+           .eq("day", today)
+           .maybeSingle(),
+         8000
+       );
        setIntake(todayRow?.total_ml || 0);
        setAdjustInput(todayRow?.total_ml ? String(todayRow.total_ml) : "");
 
        // last 7 days
        const start = new Date();
        start.setDate(start.getDate() - 6);
-       const { data: rows } = await supabase
-         .from("hydration_daily_totals")
-         .select("day,total_ml")
-         .eq("user_id", uid)
-         .gte("day", dayKey(start))
-         .lte("day", today)
-         .order("day", { ascending: true });
+       const { data: rows } = await withTimeout(
+         supabase
+           .from("hydration_daily_totals")
+           .select("day,total_ml")
+           .eq("user_id", uid)
+           .gte("day", dayKey(start))
+           .lte("day", today)
+           .order("day", { ascending: true }),
+         8000
+       );
 
        const byDay = new Map<string, number>();
        rows?.forEach((r) => byDay.set(r.day, r.total_ml));

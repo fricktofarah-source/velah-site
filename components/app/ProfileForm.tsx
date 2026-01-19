@@ -22,6 +22,18 @@ export default function ProfileForm() {
   const [deliveryReminders, setDeliveryReminders] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number) => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("Profile load timeout")), ms);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -40,11 +52,14 @@ export default function ProfileForm() {
       const defaultName = (user.user_metadata?.full_name as string) || "";
       setName(defaultName);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: profile } = await withTimeout(
+        supabase
+          .from("profiles")
+          .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        8000
+      );
 
       if (!mounted) return;
       if (profile) {
