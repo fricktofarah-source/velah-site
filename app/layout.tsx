@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import RootShell from "@/components/RootShell";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <LanguageProvider>
+          <ServiceWorkerCleanup />
           <RootShell>{children}</RootShell>
         </LanguageProvider>
       </body>
