@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import AppLoader from "@/components/app/AppLoader";
+import ProfileForm from "@/components/ProfileForm";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace("/app/profile");
-  }, [router]);
-
   return (
     <main className="container mx-auto max-w-2xl px-4 py-12">
-      <AppLoader label="Redirecting to your profile" />
+      <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Profile</h1>
+      <p className="mt-2 text-sm text-slate-500">Manage your contact details and reminders.</p>
+      <div className="mt-8">
+        <ProfileForm />
+      </div>
     </main>
   );
 }

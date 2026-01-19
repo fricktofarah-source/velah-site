@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import AppLoader from "./AppLoader";
+import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
 
 export default function ProfileForm() {
@@ -138,7 +138,7 @@ export default function ProfileForm() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("/app/auth");
+    router.replace("/");
   };
 
   const handleDelete = async () => {
@@ -158,7 +158,7 @@ export default function ProfileForm() {
     }
 
     await supabase.auth.signOut();
-    router.replace("/app/auth");
+    router.replace("/");
   };
 
   if (loading) return <AppLoader label={copy.loadingLabel} />;
@@ -172,7 +172,7 @@ export default function ProfileForm() {
 
   return (
     <div className="space-y-6">
-      <div className="app-card p-5 space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel}</span>
           <input
@@ -199,7 +199,7 @@ export default function ProfileForm() {
         </label>
       </div>
 
-      <div className="app-card p-5 space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.addressLabel}</p>
         <label className="block">
           <span className="sr-only">{copy.addressLine1}</span>
@@ -229,7 +229,7 @@ export default function ProfileForm() {
         </label>
       </div>
 
-      <div className="app-card p-5 space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.notificationsLabel}</p>
         <label className="flex items-center justify-between">
           <span className="text-sm text-slate-600">{copy.hydrationReminders}</span>
@@ -253,7 +253,7 @@ export default function ProfileForm() {
 
       {status ? <p className="text-sm text-slate-500">{status}</p> : null}
 
-      <div className="app-card p-5 space-y-3">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
         <button onClick={handleLogout} className="btn btn-ghost h-11 w-full rounded-full">
           {copy.logout}
         </button>

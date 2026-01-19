@@ -1,22 +1,10 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 export default function RootShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const isApp = pathname?.startsWith("/app");
-
-  if (isApp) {
-    return (
-      <main id="content" className="app-shell">
-        {children}
-      </main>
-    );
-  }
-
   return (
     <>
       <a
