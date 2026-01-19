@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRetry } from "@/lib/authSession";
 
 type DebugState = {
   status: "idle" | "loading" | "ready" | "error";
@@ -20,11 +21,11 @@ export default function AuthDebugPage() {
   const load = async () => {
     setState({ status: "loading", session: null, user: null });
     try {
-      const sessionRes = await supabase.auth.getSession();
+      const session = await getSessionWithRetry(10000);
       const userRes = await supabase.auth.getUser();
       setState({
         status: "ready",
-        session: sessionRes?.data?.session ?? null,
+        session: session ?? null,
         user: userRes?.data?.user ?? null,
       });
     } catch (error) {
