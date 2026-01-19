@@ -57,8 +57,14 @@ export default function AuthModal({
     if (m.includes("email not confirmed")) return "Please confirm your email, then sign in.";
     if (m.includes("already exists") || m.includes("already registered"))
       return "An account with this email already exists. Try signing in.";
-    if (m.includes("password")) return "Password must be at least 6 characters.";
+    if (m.includes("password")) {
+      return "Password must be at least 8 characters and include uppercase, lowercase, and a number.";
+    }
     return msg;
+  }
+
+  function isStrongPassword(value: string) {
+    return value.length >= 8 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
   }
 
   async function withTimeout<T>(promise: Promise<T>, ms: number) {
@@ -79,8 +85,9 @@ export default function AuthModal({
 
     const em = email.trim().toLowerCase();
     if (!validEmail(em)) return setError("Please enter a valid email.");
-    if (mode !== "reset" && (!pw || pw.length < 6)) {
-      return setError("Password must be at least 6 characters.");
+    if (mode === "signin" && !pw) return setError("Please enter your password.");
+    if (mode === "signup" && !isStrongPassword(pw)) {
+      return setError("Password must be at least 8 characters and include uppercase, lowercase, and a number.");
     }
     if (mode === "signup" && !name.trim()) return setError("Please enter your name.");
 

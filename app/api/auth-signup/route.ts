@@ -32,6 +32,10 @@ function coerceBoolean(value: boolean | string | null | undefined) {
     return false;
 }
 
+function isStrongPassword(value: string) {
+    return value.length >= 8 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
+}
+
 export async function POST(req: Request) {
     try {
         const ct = req.headers.get("content-type") || "";
@@ -67,8 +71,11 @@ export async function POST(req: Request) {
         if (!/\S+@\S+\.\S+/.test(email)) {
             return NextResponse.json({ ok: false, error: "Invalid email." }, { status: 400 });
         }
-        if (!password || password.length < 6) {
-            return NextResponse.json({ ok: false, error: "Password must be at least 6 characters." }, { status: 400 });
+        if (!isStrongPassword(password)) {
+            return NextResponse.json(
+                { ok: false, error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." },
+                { status: 400 }
+            );
         }
         if (!name) {
             return NextResponse.json({ ok: false, error: "Please enter your name." }, { status: 400 });
@@ -91,7 +98,10 @@ export async function POST(req: Request) {
                 return NextResponse.json({ ok: false, error: "An account with this email already exists. Try signing in." }, { status: 400 });
             }
             if (m.includes("password")) {
-                return NextResponse.json({ ok: false, error: "Password must be at least 6 characters." }, { status: 400 });
+                return NextResponse.json(
+                    { ok: false, error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." },
+                    { status: 400 }
+                );
             }
             return NextResponse.json({ ok: false, error: "Couldn’t create the account. Please try again." }, { status: 400 });
         }

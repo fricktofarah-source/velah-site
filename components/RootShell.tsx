@@ -1,10 +1,14 @@
 "use client";
 
 import { type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 export default function RootShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const hideShell = pathname === "/auth/reset";
+
   return (
     <>
       <a
@@ -13,11 +17,11 @@ export default function RootShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <Navbar />
+      {hideShell ? null : <Navbar />}
       <main id="content" className="flex-1">
         {children}
       </main>
-      <Footer />
+      {hideShell ? null : <Footer />}
     </>
   );
 }
