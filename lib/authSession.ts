@@ -33,16 +33,31 @@ function readStoredSession(): StoredSession | null {
 }
 
 export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | null> {
-  const initial = await supabase.auth.getSession();
+  const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("Auth timeout")), ms);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  };
+
+  const initial = await withTimeout(supabase.auth.getSession(), timeoutMs);
   if (initial.data.session) return initial.data.session;
 
   const stored = readStoredSession();
   if (stored?.access_token && stored?.refresh_token) {
     try {
-      const restored = await supabase.auth.setSession({
-        access_token: stored.access_token,
-        refresh_token: stored.refresh_token,
-      });
+      const restored = await withTimeout(
+        supabase.auth.setSession({
+          access_token: stored.access_token,
+          refresh_token: stored.refresh_token,
+        }),
+        timeoutMs
+      );
       if (restored.data.session) return restored.data.session;
     } catch {
       // ignore and continue
@@ -50,7 +65,7 @@ export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | 
   }
 
   try {
-    const refreshed = await supabase.auth.refreshSession();
+    const refreshed = await withTimeout(supabase.auth.refreshSession(), timeoutMs);
     if (refreshed.data.session) return refreshed.data.session;
   } catch {
     // ignore and fall through

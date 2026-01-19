@@ -45,6 +45,18 @@ export default function AuthDebugPage() {
   const load = async () => {
     setState({ status: "loading", session: null, user: null, storage: null, storageKeys: [], refresh: null });
     try {
+      const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error("Request timeout")), ms);
+        });
+        try {
+          return await Promise.race([promise, timeoutPromise]);
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      };
+
       const ref = getProjectRef();
       const storageKey = ref ? `sb-${ref}-auth-token` : null;
       const storageKeys = Object.keys(window.localStorage || {}).filter((key) => key.startsWith("sb-"));
@@ -65,9 +77,9 @@ export default function AuthDebugPage() {
       }
 
       const session = await getSessionWithRetry(10000);
-      const sessionRes = await supabase.auth.getSession();
-      const userRes = await supabase.auth.getUser();
-      const refreshRes = await supabase.auth.refreshSession();
+      const sessionRes = await withTimeout(supabase.auth.getSession(), 8000);
+      const userRes = await withTimeout(supabase.auth.getUser(), 8000);
+      const refreshRes = await withTimeout(supabase.auth.refreshSession(), 8000);
       setState({
         status: "ready",
         session: session ?? null,
