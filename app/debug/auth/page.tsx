@@ -11,6 +11,9 @@ type DebugState = {
   storage: unknown;
   storageKeys: string[];
   refresh: unknown;
+  anonKey: string | null;
+  storageTest: { ok: boolean; error?: string } | null;
+  authHealth: { ok: boolean; status?: number; error?: string } | null;
   errors?: { session?: string; user?: string; refresh?: string };
   error?: string;
 };
@@ -40,11 +43,25 @@ export default function AuthDebugPage() {
     storage: null,
     storageKeys: [],
     refresh: null,
+    anonKey: null,
+    storageTest: null,
+    authHealth: null,
   });
 
   const load = async () => {
-    setState({ status: "loading", session: null, user: null, storage: null, storageKeys: [], refresh: null });
+    setState({
+      status: "loading",
+      session: null,
+      user: null,
+      storage: null,
+      storageKeys: [],
+      refresh: null,
+      anonKey: null,
+      storageTest: null,
+      authHealth: null,
+    });
     try {
+      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || null;
       const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -76,6 +93,32 @@ export default function AuthDebugPage() {
         }
       }
 
+      let storageTest: { ok: boolean; error?: string } | null = null;
+      try {
+        const testKey = "velah:storage:test";
+        window.localStorage.setItem(testKey, "1");
+        const got = window.localStorage.getItem(testKey);
+        window.localStorage.removeItem(testKey);
+        storageTest = { ok: got === "1" };
+      } catch (error) {
+        storageTest = { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+      }
+
+      let authHealth: { ok: boolean; status?: number; error?: string } | null = null;
+      try {
+        if (anon && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          const health = await withTimeout(
+            fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health`, {
+              headers: { apikey: anon },
+            }),
+            8000
+          );
+          authHealth = { ok: health.ok, status: health.status };
+        }
+      } catch (error) {
+        authHealth = { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+      }
+
       const session = await getSessionWithRetry(10000);
       const sessionRes = await withTimeout(supabase.auth.getSession(), 8000);
       const userRes = await withTimeout(supabase.auth.getUser(), 8000);
@@ -87,6 +130,9 @@ export default function AuthDebugPage() {
         storage: stored,
         storageKeys,
         refresh: refreshRes?.data?.session ?? null,
+        anonKey: anon ? mask(anon) : null,
+        storageTest,
+        authHealth,
         errors: {
           session: sessionRes?.error?.message,
           user: userRes?.error?.message,
@@ -101,6 +147,9 @@ export default function AuthDebugPage() {
         storage: null,
         storageKeys: [],
         refresh: null,
+        anonKey: null,
+        storageTest: null,
+        authHealth: null,
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -137,7 +186,10 @@ export default function AuthDebugPage() {
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Env</div>
           <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
 {JSON.stringify(
-  { NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || null },
+  {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || null,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: state.anonKey,
+  },
   null,
   2
 )}
@@ -152,6 +204,13 @@ export default function AuthDebugPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Storage Test</div>
+          <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
+{JSON.stringify(state.storageTest, null, 2)}
+          </pre>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Storage Keys</div>
           <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
 {JSON.stringify(state.storageKeys, null, 2)}
@@ -162,6 +221,13 @@ export default function AuthDebugPage() {
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Errors</div>
           <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
 {JSON.stringify(state.errors ?? null, null, 2)}
+          </pre>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Auth Health</div>
+          <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
+{JSON.stringify(state.authHealth, null, 2)}
           </pre>
         </div>
 
