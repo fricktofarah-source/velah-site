@@ -61,6 +61,18 @@ export default function AuthModal({
     return msg;
   }
 
+  async function withTimeout<T>(promise: Promise<T>, ms: number) {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("Request timed out. Try again.")), ms);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -93,9 +105,16 @@ export default function AuthModal({
         if (signInErr) throw signInErr;
         setPhase("done");
       } else {
-        const redirectTo = `${window.location.origin}/auth/reset`;
-        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(em, { redirectTo });
-        if (resetErr) throw resetErr;
+        const res = await withTimeout(
+          fetch("/api/auth-reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: em }),
+          }),
+          8000
+        );
+        const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+        if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t start password reset.");
         setPhase("done");
       }
     } catch (err: unknown) {
@@ -326,7 +345,7 @@ export default function AuthModal({
                   ? "Account created. Check your email if verification is required."
                   : mode === "signin"
                   ? "Signed in successfully."
-                  : "Reset link sent. Check your inbox to set a new password."}
+                  : "If an account exists, a reset link has been sent to that email."}
               </div>
               <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose}>
                 Close
