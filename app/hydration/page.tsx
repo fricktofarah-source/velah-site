@@ -62,7 +62,19 @@ export default function HydrationPage() {
 
      async function init() {
        try {
-         const { data } = await supabase.auth.getSession();
+         const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
+           let timeoutId: ReturnType<typeof setTimeout> | null = null;
+           const timeoutPromise = new Promise<never>((_, reject) => {
+             timeoutId = setTimeout(() => reject(new Error("Auth timeout")), ms);
+           });
+           try {
+             return await Promise.race([promise, timeoutPromise]);
+           } finally {
+             if (timeoutId) clearTimeout(timeoutId);
+           }
+         };
+
+         const { data } = await withTimeout(supabase.auth.getSession(), 8000);
          if (!isMounted) return;
          setSession(data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null);
        } catch (error) {

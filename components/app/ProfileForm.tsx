@@ -38,41 +38,42 @@ export default function ProfileForm() {
     let mounted = true;
 
     const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!user) {
-        setStatus(copy.signedOut);
-        setLoading(false);
-        return;
+      try {
+        const { data } = await withTimeout(supabase.auth.getSession(), 8000);
+        const user = data.session?.user;
+        if (!user) {
+          setStatus(copy.signedOut);
+          return;
+        }
+
+        setHasSession(true);
+        if (!mounted) return;
+        setEmail(user.email || "");
+        const defaultName = (user.user_metadata?.full_name as string) || "";
+        setName(defaultName);
+
+        const { data: profile } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
+            .eq("user_id", user.id)
+            .maybeSingle(),
+          8000
+        );
+
+        if (!mounted) return;
+        if (profile) {
+          setName(profile.full_name || defaultName);
+          setPhone(profile.phone || "");
+          setAddressLine1(profile.address_line1 || "");
+          setAddressLine2(profile.address_line2 || "");
+          setCity(profile.city || "Dubai");
+          setHydrationReminders(profile.pref_hydration_reminders ?? true);
+          setDeliveryReminders(profile.pref_delivery_reminders ?? true);
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      setHasSession(true);
-      if (!mounted) return;
-      setEmail(user.email || "");
-      const defaultName = (user.user_metadata?.full_name as string) || "";
-      setName(defaultName);
-
-      const { data: profile } = await withTimeout(
-        supabase
-          .from("profiles")
-          .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        8000
-      );
-
-      if (!mounted) return;
-      if (profile) {
-        setName(profile.full_name || defaultName);
-        setPhone(profile.phone || "");
-        setAddressLine1(profile.address_line1 || "");
-        setAddressLine2(profile.address_line2 || "");
-        setCity(profile.city || "Dubai");
-        setHydrationReminders(profile.pref_hydration_reminders ?? true);
-        setDeliveryReminders(profile.pref_delivery_reminders ?? true);
-      }
-
-      setLoading(false);
     };
 
     load().catch(() => {
