@@ -2,8 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createAuthedClient, supabase } from "../../lib/supabaseClient";
-import { getSessionWithRetry, getStoredAuth } from "@/lib/authSession";
+import { supabase } from "../../lib/supabaseClient";
 import { dayKey } from "@/lib/hydration";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
@@ -19,9 +18,7 @@ const fmt = (n: number) => new Intl.NumberFormat().format(n);
 export default function HydrationPage() {
    const { t } = useLanguage();
    /* auth/session */
-   const [session, setSession] = useState<SessionLike>(null);
-   const [fallbackToken, setFallbackToken] = useState<string | null>(null);
-   const [fallbackUserId, setFallbackUserId] = useState<string | null>(null);
+  const [session, setSession] = useState<SessionLike>(null);
    const [loading, setLoading] = useState(true);
 
    /* today + goal */
@@ -64,15 +61,10 @@ export default function HydrationPage() {
 
      async function init() {
        try {
-         const stored = getStoredAuth();
-         const session = await getSessionWithRetry(10000);
-         const sessionUser = session ? { user: { id: session.user.id, email: session.user.email } } : null;
+         const { data } = await supabase.auth.getSession();
+         const sessionUser = data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null;
          if (!isMounted) return;
          setSession(sessionUser);
-         if (!sessionUser) {
-           setFallbackToken(stored.accessToken);
-           setFallbackUserId(stored.userId);
-         }
        } catch (error) {
          console.warn("supabase.auth.getSession failed", error);
          if (isMounted) setSession(null);
@@ -97,7 +89,7 @@ export default function HydrationPage() {
    useEffect(() => {
      if (loading) return;
 
-     async function loadAuthed(uid: string, accessToken?: string | null) {
+     async function loadAuthed(uid: string) {
        if (typeof navigator !== "undefined" && !navigator.onLine) {
          throw new Error("Offline");
        }
@@ -114,11 +106,9 @@ export default function HydrationPage() {
          }
        }
 
-       const client = accessToken ? createAuthedClient(accessToken) : supabase;
-
        // goal
        const { data: prof } = await withTimeout(
-         client
+         supabase
            .from("profiles")
            .select("hydration_goal_ml")
            .eq("user_id", uid)
@@ -135,7 +125,7 @@ export default function HydrationPage() {
 
        // today
        const { data: todayRow } = await withTimeout(
-         client
+         supabase
            .from("hydration_daily_totals")
            .select("total_ml")
            .eq("user_id", uid)
@@ -150,7 +140,7 @@ export default function HydrationPage() {
        const start = new Date();
        start.setDate(start.getDate() - 6);
        const { data: rows } = await withTimeout(
-         client
+         supabase
            .from("hydration_daily_totals")
            .select("day,total_ml")
            .eq("user_id", uid)
@@ -201,15 +191,6 @@ export default function HydrationPage() {
          setAdjustInput("");
          setHistory([]);
        });
-     } else if (!loading && fallbackUserId) {
-       loadAuthed(fallbackUserId, fallbackToken).catch((error) => {
-         console.warn("Failed to load hydration data for user (token)", error);
-         setGoal(null);
-         setIntake(0);
-         setGoalInput("");
-         setAdjustInput("");
-         setHistory([]);
-       });
      } else if (!loading) {
        setGoal(null);
        setIntake(0);
@@ -241,12 +222,7 @@ export default function HydrationPage() {
      setGoal(ml);
 
      if (!session) {
-       const token = fallbackToken;
-       const userId = fallbackUserId;
-       if (token && userId) {
-         const client = createAuthedClient(token);
-         await client.from("profiles").upsert({ user_id: userId, hydration_goal_ml: ml }, { onConflict: "user_id" });
-       }
+       return;
      } else {
        await supabase
          .from("profiles")
@@ -259,27 +235,12 @@ export default function HydrationPage() {
      setIntake(v);
      setAdjustInput(String(v));
      if (!session) {
-       const token = fallbackToken;
-       const userId = fallbackUserId;
-       if (token && userId) {
-         const delta = v - intake;
-         if (delta !== 0) {
-           const client = createAuthedClient(token);
-           await client.from("hydration_events").insert({
-             user_id: userId,
-             day: today,
-             amount_ml: delta,
-             logged_at: new Date().toISOString(),
-             source: "hydration_page",
-             client_event_id: crypto.randomUUID(),
-           });
-         }
-       }
+       return;
      } else {
        const delta = v - intake;
        if (delta !== 0) {
          await supabase.from("hydration_events").insert({
-           user_id: session.user.id,
+            user_id: session.user.id,
            day: today,
            amount_ml: delta,
            logged_at: new Date().toISOString(),
