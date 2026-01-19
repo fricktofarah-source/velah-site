@@ -4,7 +4,6 @@ import type { Metadata, Viewport } from "next";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import RootShell from "@/components/RootShell";
-import CookieConsent from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Velah",
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <LanguageProvider>
           <ServiceWorkerCleanup />
-          <CookieConsent />
           <RootShell>{children}</RootShell>
         </LanguageProvider>
       </body>

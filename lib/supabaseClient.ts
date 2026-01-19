@@ -19,20 +19,12 @@ const projectRef = (() => {
 
 const storageKey = projectRef ? `sb-${projectRef}-auth-token` : undefined;
 
-const cookieStorage =
-  typeof document !== "undefined"
+const localStorageAdapter =
+  typeof window !== "undefined"
     ? {
-        getItem: (key: string) => {
-          const match = document.cookie.match(new RegExp(`(?:^|; )${encodeURIComponent(key)}=([^;]*)`));
-          return match ? decodeURIComponent(match[1]) : null;
-        },
-        setItem: (key: string, value: string) => {
-          const maxAge = 60 * 60 * 24 * 365;
-          document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
-        },
-        removeItem: (key: string) => {
-          document.cookie = `${encodeURIComponent(key)}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
-        },
+        getItem: (key: string) => window.localStorage.getItem(key),
+        setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+        removeItem: (key: string) => window.localStorage.removeItem(key),
       }
     : undefined;
 
@@ -41,7 +33,7 @@ export const supabase = createClient(url, anon, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: cookieStorage,
+    storage: localStorageAdapter,
     storageKey,
   },
 });
