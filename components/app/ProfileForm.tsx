@@ -22,7 +22,7 @@ export default function ProfileForm() {
   const [deliveryReminders, setDeliveryReminders] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
-  const withTimeout = async <T,>(promise: Promise<T>, ms: number) => {
+  async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error("Profile load timeout")), ms);
@@ -32,7 +32,7 @@ export default function ProfileForm() {
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
     }
-  };
+  }
 
   useEffect(() => {
     let mounted = true;
