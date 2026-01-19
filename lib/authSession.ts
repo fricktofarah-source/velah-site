@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
+import type { Session } from "@supabase/supabase-js";
 
-export async function getSessionWithRetry(timeoutMs = 10000) {
+export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | null> {
   const initial = await supabase.auth.getSession();
   if (initial.data.session) return initial.data.session;
 
@@ -14,7 +15,7 @@ export async function getSessionWithRetry(timeoutMs = 10000) {
   const after = await supabase.auth.getSession();
   if (after.data.session) return after.data.session;
 
-  return await new Promise<typeof initial.data.session>((resolve) => {
+  return await new Promise<Session | null>((resolve) => {
     let timeoutId: ReturnType<typeof setTimeout>;
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       clearTimeout(timeoutId);
