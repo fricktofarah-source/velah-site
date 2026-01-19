@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { getSessionWithRetry } from "@/lib/authSession";
 import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
 
@@ -34,28 +35,13 @@ export default function ProfileForm() {
     }
   }
 
-  const getAuthedUser = async () => {
-    try {
-      const { data } = await withTimeout(supabase.auth.getSession(), 3000);
-      if (data.session?.user) return data.session.user;
-    } catch {
-      // fall through
-    }
-    try {
-      const { data } = await withTimeout(supabase.auth.getUser(), 3000);
-      if (data.user) return data.user;
-    } catch {
-      // fall through
-    }
-    return null;
-  };
-
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
-        const user = await getAuthedUser();
+        const session = await withTimeout(getSessionWithRetry(10000), 12000);
+        const user = session?.user ?? null;
         if (!user) {
           setStatus(copy.statusLoadFail);
           return;

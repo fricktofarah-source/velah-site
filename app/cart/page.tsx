@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/LanguageProvider";
+import { getSessionWithRetry } from "@/lib/authSession";
 
 const CART_KEY = "velah:order-cart";
 
@@ -45,9 +46,9 @@ export default function CartPage() {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
+    getSessionWithRetry(10000).then((session) => {
       if (!mounted) return;
-      setUserId(data.session?.user.id ?? null);
+      setUserId(session?.user.id ?? null);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;

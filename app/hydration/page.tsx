@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { getSessionWithRetry } from "@/lib/authSession";
 import { dayKey } from "@/lib/hydration";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
@@ -61,33 +62,8 @@ export default function HydrationPage() {
 
      async function init() {
        try {
-         const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
-           let timeoutId: ReturnType<typeof setTimeout> | null = null;
-           const timeoutPromise = new Promise<never>((_, reject) => {
-             timeoutId = setTimeout(() => reject(new Error("Auth timeout")), ms);
-           });
-           try {
-             return await Promise.race([promise, timeoutPromise]);
-           } finally {
-             if (timeoutId) clearTimeout(timeoutId);
-           }
-         };
-
-         let sessionUser: SessionLike = null;
-         try {
-           const { data } = await withTimeout(supabase.auth.getSession(), 3000);
-           sessionUser = data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null;
-         } catch {
-           // fall through
-         }
-         if (!sessionUser) {
-           try {
-             const { data } = await withTimeout(supabase.auth.getUser(), 3000);
-             sessionUser = data.user ? { user: { id: data.user.id, email: data.user.email } } : null;
-           } catch {
-             sessionUser = null;
-           }
-         }
+         const session = await getSessionWithRetry(10000);
+         const sessionUser = session ? { user: { id: session.user.id, email: session.user.email } } : null;
          if (!isMounted) return;
          setSession(sessionUser);
        } catch (error) {
