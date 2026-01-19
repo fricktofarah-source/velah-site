@@ -1,8 +1,16 @@
 // lib/supabaseClient.ts
 import { createClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+type RuntimeEnv = {
+  supabaseUrl?: string | null;
+  supabaseAnonKey?: string | null;
+};
+
+const runtimeEnv: RuntimeEnv | undefined =
+  typeof window !== "undefined" ? (window as { __VELAH_ENV__?: RuntimeEnv }).__VELAH_ENV__ : undefined;
+
+const url = runtimeEnv?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anon = runtimeEnv?.supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!url || !anon) {
   // This surfaces a clear error in the browser console instead of a vague "failed to fetch"

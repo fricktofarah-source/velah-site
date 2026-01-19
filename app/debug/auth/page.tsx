@@ -24,8 +24,14 @@ function mask(value: string | null | undefined) {
   return `${value.slice(0, 6)}…${value.slice(-6)}`;
 }
 
+function getRuntimeEnv() {
+  if (typeof window === "undefined") return null;
+  return (window as { __VELAH_ENV__?: { supabaseUrl?: string | null; supabaseAnonKey?: string | null } }).__VELAH_ENV__ || null;
+}
+
 function getProjectRef() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const runtime = getRuntimeEnv();
+  const url = runtime?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) return null;
   try {
     const host = new URL(url).hostname;
@@ -61,7 +67,8 @@ export default function AuthDebugPage() {
       authHealth: null,
     });
     try {
-      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || null;
+      const runtime = getRuntimeEnv();
+      const anon = runtime?.supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || null;
       const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -106,9 +113,10 @@ export default function AuthDebugPage() {
 
       let authHealth: { ok: boolean; status?: number; error?: string } | null = null;
       try {
-        if (anon && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        const healthUrl = runtime?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if (anon && healthUrl) {
           const health = await withTimeout(
-            fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health`, {
+            fetch(`${healthUrl}/auth/v1/health`, {
               headers: { apikey: anon },
             }),
             8000
@@ -119,10 +127,31 @@ export default function AuthDebugPage() {
         authHealth = { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
       }
 
-      const session = await getSessionWithRetry(10000);
-      const sessionRes = await withTimeout(supabase.auth.getSession(), 8000);
-      const userRes = await withTimeout(supabase.auth.getUser(), 8000);
-      const refreshRes = await withTimeout(supabase.auth.refreshSession(), 8000);
+      let session: unknown = null;
+      try {
+        session = await getSessionWithRetry(10000);
+      } catch {
+        session = null;
+      }
+
+      let sessionRes: Awaited<ReturnType<typeof supabase.auth.getSession>> | null = null;
+      let userRes: Awaited<ReturnType<typeof supabase.auth.getUser>> | null = null;
+      let refreshRes: Awaited<ReturnType<typeof supabase.auth.refreshSession>> | null = null;
+      try {
+        sessionRes = await withTimeout(supabase.auth.getSession(), 8000);
+      } catch {
+        sessionRes = null;
+      }
+      try {
+        userRes = await withTimeout(supabase.auth.getUser(), 8000);
+      } catch {
+        userRes = null;
+      }
+      try {
+        refreshRes = await withTimeout(supabase.auth.refreshSession(), 8000);
+      } catch {
+        refreshRes = null;
+      }
       setState({
         status: "ready",
         session: session ?? null,
@@ -189,6 +218,8 @@ export default function AuthDebugPage() {
   {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || null,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: state.anonKey,
+    RUNTIME_SUPABASE_URL: getRuntimeEnv()?.supabaseUrl || null,
+    RUNTIME_SUPABASE_ANON_KEY: state.anonKey,
   },
   null,
   2
