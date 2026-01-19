@@ -80,6 +80,17 @@ export function getStoredUserInfo(): { userId?: string; email?: string; fullName
   return { userId, email, fullName };
 }
 
+export function getStoredAuth() {
+  const accessToken = getStoredAccessToken();
+  const info = getStoredUserInfo();
+  return {
+    accessToken,
+    userId: info?.userId || null,
+    email: info?.email || null,
+    fullName: info?.fullName || null,
+  };
+}
+
 export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | null> {
   const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -93,8 +104,12 @@ export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | 
     }
   };
 
-  const initial = await withTimeout(supabase.auth.getSession(), timeoutMs);
-  if (initial.data.session) return initial.data.session;
+  try {
+    const initial = await withTimeout(supabase.auth.getSession(), timeoutMs);
+    if (initial.data.session) return initial.data.session;
+  } catch {
+    // ignore and continue to fallbacks
+  }
 
   const stored = readStoredSession();
   if (stored?.access_token && stored?.refresh_token) {

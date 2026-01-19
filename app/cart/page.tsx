@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createAuthedClient, supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getSessionWithRetry, getStoredAccessToken, getStoredUserInfo } from "@/lib/authSession";
+import { getSessionWithRetry, getStoredAuth } from "@/lib/authSession";
 
 const CART_KEY = "velah:order-cart";
 
@@ -54,10 +54,9 @@ export default function CartPage() {
         setAccessToken(session.access_token ?? null);
         return;
       }
-      const storedToken = getStoredAccessToken();
-      const storedInfo = getStoredUserInfo();
-      setUserId(storedInfo?.userId ?? null);
-      setAccessToken(storedToken ?? null);
+      const stored = getStoredAuth();
+      setUserId(stored.userId);
+      setAccessToken(stored.accessToken);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;

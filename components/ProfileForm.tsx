@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createAuthedClient, supabase } from "@/lib/supabaseClient";
-import { getSessionWithRetry, getStoredAccessToken, getStoredUserInfo } from "@/lib/authSession";
+import { getSessionWithRetry, getStoredAuth } from "@/lib/authSession";
 import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
 
@@ -40,13 +40,12 @@ export default function ProfileForm() {
 
     const load = async () => {
       try {
+        const stored = getStoredAuth();
         const session = await withTimeout(getSessionWithRetry(10000), 12000);
         const user = session?.user ?? null;
-        const storedAccessToken = getStoredAccessToken();
-        const storedInfo = getStoredUserInfo();
         const fallbackUser =
-          storedAccessToken && storedInfo?.userId
-            ? { id: storedInfo.userId, email: storedInfo.email || null, full_name: storedInfo.fullName || null }
+          stored.accessToken && stored.userId
+            ? { id: stored.userId, email: stored.email || null, full_name: stored.fullName || null }
             : null;
 
         if (!user && !fallbackUser) {
@@ -65,8 +64,8 @@ export default function ProfileForm() {
         try {
           const client = user
             ? supabase
-            : storedAccessToken
-            ? createAuthedClient(storedAccessToken)
+            : stored.accessToken
+            ? createAuthedClient(stored.accessToken)
             : supabase;
           await withTimeout(
             client.from("profiles").upsert(
@@ -86,8 +85,8 @@ export default function ProfileForm() {
         try {
           const client = user
             ? supabase
-            : storedAccessToken
-            ? createAuthedClient(storedAccessToken)
+            : stored.accessToken
+            ? createAuthedClient(stored.accessToken)
             : supabase;
           const { data: profile } = await withTimeout(
             client
@@ -129,18 +128,17 @@ export default function ProfileForm() {
   }, []);
 
   const saveProfile = async () => {
+    const stored = getStoredAuth();
     const { data } = await supabase.auth.getSession();
     const user = data.session?.user;
-    const storedAccessToken = getStoredAccessToken();
-    const storedInfo = getStoredUserInfo();
-    const fallbackUserId = storedInfo?.userId;
+    const fallbackUserId = stored.userId;
     if (!user && !fallbackUserId) return;
 
     setStatus(copy.statusSaving);
     const client = user
       ? supabase
-      : storedAccessToken
-      ? createAuthedClient(storedAccessToken)
+      : stored.accessToken
+      ? createAuthedClient(stored.accessToken)
       : supabase;
     const { error } = await client.from("profiles").upsert(
       {

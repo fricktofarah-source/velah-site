@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createAuthedClient, supabase } from "../../lib/supabaseClient";
-import { getSessionWithRetry, getStoredAccessToken, getStoredUserInfo } from "@/lib/authSession";
+import { getSessionWithRetry, getStoredAuth } from "@/lib/authSession";
 import { dayKey } from "@/lib/hydration";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
@@ -64,15 +64,14 @@ export default function HydrationPage() {
 
      async function init() {
        try {
+         const stored = getStoredAuth();
          const session = await getSessionWithRetry(10000);
          const sessionUser = session ? { user: { id: session.user.id, email: session.user.email } } : null;
          if (!isMounted) return;
          setSession(sessionUser);
          if (!sessionUser) {
-           const token = getStoredAccessToken();
-           const info = getStoredUserInfo();
-           setFallbackToken(token);
-           setFallbackUserId(info?.userId || null);
+           setFallbackToken(stored.accessToken);
+           setFallbackUserId(stored.userId);
          }
        } catch (error) {
          console.warn("supabase.auth.getSession failed", error);
