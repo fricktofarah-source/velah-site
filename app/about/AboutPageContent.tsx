@@ -245,31 +245,30 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
           {copy.heading}
         </h2>
         <p className="mt-6 text-lg leading-relaxed text-slate-600">{copy.body}</p>
-        <div className="mt-8 grid gap-6 text-center sm:grid-cols-3 sm:text-left">
+        <div className="mt-10 grid gap-8 text-center sm:grid-cols-3 sm:text-left">
           {copy.stats.map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-slate-200/70 p-4">
+            <div key={stat.label} className="relative space-y-2">
+              <span className="absolute -left-3 top-2 hidden h-2 w-2 rounded-full bg-[var(--velah)]/70 sm:block" />
               <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-              <p className="mt-2 text-sm text-slate-500">{stat.label}</p>
+              <p className="text-sm text-slate-500">{stat.label}</p>
             </div>
           ))}
         </div>
       </motion.div>
-      <motion.div
-        {...revealProps(0.1)}
-        className="relative rounded-[2rem] border border-slate-200 bg-slate-50/70 p-6"
-      >
-        {/* PROBLEM COLLAGE IMAGE HERE */}
-        <div className="flex h-full flex-col gap-4 text-sm text-slate-500">
-          <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center">{copy.collage[0]}</div>
-          <div className="grid flex-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-center">
-              {copy.collage[1]}
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-center">
-              {copy.collage[2]}
-            </div>
-          </div>
-        </div>
+      <motion.div {...revealProps(0.1)} className="relative">
+        {/* PROBLEM COLLAGE COPY */}
+        <ul className="space-y-6 text-sm text-slate-500">
+          {copy.collage.map((item, idx) => (
+            <motion.li
+              key={item}
+              {...revealProps(0.12 + idx * 0.1)}
+              className="flex items-start gap-4"
+            >
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
+              <span className="text-base leading-relaxed text-slate-600">{item}</span>
+            </motion.li>
+          ))}
+        </ul>
       </motion.div>
     </div>
   </section>
@@ -277,71 +276,63 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
 
 const SparkSection = ({ copy }: { copy: AboutCopy["spark"] }) => (
   <section className="section-shell py-24 sm:py-32">
-    <div className="rounded-[2.5rem] border border-slate-200 bg-white/80 p-8 sm:p-12 lg:p-16">
-      <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-        <motion.div {...revealProps()} className="text-center lg:text-left">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-            {copy.label}
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.6rem]">
-            {copy.heading}
-          </h2>
-          <p className="mt-6 text-lg leading-relaxed text-slate-600">{copy.body}</p>
-        </motion.div>
-        <motion.div
-          {...revealProps(0.1)}
-          className="relative rounded-[2rem] border border-slate-200 bg-slate-50/70 p-6"
-        >
-          {/* POUR PHOTO OR SHORT LOOP HERE */}
-          <PlaceholderBlock
-            label="POUR PHOTO"
-            className="aspect-[4/3] w-full bg-gradient-to-br from-white to-slate-100/40"
-          />
-          <p className="mt-4 text-sm text-slate-500">
-            {copy.note}
-          </p>
-        </motion.div>
-      </div>
+    <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+      <motion.div {...revealProps()} className="text-center lg:text-left">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
+          {copy.label}
+        </p>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.6rem]">
+          {copy.heading}
+        </h2>
+        <p className="mt-6 text-lg leading-relaxed text-slate-600">{copy.body}</p>
+      </motion.div>
+      <motion.div {...revealProps(0.1)} className="relative">
+        {/* POUR PHOTO OR SHORT LOOP HERE */}
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-slate-50 to-[#f6fbfb]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(127,203,216,0.12),_transparent_60%)]" />
+          <div className="relative flex aspect-[4/3] w-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-[0.45em] text-slate-400">
+            POUR PHOTO
+          </div>
+        </div>
+        <p className="mt-5 text-sm text-slate-500">{copy.note}</p>
+      </motion.div>
     </div>
   </section>
 );
 
 const FlowSection = ({ copy }: { copy: AboutCopy["flow"] }) => (
   <section className="section-shell py-24 sm:py-32">
-    <div className="rounded-[2.5rem] border border-slate-200 bg-slate-50/70 p-8 sm:p-12">
-      <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-          {copy.label}
-        </p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          {copy.heading}
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">{copy.body}</p>
-      </div>
-      <div className="relative mt-12 grid gap-10 lg:grid-cols-3">
-        <motion.span
-          className="pointer-events-none absolute top-16 hidden h-0.5 w-full bg-gradient-to-r from-transparent via-[var(--velah)] to-transparent lg:block"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.9, ease }}
-          style={{ transformOrigin: "left center" }}
-        />
-        {copy.steps.map((step, idx) => (
-          <motion.div
-            key={step.title}
-            {...revealProps(idx * 0.15)}
-            className="relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-[0_25px_60px_rgba(15,23,42,0.06)] lg:text-left"
-          >
-            {/* FLOW ICON / ILLUSTRATION HERE */}
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--velah)]/10 text-base font-semibold text-[var(--velah)]">
-              {step.icon}
-            </div>
-            <h3 className="mt-6 text-xl font-semibold text-slate-900">{step.title}</h3>
-            <p className="mt-3 text-base text-slate-600">{step.body}</p>
-          </motion.div>
-        ))}
-      </div>
+    <div className="text-center">
+      <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
+        {copy.label}
+      </p>
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+        {copy.heading}
+      </h2>
+      <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">{copy.body}</p>
+    </div>
+    <div className="relative mt-12 grid gap-10 lg:grid-cols-3">
+      <motion.span
+        className="pointer-events-none absolute top-6 hidden h-0.5 w-full bg-gradient-to-r from-transparent via-[var(--velah)] to-transparent lg:block"
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.9, ease }}
+        style={{ transformOrigin: "left center" }}
+      />
+      {copy.steps.map((step, idx) => (
+        <motion.div
+          key={step.title}
+          {...revealProps(idx * 0.15)}
+          className="relative pl-12 text-center lg:text-left"
+        >
+          <div className="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--velah)]/12 text-sm font-semibold text-[var(--velah)]">
+            {step.icon}
+          </div>
+          <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+          <p className="mt-3 text-base text-slate-600">{step.body}</p>
+        </motion.div>
+      ))}
     </div>
   </section>
 );
@@ -385,20 +376,20 @@ const SustainabilitySection = ({ copy }: { copy: AboutCopy["sustainability"] }) 
               />
             </motion.div>
           </ScrollParallax>
-          <motion.div
+          <motion.ul
             {...revealProps(0.15)}
-            className="mt-8 grid w-full gap-4 text-center text-sm text-slate-600 lg:hidden"
+            className="mt-8 w-full space-y-4 text-left text-sm text-slate-600 lg:hidden"
           >
             {copy.loopPoints.map((point) => (
-              <div
-                key={point.title}
-                className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]"
-              >
-                <p className="text-base font-semibold text-slate-900">{point.title}</p>
-                <p className="mt-1">{point.detail}</p>
-              </div>
+              <li key={point.title} className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-[var(--velah)]/60" />
+                <div>
+                  <p className="text-base font-semibold text-slate-900">{point.title}</p>
+                  <p className="mt-1">{point.detail}</p>
+                </div>
+              </li>
             ))}
-          </motion.div>
+          </motion.ul>
         </div>
       </div>
     </div>
