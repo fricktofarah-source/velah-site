@@ -2,18 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { type ReactNode } from "react";
 import AppTabBar from "@/components/app/AppTabBar";
 import AppTransitions from "@/components/app/AppTransitions";
-import AddToHome from "@/components/AddToHome";
-
 export const metadata: Metadata = {
   title: {
     default: "Velah App",
     template: "%s · Velah",
   },
   description: "Velah hydration app",
-  manifest: "/app-manifest.json",
-  appleWebApp: {
-    statusBarStyle: "black-translucent",
-  },
 };
 
 export const viewport: Viewport = {
@@ -26,7 +20,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-surface">
       <AppTransitions>{children}</AppTransitions>
       <AppTabBar />
-      <AddToHome />
     </div>
   );
 }

@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { dayKey } from "@/lib/app/hydration";
-import AddToHome from "../../components/AddToHome";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
 
@@ -414,7 +413,6 @@ export default function HydrationPage() {
            </div>
          </section>
        </div>
-       <AddToHome />
      </main>
    );
  }
