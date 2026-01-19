@@ -95,7 +95,7 @@ export default function HydrationPage() {
          return;
        }
 
-       async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+       async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
          let timeoutId: ReturnType<typeof setTimeout> | null = null;
          const timeoutPromise = new Promise<never>((_, reject) => {
            timeoutId = setTimeout(() => reject(new Error("Hydration load timeout")), ms);
