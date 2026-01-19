@@ -74,6 +74,11 @@ alter table public.profiles enable row level security;
 alter table public.hydration_events enable row level security;
 alter table public.order_carts enable row level security;
 
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert on public.hydration_events to authenticated;
+grant select on public.hydration_daily_totals to authenticated;
+grant select, insert, update on public.order_carts to authenticated;
+
 create policy "Profiles: read own" on public.profiles
   for select using (auth.uid() = user_id);
 create policy "Profiles: insert own" on public.profiles
