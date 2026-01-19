@@ -47,6 +47,9 @@ export const supabase = createClient(url, anon, {
 });
 
 export function createAuthedClient(accessToken: string) {
+  if (!url || !anon) {
+    throw new Error("Missing Supabase URL or anon key");
+  }
   return createClient(url, anon, {
     global: {
       headers: {
