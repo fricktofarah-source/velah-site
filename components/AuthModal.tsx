@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-type Mode = "signup" | "signin";
+type Mode = "signup" | "signin" | "reset";
 
 export default function AuthModal({
   open,
@@ -67,7 +67,9 @@ export default function AuthModal({
 
     const em = email.trim().toLowerCase();
     if (!validEmail(em)) return setError("Please enter a valid email.");
-    if (!pw || pw.length < 6) return setError("Password must be at least 6 characters.");
+    if (mode !== "reset" && (!pw || pw.length < 6)) {
+      return setError("Password must be at least 6 characters.");
+    }
     if (mode === "signup" && !name.trim()) return setError("Please enter your name.");
 
     try {
@@ -83,12 +85,17 @@ export default function AuthModal({
         const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
         if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t create the account.");
         setPhase("done");
-      } else {
+      } else if (mode === "signin") {
         const { error: signInErr } = await supabase.auth.signInWithPassword({
           email: em,
           password: pw,
         });
         if (signInErr) throw signInErr;
+        setPhase("done");
+      } else {
+        const redirectTo = `${window.location.origin}/auth/reset`;
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(em, { redirectTo });
+        if (resetErr) throw resetErr;
         setPhase("done");
       }
     } catch (err: unknown) {
@@ -117,7 +124,7 @@ export default function AuthModal({
         {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <div id={titleId} className="font-semibold">
-            {mode === "signup" ? "Create your account" : "Sign in"}
+            {mode === "signup" ? "Create your account" : mode === "signin" ? "Sign in" : "Reset password"}
           </div>
           <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose} aria-label="Close">
             ✕
@@ -129,7 +136,9 @@ export default function AuthModal({
           <p id={descId} className="sr-only">
             {mode === "signup"
               ? "Create a new account with your name, email, and password."
-              : "Sign in with your email and password."}
+              : mode === "signin"
+              ? "Sign in with your email and password."
+              : "Request a password reset link by email."}
           </p>
 
           <div className="p-5 md:p-6 max-h-[85vh] overflow-auto">
@@ -180,23 +189,25 @@ export default function AuthModal({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="auth-pw" className="text-sm">
-                    Password
-                  </label>
-                  <input
-                    id="auth-pw"
-                    name="password"
-                    type="password"
-                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                    enterKeyHint="go"
-                    value={pw}
-                    disabled={disabled}
-                    onChange={(e) => setPw(e.target.value)}
-                    className="border rounded-2xl px-3 py-2 w-full focus-ring"
-                    placeholder="••••••••"
-                  />
-                </div>
+                {mode !== "reset" ? (
+                  <div className="space-y-2">
+                    <label htmlFor="auth-pw" className="text-sm">
+                      Password
+                    </label>
+                    <input
+                      id="auth-pw"
+                      name="password"
+                      type="password"
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      enterKeyHint="go"
+                      value={pw}
+                      disabled={disabled}
+                      onChange={(e) => setPw(e.target.value)}
+                      className="border rounded-2xl px-3 py-2 w-full focus-ring"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                ) : null}
 
                 {error && (
                   <div className="text-sm text-red-600 animate-soft-shake" role="alert" aria-live="polite">
@@ -221,10 +232,14 @@ export default function AuthModal({
                   {phase === "sending"
                     ? mode === "signup"
                       ? "Creating…"
-                      : "Signing in…"
+                      : mode === "signin"
+                      ? "Signing in…"
+                      : "Sending reset…"
                     : mode === "signup"
                     ? "Sign up"
-                    : "Sign in"}
+                    : mode === "signin"
+                    ? "Sign in"
+                    : "Send reset link"}
                 </button>
 
                 <div className="pt-2 text-center text-sm text-slate-600">
@@ -239,7 +254,7 @@ export default function AuthModal({
                     >
                       Have an account? Sign in
                     </button>
-                  ) : (
+                  ) : mode === "signin" ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -250,8 +265,34 @@ export default function AuthModal({
                     >
                       New here? Create an account
                     </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("signin");
+                        setError(null);
+                      }}
+                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-[var(--velah)] focus-ring rounded"
+                    >
+                      Back to sign in
+                    </button>
                   )}
                 </div>
+
+                {mode === "signin" ? (
+                  <div className="text-center text-sm text-slate-600">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("reset");
+                        setError(null);
+                      }}
+                      className="underline underline-offset-4 decoration-slate-400 hover:decoration-[var(--velah)] focus-ring rounded"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                ) : null}
               </form>
             </div>
 
@@ -264,7 +305,11 @@ export default function AuthModal({
             >
               <div className="loader" aria-hidden />
               <div className="text-sm text-slate-600">
-                {mode === "signup" ? "Creating your account…" : "Signing you in…"}
+                {mode === "signup"
+                  ? "Creating your account…"
+                  : mode === "signin"
+                  ? "Signing you in…"
+                  : "Sending reset email…"}
               </div>
             </div>
 
@@ -276,10 +321,12 @@ export default function AuthModal({
               aria-hidden={phase !== "done"}
             >
               <div className="success-check" aria-hidden />
-              <div className="text-emerald-700 text-sm">
+              <div className="text-emerald-700 text-sm text-center">
                 {mode === "signup"
                   ? "Account created. Check your email if verification is required."
-                  : "Signed in successfully."}
+                  : mode === "signin"
+                  ? "Signed in successfully."
+                  : "Reset link sent. Check your inbox to set a new password."}
               </div>
               <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose}>
                 Close

@@ -28,6 +28,8 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
   const [hydrationReminders, setHydrationReminders] = useState(true);
   const [deliveryReminders, setDeliveryReminders] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -99,6 +101,27 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace("/");
+  };
+
+  const handleLogoutAll = async () => {
+    await supabase.auth.signOut({ scope: "global" });
+    router.replace("/");
+  };
+
+  const handleEmailChange = async () => {
+    const nextEmail = newEmail.trim().toLowerCase();
+    setEmailStatus(null);
+    if (!nextEmail) {
+      setEmailStatus("Enter a valid email.");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ email: nextEmail });
+    if (error) {
+      setEmailStatus(error.message);
+      return;
+    }
+    setEmailStatus("Check your inbox to confirm the new email.");
+    setNewEmail("");
   };
 
   const handleDelete = async () => {
@@ -182,6 +205,24 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</p>
+        <label className="block">
+          <span className="sr-only">New email</span>
+          <input
+            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+            placeholder="new@email.com"
+            value={newEmail}
+            onChange={(event) => setNewEmail(event.target.value)}
+            autoComplete="email"
+          />
+        </label>
+        <button onClick={handleEmailChange} className="btn btn-ghost h-10 rounded-full px-4">
+          Update email
+        </button>
+        {emailStatus ? <p className="text-sm text-slate-500">{emailStatus}</p> : null}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.notificationsLabel}</p>
         <label className="flex items-center justify-between">
           <span className="text-sm text-slate-600">{copy.hydrationReminders}</span>
@@ -208,6 +249,9 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
         <button onClick={handleLogout} className="btn btn-ghost h-11 w-full rounded-full">
           {copy.logout}
+        </button>
+        <button onClick={handleLogoutAll} className="btn btn-ghost h-11 w-full rounded-full">
+          Sign out everywhere
         </button>
         <button onClick={handleDelete} className="btn btn-ghost h-11 w-full rounded-full text-red-500">
           {copy.delete}
