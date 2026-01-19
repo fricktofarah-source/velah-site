@@ -6,20 +6,18 @@ import { supabase } from "../../lib/supabaseClient";
 import { dayKey } from "@/lib/hydration";
 import { useLanguage } from "@/components/LanguageProvider";
 import TimezoneSync from "@/components/TimezoneSync";
+import { useAuth } from "@/components/AuthProvider";
 
 /* ---------- helpers ---------- */
 const clamp = (n: number, lo = 0, hi = 1_000_000) => Math.min(hi, Math.max(lo, n));
 const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
- type SessionLike = { user: { id: string; email?: string | null } } | null;
-
  type HistoryItem = { day: string; intake_ml: number };
 
 export default function HydrationPage() {
-   const { t } = useLanguage();
-   /* auth/session */
-  const [session, setSession] = useState<SessionLike>(null);
-   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
+  const { status: authStatus, user, refresh } = useAuth();
+  const userId = user?.id ?? null;
 
    /* today + goal */
    const [goal, setGoal] = useState<number | null>(null);
@@ -55,41 +53,14 @@ export default function HydrationPage() {
     return count;
   }, [goal, history, today]);
 
-   /* session listen */
-   useEffect(() => {
-     let isMounted = true;
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-     async function init() {
-       try {
-         const { data } = await supabase.auth.getSession();
-         const sessionUser = data.session ? { user: { id: data.session.user.id, email: data.session.user.email } } : null;
-         if (!isMounted) return;
-         setSession(sessionUser);
-       } catch (error) {
-         console.warn("supabase.auth.getSession failed", error);
-         if (isMounted) setSession(null);
-       } finally {
-         if (isMounted) setLoading(false);
-       }
-     }
+  /* load state */
+  useEffect(() => {
+    if (authStatus === "loading") return;
+    setLoadError(null);
 
-     const sub = supabase.auth.onAuthStateChange((_e, s) => {
-       setSession(s ? { user: { id: s.user.id, email: s.user.email } } : null);
-     });
-
-     init();
-
-     return () => {
-       isMounted = false;
-       sub.data?.subscription.unsubscribe();
-     };
-   }, []);
-
-   /* load state */
-   useEffect(() => {
-     if (loading) return;
-
-     async function loadAuthed(uid: string) {
+    async function loadAuthed(uid: string) {
        if (typeof navigator !== "undefined" && !navigator.onLine) {
          throw new Error("Offline");
        }
@@ -162,90 +133,68 @@ export default function HydrationPage() {
        setHistory(list);
      }
 
-     function loadGuest() {
-       const g = Number(localStorage.getItem("hydration:goal") || "") || 0;
-       setGoal(g || null);
-       setGoalInput(g ? String(g) : "");
-
-       const t = Number(localStorage.getItem(`hydration:intake:${today}`) || "") || 0;
-       setIntake(t);
-       setAdjustInput(t ? String(t) : "");
-
-       const list: HistoryItem[] = [];
-       for (let i = 6; i >= 0; i--) {
-         const d = new Date();
-         d.setDate(d.getDate() - i);
-         const k = dayKey(d);
-         const v = Number(localStorage.getItem(`hydration:intake:${k}`) || "") || 0;
-         list.push({ day: k, intake_ml: v });
-       }
-       setHistory(list);
-     }
-
-     if (session?.user.id) {
-       loadAuthed(session.user.id).catch((error) => {
-         console.warn("Failed to load hydration data for user", error);
-         setGoal(null);
-         setIntake(0);
-         setGoalInput("");
-         setAdjustInput("");
-         setHistory([]);
-       });
-     } else if (!loading) {
-       setGoal(null);
-       setIntake(0);
-       setGoalInput("");
-       setAdjustInput("");
-       setHistory([]);
-     }
-   }, [loading, session?.user.id, today]);
+      if (userId) {
+        loadAuthed(userId).catch((error) => {
+          console.warn("Failed to load hydration data for user", error);
+          setLoadError("Could not load hydration right now.");
+          setGoal(null);
+          setIntake(0);
+          setGoalInput("");
+          setAdjustInput("");
+          setHistory([]);
+        });
+      } else {
+        setGoal(null);
+        setIntake(0);
+        setGoalInput("");
+        setAdjustInput("");
+        setHistory([]);
+      }
+    }, [authStatus, userId, today]);
 
    /* midnight reset (keeps history) */
-   useEffect(() => {
-     const id = setInterval(() => {
-       const d = new Date();
-       if (d.getHours() === 0 && d.getMinutes() === 0) {
-         setIntake(0);
-         setAdjustInput("0");
-         if (!session) {
-           localStorage.setItem(`hydration:intake:${dayKey()}`, "0");
-         }
-       }
-     }, 60_000);
-     return () => clearInterval(id);
-   }, [session]);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const d = new Date();
+      if (d.getHours() === 0 && d.getMinutes() === 0) {
+        setIntake(0);
+        setAdjustInput("0");
+      }
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
    /* actions */
-   async function saveGoal() {
-     const ml = clamp(Number(goalInput || "0"));
-     if (!ml) return;
-     setGoal(ml);
+  async function saveGoal() {
+    const ml = clamp(Number(goalInput || "0"));
+    if (!ml) return;
+    setGoal(ml);
 
-     if (!session) {
-       return;
-     } else {
-       await supabase
-         .from("profiles")
-         .upsert({ user_id: session.user.id, hydration_goal_ml: ml }, { onConflict: "user_id" });
-     }
-   }
+    if (!userId) {
+      return;
+    } else {
+      await supabase
+        .from("profiles")
+        .upsert({ user_id: userId, hydration_goal_ml: ml }, { onConflict: "user_id" });
+    }
+  }
 
-   async function setTotal(ml: number) {
-     const v = clamp(ml);
-     setIntake(v);
-     setAdjustInput(String(v));
-     if (!session) {
-       return;
-     } else {
-       const delta = v - intake;
-       if (delta !== 0) {
-         await supabase.from("hydration_events").insert({
-            user_id: session.user.id,
-           day: today,
-           amount_ml: delta,
-           logged_at: new Date().toISOString(),
-           source: "hydration_page",
-           client_event_id: crypto.randomUUID(),
+  async function setTotal(ml: number) {
+    const v = clamp(ml);
+    setIntake(v);
+    setAdjustInput(String(v));
+    if (!userId) {
+      return;
+    } else {
+      const delta = v - intake;
+      if (delta !== 0) {
+        await supabase.from("hydration_events").insert({
+          user_id: userId,
+          day: today,
+          amount_ml: delta,
+          logged_at: new Date().toISOString(),
+          source: "hydration_page",
+          client_event_id: crypto.randomUUID(),
          });
        }
      }
@@ -265,13 +214,36 @@ export default function HydrationPage() {
          <header className="flex items-center justify-between gap-4">
            <h1 className="text-3xl font-semibold tracking-tight">{t.hydration.title}</h1>
            <div className="text-sm text-slate-500">
-             {session
-               ? session.user.email
-                 ? t.hydration.statusSignedInAs(session.user.email)
+             {authStatus === "loading"
+               ? "Checking sign-in…"
+               : user
+               ? user.email
+                 ? t.hydration.statusSignedInAs(user.email)
                  : t.hydration.statusSignedIn
                : t.hydration.statusGuest}
            </div>
          </header>
+
+        {authStatus === "error" ? (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center justify-between gap-3">
+            <span>Could not verify your sign-in.</span>
+            <button onClick={refresh} className="btn btn-ghost h-9 rounded-full px-4">
+              Retry
+            </button>
+          </div>
+        ) : null}
+
+        {loadError ? (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            {loadError}
+          </div>
+        ) : null}
+
+        {!userId && authStatus === "ready" ? (
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+            Sign in to save and sync your hydration history.
+          </div>
+        ) : null}
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 flex items-center justify-between gap-4">
           <div>

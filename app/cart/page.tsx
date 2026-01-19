@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useAuth } from "@/components/AuthProvider";
 
 const CART_KEY = "velah:order-cart";
 
@@ -34,32 +35,18 @@ function saveLocalCart(items: CartItem[]) {
 export default function CartPage() {
   const { t } = useLanguage();
   const copy = t.cart;
+  const { status: authStatus, user } = useAuth();
+  const userId = user?.id ?? null;
   const bottleMeta: Record<BottleSize, { label: string; note: string }> = {
     "5G": { label: copy.bottleLabels.fiveG, note: copy.bottleLabels.singleNote },
     "1L": { label: copy.bottleLabels.oneL, note: copy.bottleLabels.singleNote },
     "500mL": { label: copy.bottleLabels.fiveHund, note: copy.bottleLabels.packNote },
   };
-  const [userId, setUserId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setUserId(data.session?.user.id ?? null);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      setUserId(session?.user?.id ?? null);
-    });
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
+    if (authStatus === "loading") return;
     let active = true;
     const load = async () => {
       setLoading(true);
@@ -84,7 +71,7 @@ export default function CartPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [authStatus, userId]);
 
   const persistCart = async (items: CartItem[]) => {
     setCart(items);

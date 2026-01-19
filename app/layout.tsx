@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { AuthProvider } from "@/components/AuthProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import RootShell from "@/components/RootShell";
 
@@ -42,7 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <LanguageProvider>
-          <RootShell>{children}</RootShell>
+          <AuthProvider>
+            <RootShell>{children}</RootShell>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

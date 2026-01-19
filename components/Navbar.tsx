@@ -8,10 +8,12 @@ import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
+import { useAuth } from "./AuthProvider";
 import { posts } from "@/lib/posts";
 
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
+  const { status: authStatus, user } = useAuth();
   // Waitlist modal
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
@@ -137,29 +139,14 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    let active = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      const session = data.session;
-      setIsAuthed(!!session);
-      const emailFromSession = session?.user?.email ?? null;
-      const metadata = session?.user?.user_metadata as { full_name?: string } | undefined;
-      const fullName =
-        typeof metadata?.full_name === "string" ? metadata.full_name : null;
-      setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
-      await loadCartCount(session?.user?.id ?? null);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!active) return;
-      setIsAuthed(!!session);
-      const emailFromSession = session?.user?.email ?? null;
-      const metadata = session?.user?.user_metadata as { full_name?: string } | undefined;
-      const fullName =
-        typeof metadata?.full_name === "string" ? metadata.full_name : null;
-      setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
-      setMenuOpen(false);
-      await loadCartCount(session?.user?.id ?? null);
-    });
+    if (authStatus === "loading") return;
+    const emailFromSession = user?.email ?? null;
+    const metadata = user?.user_metadata as { full_name?: string } | undefined;
+    const fullName = typeof metadata?.full_name === "string" ? metadata.full_name : null;
+    setIsAuthed(!!user);
+    setDisplayName(fullName || (emailFromSession ? emailFromSession.split("@")[0] : null));
+    loadCartCount(user?.id ?? null);
+    setMenuOpen(false);
 
     const onCartUpdate = (event: Event) => {
       const detail = (event as CustomEvent).detail as Array<{ qty: number }> | undefined;
@@ -176,12 +163,10 @@ export default function Navbar() {
     window.addEventListener("storage", onStorage);
 
     return () => {
-      active = false;
-      sub.subscription.unsubscribe();
       window.removeEventListener("cart:updated", onCartUpdate as EventListener);
       window.removeEventListener("storage", onStorage);
     };
-  }, []);
+  }, [authStatus, user]);
 
   // Global open-waitlist trigger (from Hero)
   useEffect(() => {

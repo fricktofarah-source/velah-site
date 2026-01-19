@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useAuth } from "@/components/AuthProvider";
 
 type ProfileUser = {
   id: string;
@@ -16,6 +17,7 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
   const { t } = useLanguage();
   const copy = t.app.profile;
   const router = useRouter();
+  const { session } = useAuth();
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -104,8 +106,7 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
     if (!sure) return;
 
     setStatus(copy.statusDelete);
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    const token = session?.access_token;
     const res = await fetch("/api/account/delete", {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,

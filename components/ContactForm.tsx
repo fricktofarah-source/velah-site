@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
+import { useAuth } from "./AuthProvider";
 
 export default function ContactForm() {
   const { t } = useLanguage();
@@ -14,33 +14,20 @@ export default function ContactForm() {
   const [startedAt] = useState(() => Date.now());
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [useAccount, setUseAccount] = useState(false);
+  const { status: authStatus, user } = useAuth();
 
   useEffect(() => {
-    let mounted = true;
     const applyUser = (user?: { email?: string | null; user_metadata?: { full_name?: string | null } } | null) => {
-      if (!mounted || !user?.email) return;
+      if (!user?.email) return;
       const fullName = user.user_metadata?.full_name ?? "";
       setEmail(user.email);
       setName(fullName);
       setUseAccount(true);
     };
 
-    const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      applyUser(sessionData.session?.user ?? null);
-      const { data: userData } = await supabase.auth.getUser();
-      applyUser(userData.user ?? null);
-    };
-
-    load().catch(() => null);
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      applyUser(session?.user ?? null);
-    });
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+    if (authStatus !== "ready") return;
+    applyUser(user ?? null);
+  }, [authStatus, user]);
 
   return (
     <form

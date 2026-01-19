@@ -2,15 +2,17 @@
 
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/components/AuthProvider";
 
 const STORAGE_PREFIX = "velah:timezone:";
 
 export default function TimezoneSync() {
+  const { status: authStatus, user } = useAuth();
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-    let active = true;
 
-    const sync = async (userId?: string) => {
+    const sync = async (userId?: string | null) => {
       if (!userId || typeof window === "undefined") return;
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       const storageKey = `${STORAGE_PREFIX}${userId}`;
@@ -24,19 +26,9 @@ export default function TimezoneSync() {
       }
     };
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      sync(data.session?.user.id);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      sync(session?.user?.id);
-    });
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+    if (authStatus !== "ready") return;
+    sync(user?.id ?? null);
+  }, [authStatus, user?.id]);
 
   return null;
 }

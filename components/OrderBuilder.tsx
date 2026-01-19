@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useAuth } from "@/components/AuthProvider";
 
 const GLASS_ML = 250;
 const FIVE_GAL_LITERS = 18.9;
@@ -101,7 +102,8 @@ export default function OrderBuilder() {
     animate: { opacity: 1, y: 0 },
     transition: { duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   };
-  const [userId, setUserId] = useState<string | null>(null);
+  const { status: authStatus, user } = useAuth();
+  const userId = user?.id ?? null;
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loadingCart, setLoadingCart] = useState(true);
 
@@ -118,22 +120,7 @@ export default function OrderBuilder() {
   const [cartNotice, setCartNotice] = useState<CartItem[] | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setUserId(data.session?.user.id ?? null);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      setUserId(session?.user?.id ?? null);
-    });
-    return () => {
-      mounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
+    if (authStatus === "loading") return;
     let active = true;
     const loadCart = async () => {
       setLoadingCart(true);
@@ -162,7 +149,7 @@ export default function OrderBuilder() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [authStatus, userId]);
 
   const persistCart = async (items: CartItem[]) => {
     setCart(items);
