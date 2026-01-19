@@ -6,8 +6,18 @@ type StoredSession = {
   refresh_token?: string;
 };
 
+type RuntimeEnv = {
+  supabaseUrl?: string | null;
+};
+
+function getRuntimeEnv(): RuntimeEnv | null {
+  if (typeof window === "undefined") return null;
+  return (window as { __VELAH_ENV__?: RuntimeEnv }).__VELAH_ENV__ || null;
+}
+
 function getProjectRef() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const runtime = getRuntimeEnv();
+  const url = runtime?.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) return null;
   try {
     const host = new URL(url).hostname;
@@ -17,11 +27,19 @@ function getProjectRef() {
   }
 }
 
-function readStoredSession(): StoredSession | null {
+function findStorageKey() {
   if (typeof window === "undefined") return null;
   const ref = getProjectRef();
-  if (!ref) return null;
-  const key = `sb-${ref}-auth-token`;
+  if (ref) return `sb-${ref}-auth-token`;
+  const keys = Object.keys(window.localStorage || {}).filter((key) => key.endsWith("-auth-token") && key.startsWith("sb-"));
+  if (keys.length === 1) return keys[0];
+  return null;
+}
+
+function readStoredSession(): StoredSession | null {
+  if (typeof window === "undefined") return null;
+  const key = findStorageKey();
+  if (!key) return null;
   const raw = window.localStorage.getItem(key);
   if (!raw) return null;
   try {

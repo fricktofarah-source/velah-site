@@ -11,6 +11,7 @@ type DebugState = {
   storage: unknown;
   storageKeys: string[];
   refresh: unknown;
+  setSessionResult: unknown;
   anonKey: string | null;
   storageTest: { ok: boolean; error?: string } | null;
   authHealth: { ok: boolean; status?: number; error?: string } | null;
@@ -49,6 +50,7 @@ export default function AuthDebugPage() {
     storage: null,
     storageKeys: [],
     refresh: null,
+    setSessionResult: null,
     anonKey: null,
     storageTest: null,
     authHealth: null,
@@ -62,6 +64,7 @@ export default function AuthDebugPage() {
       storage: null,
       storageKeys: [],
       refresh: null,
+      setSessionResult: null,
       anonKey: null,
       storageTest: null,
       authHealth: null,
@@ -86,9 +89,11 @@ export default function AuthDebugPage() {
       const storageKeys = Object.keys(window.localStorage || {}).filter((key) => key.startsWith("sb-"));
       const storedRaw = storageKey ? window.localStorage.getItem(storageKey) : null;
       let stored: unknown = null;
+      let parsedStored: Record<string, unknown> | null = null;
       if (storedRaw) {
         try {
           const parsed = JSON.parse(storedRaw) as Record<string, unknown>;
+          parsedStored = parsed;
           stored = {
             storageKey,
             access_token: mask(typeof parsed.access_token === "string" ? parsed.access_token : null),
@@ -134,6 +139,26 @@ export default function AuthDebugPage() {
         session = null;
       }
 
+      let setSessionResult: unknown = null;
+      if (parsedStored?.access_token && parsedStored?.refresh_token) {
+        try {
+          const res = await withTimeout(
+            supabase.auth.setSession({
+              access_token: String(parsedStored.access_token),
+              refresh_token: String(parsedStored.refresh_token),
+            }),
+            8000
+          );
+          setSessionResult = {
+            session: res.data.session ? "ok" : null,
+            user: res.data.user ? "ok" : null,
+            error: res.error?.message || null,
+          };
+        } catch (error) {
+          setSessionResult = { session: null, user: null, error: error instanceof Error ? error.message : "Unknown error" };
+        }
+      }
+
       let sessionRes: Awaited<ReturnType<typeof supabase.auth.getSession>> | null = null;
       let userRes: Awaited<ReturnType<typeof supabase.auth.getUser>> | null = null;
       let refreshRes: Awaited<ReturnType<typeof supabase.auth.refreshSession>> | null = null;
@@ -159,6 +184,7 @@ export default function AuthDebugPage() {
         storage: stored,
         storageKeys,
         refresh: refreshRes?.data?.session ?? null,
+        setSessionResult,
         anonKey: anon ? mask(anon) : null,
         storageTest,
         authHealth,
@@ -176,6 +202,7 @@ export default function AuthDebugPage() {
         storage: null,
         storageKeys: [],
         refresh: null,
+        setSessionResult: null,
         anonKey: null,
         storageTest: null,
         authHealth: null,
@@ -273,6 +300,13 @@ export default function AuthDebugPage() {
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Refresh Session</div>
           <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
 {JSON.stringify(state.refresh, null, 2)}
+          </pre>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Set Session Result</div>
+          <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-slate-700">
+{JSON.stringify(state.setSessionResult, null, 2)}
           </pre>
         </div>
 
