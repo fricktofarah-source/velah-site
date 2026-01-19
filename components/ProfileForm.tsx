@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { getSessionWithRetry } from "@/lib/authSession";
+import { createAuthedClient, supabase } from "@/lib/supabaseClient";
+import { getSessionWithRetry, getStoredAccessToken, getStoredUserInfo } from "@/lib/authSession";
 import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
 
@@ -42,23 +42,37 @@ export default function ProfileForm() {
       try {
         const session = await withTimeout(getSessionWithRetry(10000), 12000);
         const user = session?.user ?? null;
-        if (!user) {
+        const storedAccessToken = getStoredAccessToken();
+        const storedInfo = getStoredUserInfo();
+        const fallbackUser =
+          storedAccessToken && storedInfo?.userId
+            ? { id: storedInfo.userId, email: storedInfo.email || null, full_name: storedInfo.fullName || null }
+            : null;
+
+        if (!user && !fallbackUser) {
           setStatus(copy.statusLoadFail);
           return;
         }
 
         setHasSession(true);
         if (!mounted) return;
-        setEmail(user.email || "");
-        const defaultName = (user.user_metadata?.full_name as string) || "";
+        const defaultEmail = user?.email || fallbackUser?.email || "";
+        const defaultName =
+          (user?.user_metadata?.full_name as string) || fallbackUser?.full_name || "";
+        setEmail(defaultEmail);
         setName(defaultName);
 
         try {
+          const client = user
+            ? supabase
+            : storedAccessToken
+            ? createAuthedClient(storedAccessToken)
+            : supabase;
           await withTimeout(
-            supabase.from("profiles").upsert(
+            client.from("profiles").upsert(
               {
-                user_id: user.id,
-                email: user.email || null,
+                user_id: user?.id || fallbackUser?.id,
+                email: defaultEmail || null,
                 full_name: defaultName || null,
               },
               { onConflict: "user_id" }
@@ -70,11 +84,16 @@ export default function ProfileForm() {
         }
 
         try {
+          const client = user
+            ? supabase
+            : storedAccessToken
+            ? createAuthedClient(storedAccessToken)
+            : supabase;
           const { data: profile } = await withTimeout(
-            supabase
+            client
               .from("profiles")
               .select("full_name,phone,address_line1,address_line2,city,pref_hydration_reminders,pref_delivery_reminders")
-              .eq("user_id", user.id)
+              .eq("user_id", user?.id || fallbackUser?.id)
               .maybeSingle(),
             6000
           );
@@ -112,12 +131,20 @@ export default function ProfileForm() {
   const saveProfile = async () => {
     const { data } = await supabase.auth.getSession();
     const user = data.session?.user;
-    if (!user) return;
+    const storedAccessToken = getStoredAccessToken();
+    const storedInfo = getStoredUserInfo();
+    const fallbackUserId = storedInfo?.userId;
+    if (!user && !fallbackUserId) return;
 
     setStatus(copy.statusSaving);
-    const { error } = await supabase.from("profiles").upsert(
+    const client = user
+      ? supabase
+      : storedAccessToken
+      ? createAuthedClient(storedAccessToken)
+      : supabase;
+    const { error } = await client.from("profiles").upsert(
       {
-        user_id: user.id,
+        user_id: user?.id || fallbackUserId,
         full_name: name,
         phone,
         address_line1: addressLine1,

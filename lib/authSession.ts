@@ -50,6 +50,36 @@ function readStoredSession(): StoredSession | null {
   }
 }
 
+function decodeJwtPayload(token: string) {
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  try {
+    const json = atob(padded);
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredAccessToken(): string | null {
+  const stored = readStoredSession();
+  return stored?.access_token || null;
+}
+
+export function getStoredUserInfo(): { userId?: string; email?: string; fullName?: string } | null {
+  const token = getStoredAccessToken();
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  const userId = typeof payload.sub === "string" ? payload.sub : undefined;
+  const email = typeof payload.email === "string" ? payload.email : undefined;
+  const meta = payload.user_metadata as Record<string, unknown> | undefined;
+  const fullName = meta && typeof meta.full_name === "string" ? meta.full_name : undefined;
+  return { userId, email, fullName };
+}
+
 export async function getSessionWithRetry(timeoutMs = 10000): Promise<Session | null> {
   const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;

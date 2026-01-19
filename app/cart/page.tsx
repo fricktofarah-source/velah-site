@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
+import { createAuthedClient, supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getSessionWithRetry } from "@/lib/authSession";
+import { getSessionWithRetry, getStoredAccessToken, getStoredUserInfo } from "@/lib/authSession";
 
 const CART_KEY = "velah:order-cart";
 
@@ -41,6 +41,7 @@ export default function CartPage() {
     "500mL": { label: copy.bottleLabels.fiveHund, note: copy.bottleLabels.packNote },
   };
   const [userId, setUserId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,11 +49,20 @@ export default function CartPage() {
     let mounted = true;
     getSessionWithRetry(10000).then((session) => {
       if (!mounted) return;
-      setUserId(session?.user.id ?? null);
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        setAccessToken(session.access_token ?? null);
+        return;
+      }
+      const storedToken = getStoredAccessToken();
+      const storedInfo = getStoredUserInfo();
+      setUserId(storedInfo?.userId ?? null);
+      setAccessToken(storedToken ?? null);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       setUserId(session?.user?.id ?? null);
+      setAccessToken(session?.access_token ?? null);
     });
     return () => {
       mounted = false;
@@ -70,10 +80,11 @@ export default function CartPage() {
         setLoading(false);
       }
       if (!userId) return;
-      const { data } = await supabase.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
+      const client = accessToken ? createAuthedClient(accessToken) : supabase;
+      const { data } = await client.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
       const remoteItems = (data?.items as CartItem[] | null) || [];
       if (remoteItems.length === 0 && localItems.length > 0) {
-        await supabase.from("order_carts").upsert({ user_id: userId, items: localItems }, { onConflict: "user_id" });
+        await client.from("order_carts").upsert({ user_id: userId, items: localItems }, { onConflict: "user_id" });
         saveLocalCart([]);
         if (active) setCart(localItems);
       } else if (active) {
@@ -85,12 +96,13 @@ export default function CartPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, accessToken]);
 
   const persistCart = async (items: CartItem[]) => {
     setCart(items);
     if (userId) {
-      await supabase.from("order_carts").upsert({ user_id: userId, items }, { onConflict: "user_id" });
+      const client = accessToken ? createAuthedClient(accessToken) : supabase;
+      await client.from("order_carts").upsert({ user_id: userId, items }, { onConflict: "user_id" });
     } else {
       saveLocalCart(items);
     }
