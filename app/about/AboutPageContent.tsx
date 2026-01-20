@@ -319,42 +319,25 @@ const ImageCompare = ({
     setSplit(next);
   };
 
-  useEffect(() => {
-    if (!dragging) return;
-    const onMove = (event: MouseEvent) => updateSplit(event.clientX);
-    const onUp = () => setDragging(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [dragging]);
-
-  useEffect(() => {
-    if (!dragging) return;
-    const onMove = (event: TouchEvent) => updateSplit(event.touches[0]?.clientX ?? 0);
-    const onEnd = () => setDragging(false);
-    window.addEventListener("touchmove", onMove);
-    window.addEventListener("touchend", onEnd);
-    return () => {
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onEnd);
-    };
-  }, [dragging]);
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-100">
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-100 select-none touch-none">
       <div
         ref={frameRef}
         className="relative aspect-[4/3] w-full"
-        onMouseDown={(event) => {
+        onPointerDown={(event) => {
           setDragging(true);
           updateSplit(event.clientX);
+          event.currentTarget.setPointerCapture(event.pointerId);
         }}
-        onTouchStart={(event) => {
-          setDragging(true);
-          updateSplit(event.touches[0]?.clientX ?? 0);
+        onPointerMove={(event) => {
+          if (!dragging) return;
+          updateSplit(event.clientX);
         }}
+        onPointerUp={(event) => {
+          setDragging(false);
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }}
+        onPointerCancel={() => setDragging(false)}
       >
         <Image
           src={before}
@@ -362,6 +345,7 @@ const ImageCompare = ({
           fill
           sizes="(min-width: 1024px) 520px, 90vw"
           className="object-cover object-center"
+          draggable={false}
         />
         <div
           className="absolute inset-0"
@@ -373,13 +357,12 @@ const ImageCompare = ({
             fill
             sizes="(min-width: 1024px) 520px, 90vw"
             className="object-cover object-center"
+            draggable={false}
           />
         </div>
         <div
           className="absolute inset-y-0 cursor-ew-resize"
           style={{ left: `calc(${split}% - 18px)` }}
-          onMouseDown={() => setDragging(true)}
-          onTouchStart={() => setDragging(true)}
           role="slider"
           aria-label="Compare room images"
           aria-valuemin={15}
