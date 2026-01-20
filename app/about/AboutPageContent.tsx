@@ -256,13 +256,13 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
         </div>
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
-        <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-[2.5rem]">
+        <div className="relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[2.5rem] aspect-[4/5] lg:aspect-auto lg:h-full">
           <Image
             src="/about/Dirty_plastic_bottle.jpg"
             alt="Discarded plastic bottle"
             fill
             sizes="(min-width: 1024px) 520px, 90vw"
-            className="object-cover"
+            className="object-cover object-top"
           />
         </div>
       </motion.div>
@@ -272,7 +272,7 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
 
 const SparkSection = ({ copy }: { copy: AboutCopy["spark"] }) => (
   <section className="section-shell py-24 sm:py-32">
-    <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
       <motion.div {...revealProps()} className="text-center lg:text-left">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
           {copy.label}
