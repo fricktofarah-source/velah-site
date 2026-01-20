@@ -238,7 +238,7 @@ const AnimatedVelahLogo = () => {
 
 const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
   <section className="section-shell py-24 sm:py-32">
-    <div className="grid gap-12 lg:grid-cols-2">
+    <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
       <motion.div {...revealProps()} className="text-center lg:text-left">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">{copy.label}</p>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
@@ -256,7 +256,7 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
         </div>
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem]">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-[2.5rem]">
           <Image
             src="/about/Dirty_plastic_bottle.jpg"
             alt="Discarded plastic bottle"
