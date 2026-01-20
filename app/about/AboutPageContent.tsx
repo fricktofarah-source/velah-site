@@ -546,11 +546,22 @@ const UseCasesSection = ({ copy }: { copy: AboutCopy["useCases"] }) => (
           {...revealProps(idx * 0.1)}
           className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white/90 p-6 text-center shadow-[0_30px_70px_rgba(15,23,42,0.07)] lg:text-left"
         >
-          {/* USE CASE IMAGE HERE */}
-          <PlaceholderBlock
-            label={`${card.title} IMAGE`}
-            className="aspect-[4/3] w-full bg-gradient-to-b from-white to-slate-100/40"
-          />
+          {card.title === "Residences" ? (
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
+              <Image
+                src="/about/Residences.png"
+                alt="Residences with Velah"
+                fill
+                sizes="(min-width: 1024px) 420px, 90vw"
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <PlaceholderBlock
+              label={`${card.title} IMAGE`}
+              className="aspect-[4/3] w-full bg-gradient-to-b from-white to-slate-100/40"
+            />
+          )}
           <div className="space-y-2 lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
               {card.caption}
