@@ -364,8 +364,8 @@ const ImageCompare = ({
           className="object-cover object-center"
         />
         <div
-          className="absolute inset-0 overflow-hidden"
-          style={{ width: `${split}%` }}
+          className="absolute inset-0"
+          style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
         >
           <Image
             src={after}
