@@ -283,18 +283,79 @@ const SparkSection = ({ copy }: { copy: AboutCopy["spark"] }) => (
         <p className="mt-6 text-lg leading-relaxed text-slate-600">{copy.body}</p>
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
-        {/* POUR PHOTO OR SHORT LOOP HERE */}
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-slate-50 to-[#f6fbfb]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(127,203,216,0.12),_transparent_60%)]" />
-          <div className="relative flex aspect-[4/3] w-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-[0.45em] text-slate-400">
-            POUR PHOTO
-          </div>
-        </div>
+        <ImageCompare
+          before="/about/room_with_plastic.png"
+          after="/about/room_with_glass.png"
+          beforeLabel="Plastic"
+          afterLabel="Glass"
+        />
         <p className="mt-5 text-sm text-slate-500">{copy.note}</p>
       </motion.div>
     </div>
   </section>
 );
+
+const ImageCompare = ({
+  before,
+  after,
+  beforeLabel,
+  afterLabel,
+}: {
+  before: string;
+  after: string;
+  beforeLabel: string;
+  afterLabel: string;
+}) => {
+  const [split, setSplit] = useState(55);
+  return (
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-100">
+      <div className="relative aspect-[4/3] w-full">
+        <Image
+          src={before}
+          alt="Room with plastic bottles"
+          fill
+          sizes="(min-width: 1024px) 520px, 90vw"
+          className="object-cover"
+        />
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ width: `${split}%` }}
+        >
+          <Image
+            src={after}
+            alt="Room with glass bottles"
+            fill
+            sizes="(min-width: 1024px) 520px, 90vw"
+            className="object-cover"
+          />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-y-0"
+          style={{ left: `calc(${split}% - 1px)` }}
+        >
+          <div className="h-full w-[2px] bg-white/80 shadow-[0_0_12px_rgba(15,23,42,0.2)]" />
+        </div>
+        <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-600">
+          {beforeLabel}
+        </div>
+        <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-600">
+          {afterLabel}
+        </div>
+      </div>
+      <div className="px-4 pb-4 pt-3">
+        <input
+          type="range"
+          min={15}
+          max={85}
+          value={split}
+          onChange={(event) => setSplit(Number(event.target.value))}
+          className="w-full accent-[var(--velah)]"
+          aria-label="Compare room images"
+        />
+      </div>
+    </div>
+  );
+};
 
 const FlowSection = ({ copy }: { copy: AboutCopy["flow"] }) => (
   <section className="section-shell py-24 sm:py-32">
