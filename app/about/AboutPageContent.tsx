@@ -256,7 +256,7 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
         </div>
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
-        <div className="relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[2.5rem] aspect-[4/5] lg:aspect-auto lg:h-full">
+        <div className="relative mx-auto w-full max-w-[440px] overflow-hidden rounded-[2.5rem] aspect-[4/5] lg:aspect-[3/4] lg:min-h-[480px]">
           <Image
             src="/about/Dirty_plastic_bottle.jpg"
             alt="Discarded plastic bottle"
