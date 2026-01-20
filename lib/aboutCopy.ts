@@ -100,17 +100,13 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
       label: "The problem",
       heading: "Water everywhere. But not the kind we want.",
       body:
-        "Dubai apartments are filled with plastic gallons, filters, and desalinated blends. The people who care most about health and the environment still compromise daily because real mineral water in reusable formats is hard to find.",
+        "Dubai apartments are filled with plastic gallons, filters, and desalinated blends. The people who care most about health and the environment still compromise daily because real mineral water in reusable formats is impossible to find.",
       stats: [
         { value: 48, suffix: "+", label: "plastic gallons per household / year" },
         { value: 95, suffix: "%", label: "of Dubai water is desalinated today" },
         { value: 2, suffix: "x", label: "more microplastics than mineral sources" },
       ],
-      collage: [
-        "Plastic gallons in every corner",
-        "Tap filters pretending to be mineral water",
-        "Wellness-minded residents with few choices",
-      ],
+      collage: [],
     },
     spark: {
       label: "The spark",

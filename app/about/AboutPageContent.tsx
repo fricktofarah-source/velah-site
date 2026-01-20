@@ -256,19 +256,15 @@ const ProblemSection = ({ copy }: { copy: AboutCopy["problem"] }) => (
         </div>
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
-        {/* PROBLEM COLLAGE COPY */}
-        <ul className="space-y-6 text-sm text-slate-500">
-          {copy.collage.map((item, idx) => (
-            <motion.li
-              key={item}
-              {...revealProps(0.12 + idx * 0.1)}
-              className="flex items-start gap-4"
-            >
-              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
-              <span className="text-base leading-relaxed text-slate-600">{item}</span>
-            </motion.li>
-          ))}
-        </ul>
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem]">
+          <Image
+            src="/about/Dirty_plastic_bottle.jpg"
+            alt="Discarded plastic bottle"
+            fill
+            sizes="(min-width: 1024px) 520px, 90vw"
+            className="object-cover"
+          />
+        </div>
       </motion.div>
     </div>
   </section>
