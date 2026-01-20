@@ -404,32 +404,21 @@ const FlowSection = ({ copy }: { copy: AboutCopy["flow"] }) => (
       <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">{copy.body}</p>
     </div>
     <div className="relative mt-12 grid gap-10 lg:grid-cols-3">
-      <motion.span
-        className="pointer-events-none absolute top-4 hidden h-0.5 w-full bg-gradient-to-r from-transparent via-[var(--velah)] to-transparent opacity-70 lg:block"
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true, amount: 0.4 }}
-        transition={{ duration: 0.9, ease }}
-        style={{ transformOrigin: "left center" }}
-      />
-      <motion.span
-        className="pointer-events-none absolute top-4 hidden h-0.5 w-full lg:block"
-        initial={{ x: "-40%" }}
-        whileInView={{ x: "40%" }}
-        viewport={{ once: true, amount: 0.4 }}
-        transition={{ duration: 2.4, ease, repeat: Infinity }}
-        style={{ background: "linear-gradient(90deg, transparent, rgba(127,203,216,0.7), transparent)" }}
-      />
       {copy.steps.map((step, idx) => (
         <motion.div
           key={step.title}
           {...revealProps(idx * 0.15)}
-          className="relative z-10 pl-12 text-center lg:text-left"
+          whileHover={{ y: -6 }}
+          transition={{ duration: 0.35, ease }}
+          className="group relative z-10 pl-12 text-center lg:text-left"
         >
-          <div className="absolute left-0 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-semibold text-[var(--velah)] shadow-[0_8px_24px_rgba(15,23,42,0.12)]">
+          <div className="absolute left-0 top-0 flex h-9 w-9 items-center justify-center text-sm font-semibold text-[var(--velah)]">
             {step.icon}
           </div>
-          <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+          <h3 className="text-xl font-semibold text-slate-900">
+            {step.title}
+          </h3>
+          <div className="mt-3 h-[2px] w-10 bg-[var(--velah)]/30 transition-all duration-300 group-hover:w-16 group-hover:bg-[var(--velah)]/70 mx-auto lg:mx-0" />
           <p className="mt-3 text-base text-slate-600">{step.body}</p>
         </motion.div>
       ))}
