@@ -284,12 +284,12 @@ const SparkSection = ({ copy }: { copy: AboutCopy["spark"] }) => (
       </motion.div>
       <motion.div {...revealProps(0.1)} className="relative">
         <ImageCompare
-          before="/about/room_with_plastic.png"
-          after="/about/room_with_glass.png"
+          before="/about/room_with_glass.png"
+          after="/about/room_with_plastic.png"
           beforeLabel="Plastic"
           afterLabel="Glass"
         />
-        <p className="mt-5 text-sm text-slate-500">{copy.note}</p>
+        {copy.note ? <p className="mt-5 text-sm text-slate-500">{copy.note}</p> : null}
       </motion.div>
     </div>
   </section>
@@ -307,15 +307,61 @@ const ImageCompare = ({
   afterLabel: string;
 }) => {
   const [split, setSplit] = useState(55);
+  const [dragging, setDragging] = useState(false);
+  const frameRef = useRef<HTMLDivElement | null>(null);
+
+  const updateSplit = (clientX: number) => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const rect = frame.getBoundingClientRect();
+    const raw = ((clientX - rect.left) / rect.width) * 100;
+    const next = Math.min(85, Math.max(15, Math.round(raw)));
+    setSplit(next);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (event: MouseEvent) => updateSplit(event.clientX);
+    const onUp = () => setDragging(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [dragging]);
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (event: TouchEvent) => updateSplit(event.touches[0]?.clientX ?? 0);
+    const onEnd = () => setDragging(false);
+    window.addEventListener("touchmove", onMove);
+    window.addEventListener("touchend", onEnd);
+    return () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [dragging]);
   return (
     <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-100">
-      <div className="relative aspect-[4/3] w-full">
+      <div
+        ref={frameRef}
+        className="relative aspect-[4/3] w-full"
+        onMouseDown={(event) => {
+          setDragging(true);
+          updateSplit(event.clientX);
+        }}
+        onTouchStart={(event) => {
+          setDragging(true);
+          updateSplit(event.touches[0]?.clientX ?? 0);
+        }}
+      >
         <Image
           src={before}
-          alt="Room with plastic bottles"
+          alt="Room with glass bottles"
           fill
           sizes="(min-width: 1024px) 520px, 90vw"
-          className="object-cover"
+          className="object-cover object-center"
         />
         <div
           className="absolute inset-0 overflow-hidden"
@@ -323,17 +369,34 @@ const ImageCompare = ({
         >
           <Image
             src={after}
-            alt="Room with glass bottles"
+            alt="Room with plastic bottles"
             fill
             sizes="(min-width: 1024px) 520px, 90vw"
-            className="object-cover"
+            className="object-cover object-center"
           />
         </div>
         <div
-          className="pointer-events-none absolute inset-y-0"
-          style={{ left: `calc(${split}% - 1px)` }}
+          className="absolute inset-y-0 cursor-ew-resize"
+          style={{ left: `calc(${split}% - 18px)` }}
+          onMouseDown={() => setDragging(true)}
+          onTouchStart={() => setDragging(true)}
+          role="slider"
+          aria-label="Compare room images"
+          aria-valuemin={15}
+          aria-valuemax={85}
+          aria-valuenow={split}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowLeft") setSplit((v) => Math.max(15, v - 2));
+            if (event.key === "ArrowRight") setSplit((v) => Math.min(85, v + 2));
+          }}
         >
-          <div className="h-full w-[2px] bg-white/80 shadow-[0_0_12px_rgba(15,23,42,0.2)]" />
+          <div className="h-full w-9 flex items-center justify-center">
+            <div className="h-full w-[2px] bg-white/90 shadow-[0_0_12px_rgba(15,23,42,0.25)]" />
+          </div>
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow-[0_10px_30px_rgba(15,23,42,0.18)] flex items-center justify-center text-slate-500 text-xs font-semibold">
+            ↔
+          </div>
         </div>
         <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-600">
           {beforeLabel}
@@ -341,17 +404,6 @@ const ImageCompare = ({
         <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-600">
           {afterLabel}
         </div>
-      </div>
-      <div className="px-4 pb-4 pt-3">
-        <input
-          type="range"
-          min={15}
-          max={85}
-          value={split}
-          onChange={(event) => setSplit(Number(event.target.value))}
-          className="w-full accent-[var(--velah)]"
-          aria-label="Compare room images"
-        />
       </div>
     </div>
   );

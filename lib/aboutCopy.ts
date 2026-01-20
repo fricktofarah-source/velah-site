@@ -113,7 +113,7 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
       heading: "We wanted something that didn’t exist yet.",
       body:
         "Real mineral water, delivered in glass. Designed to look good in a Dubai home. Built to reduce plastic, not just talk about it. Velah is a founder-led obsession with better rituals, better materials, and a calmer hydration experience.",
-      note: "Gentle float effect keeps the pour moment alive even when static.",
+      note: "",
     },
     flow: {
       label: "The flow",
