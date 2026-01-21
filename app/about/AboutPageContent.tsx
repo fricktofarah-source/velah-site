@@ -315,7 +315,7 @@ const ImageCompare = ({
     if (!frame) return;
     const rect = frame.getBoundingClientRect();
     const raw = ((clientX - rect.left) / rect.width) * 100;
-    const next = Math.min(85, Math.max(15, Math.round(raw)));
+    const next = Math.min(100, Math.max(0, Math.round(raw)));
     setSplit(next);
   };
 
@@ -365,13 +365,13 @@ const ImageCompare = ({
           style={{ left: `calc(${split}% - 18px)` }}
           role="slider"
           aria-label="Compare room images"
-          aria-valuemin={15}
-          aria-valuemax={85}
+          aria-valuemin={0}
+          aria-valuemax={100}
           aria-valuenow={split}
           tabIndex={0}
           onKeyDown={(event) => {
-            if (event.key === "ArrowLeft") setSplit((v) => Math.max(15, v - 2));
-            if (event.key === "ArrowRight") setSplit((v) => Math.min(85, v + 2));
+            if (event.key === "ArrowLeft") setSplit((v) => Math.max(0, v - 2));
+            if (event.key === "ArrowRight") setSplit((v) => Math.min(100, v + 2));
           }}
         >
           <div className="h-full w-9 flex items-center justify-center">
