@@ -37,14 +37,24 @@ export default function HydrationPage() {
 
   const streak = useMemo(() => {
     if (!goal || goal <= 0 || history.length === 0) return 0;
+
     let count = 0;
     const cursor = new Date(today);
-    for (let i = history.length - 1; i >= 0; i--) {
+    cursor.setDate(cursor.getDate() - 1); // Start checking from yesterday
+
+    // History is ordered, with today being the last element. We want to start from yesterday.
+    const yesterdayIndex = history.findIndex((h) => h.day === dayKey(cursor));
+
+    if (yesterdayIndex === -1) return 0; // No data for yesterday
+
+    for (let i = yesterdayIndex; i >= 0; i--) {
       const entry = history[i];
-      const expected = dayKey(cursor);
-      if (entry.day !== expected) break;
+      const expectedDay = dayKey(cursor);
+
+      if (entry.day !== expectedDay) break;
+
       if (entry.intake_ml >= goal) {
-        count += 1;
+        count++;
         cursor.setDate(cursor.getDate() - 1);
       } else {
         break;
