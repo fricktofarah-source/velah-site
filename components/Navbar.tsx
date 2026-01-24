@@ -10,6 +10,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
 import { useAuth } from "./AuthProvider";
 import { posts } from "@/lib/posts";
+import Magnetic from "./Magnetic";
 
 function sumCart(items: Array<{ qty: number }> | null | undefined) {
   if (!items?.length) return 0;
@@ -339,6 +340,7 @@ export default function Navbar() {
                   key={item.key}
                   href={`#${item.sectionId}`}
                   className="nav-link"
+                  data-nav={item.key}
                   onClick={(e) => {
                     e.preventDefault();
                     goSection(item.sectionId);
@@ -347,7 +349,7 @@ export default function Navbar() {
                   {item.label}
                 </a>
               ) : (
-                <Link key={item.key} href={item.href} className="nav-link">
+                <Link key={item.key} href={item.href} className="nav-link" data-nav={item.key}>
                   {item.label}
                 </Link>
               )
@@ -569,13 +571,16 @@ export default function Navbar() {
             )}
 
             {/* CTA */}
-            <button
-              type="button"
-              onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); }}
-              className="hidden md:inline-flex btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
-            >
-              {t.nav.joinWaitlist}
-            </button>
+            <Magnetic strength={0.4}>
+              <button
+                type="button"
+                onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); }}
+                className="hidden md:inline-flex btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
+                data-action="join-waitlist"
+              >
+                {t.nav.joinWaitlist}
+              </button>
+            </Magnetic>
           </div>
         </div>
       </nav>

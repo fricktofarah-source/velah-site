@@ -16,7 +16,10 @@ export default function Hero() {
   const copy = ABOUT_COPY[language].hero;
 
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-b from-white via-[#f6fbfb] to-white pb-12 pt-0 sm:pb-24 sm:pt-8">
+    <section
+      className="relative isolate overflow-hidden bg-gradient-to-b from-white via-[#f6fbfb] to-white pb-12 pt-0 sm:pb-24 sm:pt-8"
+      data-section="hero"
+    >
       <div className="absolute inset-0">
         <ScrollParallax amount={60} className="absolute inset-0">
           <Image
@@ -53,9 +56,8 @@ export default function Hero() {
                 {copy.bullets.map((bullet, idx) => (
                   <span key={bullet} className="inline-flex items-center gap-2">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        idx === 0 ? "bg-[var(--velah)]" : "bg-slate-300"
-                      }`}
+                      className={`h-1.5 w-1.5 rounded-full ${idx === 0 ? "bg-[var(--velah)]" : "bg-slate-300"
+                        }`}
                     />
                     {bullet}
                   </span>
