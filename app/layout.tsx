@@ -9,8 +9,9 @@ import RootShell from "@/components/RootShell";
 export const metadata: Metadata = {
   title: "Velah",
   description: "Eco-luxury water in reusable glass gallons. Dubai & GCC.",
-
-
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export const viewport: Viewport = {
