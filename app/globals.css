@@ -333,15 +333,22 @@ a, button, [role='button'] { cursor: pointer; }
   }
 }
 
-/* Success check (inline badge) */
+/* Success check (inline badge) - Centered variant */
 .success-check {
-  width: 22px; height: 22px; border-radius: 9999px; position: relative;
+  width: 24px; height: 24px; 
+  border-radius: 9999px; 
   border: 2px solid #10b981; /* emerald-500 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .success-check::after {
-  content: ""; position: absolute; left: 5px; top: 6px; width: 6px; height: 10px;
-  border-right: 2px solid #10b981; border-bottom: 2px solid #10b981;
+  content: ""; 
+  width: 6px; height: 10px;
+  border-right: 2px solid #10b981; 
+  border-bottom: 2px solid #10b981;
   transform: rotate(45deg);
+  margin-bottom: 2px; /* Visual optical center adjustment */
 }
 
 /* Marquee band */

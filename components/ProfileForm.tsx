@@ -72,7 +72,7 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
     return () => {
       mounted = false;
     };
-  }, [user.id]);
+  }, [user.id, user.full_name, user.email, copy.statusLoadFail]);
 
   const saveProfile = async () => {
     setStatus(copy.statusSaving);

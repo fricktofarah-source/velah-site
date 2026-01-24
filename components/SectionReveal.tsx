@@ -36,8 +36,8 @@ export default function SectionReveal({ children, delay = 0, once = true }: Sect
         });
       },
       {
-        threshold: 0.1,
-        rootMargin: "0px 0px -10% 0px",
+        threshold: 0,
+        rootMargin: "0px 0px -5% 0px",
       }
     );
 
@@ -48,8 +48,8 @@ export default function SectionReveal({ children, delay = 0, once = true }: Sect
 
   const style: SectionRevealStyle = delay
     ? {
-        ["--section-reveal-delay" as const]: `${delay}s`,
-      }
+      ["--section-reveal-delay" as const]: `${delay}s`,
+    }
     : {};
 
   return (

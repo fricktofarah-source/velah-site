@@ -3,13 +3,30 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
 import { useAuth } from "./AuthProvider";
 import { posts } from "@/lib/posts";
+
+function sumCart(items: Array<{ qty: number }> | null | undefined) {
+  if (!items?.length) return 0;
+  return items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+}
+
+function readLocalCartCount() {
+  if (typeof window === "undefined") return 0;
+  const raw = window.localStorage.getItem("velah:order-cart");
+  if (!raw) return 0;
+  try {
+    const parsed = JSON.parse(raw);
+    return sumCart(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return 0;
+  }
+}
 
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
@@ -112,31 +129,16 @@ export default function Navbar() {
   }, [t.nav.waitlistModal.areaPlaceholder]);
 
   // Auth session + listener
-  function sumCart(items: Array<{ qty: number }> | null | undefined) {
-    if (!items?.length) return 0;
-    return items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
-  }
 
-  function readLocalCartCount() {
-    if (typeof window === "undefined") return 0;
-    const raw = window.localStorage.getItem("velah:order-cart");
-    if (!raw) return 0;
-    try {
-      const parsed = JSON.parse(raw);
-      return sumCart(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      return 0;
-    }
-  }
 
-  async function loadCartCount(userId?: string | null) {
+  const loadCartCount = useCallback(async (userId?: string | null) => {
     if (userId) {
       const { data } = await supabase.from("order_carts").select("items").eq("user_id", userId).maybeSingle();
       setCartCount(sumCart((data?.items as Array<{ qty: number }> | null) ?? []));
       return;
     }
     setCartCount(readLocalCartCount());
-  }
+  }, []);
 
   useEffect(() => {
     if (authStatus === "loading") return;
@@ -161,12 +163,11 @@ export default function Navbar() {
 
     const onStorage = () => loadCartCount(null);
     window.addEventListener("storage", onStorage);
-
     return () => {
       window.removeEventListener("cart:updated", onCartUpdate as EventListener);
       window.removeEventListener("storage", onStorage);
     };
-  }, [authStatus, user]);
+  }, [authStatus, user, loadCartCount]);
 
   // Global open-waitlist trigger (from Hero)
   useEffect(() => {
@@ -271,12 +272,12 @@ export default function Navbar() {
     | { key: "about" | "sustainability" | "subscription" | "blog"; label: string; type: "section"; sectionId: string }
     | { key: "hydration"; label: string; type: "route"; href: string }
   > = [
-    { key: "about", label: navLinks.about, type: "section", sectionId: "about" },
-    { key: "sustainability", label: navLinks.sustainability, type: "section", sectionId: "sustainability" },
-    { key: "subscription", label: navLinks.subscription, type: "section", sectionId: "subscription" },
-    { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
-    { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
-  ];
+      { key: "about", label: navLinks.about, type: "section", sectionId: "about" },
+      { key: "sustainability", label: navLinks.sustainability, type: "section", sectionId: "sustainability" },
+      { key: "subscription", label: navLinks.subscription, type: "section", sectionId: "subscription" },
+      { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
+      { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
+    ];
   const visibleNavItems = allNavItems;
   const waitlistCopy = t.nav.waitlistModal;
   const languageOptions = t.nav.languages;
@@ -308,9 +309,8 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 border-b bg-white/80 backdrop-blur transition-transform duration-300 ${
-          hidden ? "-translate-y-full" : "translate-y-0"
-        }`}
+        className={`sticky top-0 z-50 border-b bg-white/80 backdrop-blur transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"
+          }`}
       >
         {/* Center the middle perfectly with 1fr | auto | 1fr */}
         <div
@@ -388,7 +388,7 @@ export default function Navbar() {
                   }}
                 >
                   <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 text-slate-600">
-                    <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.71.71l.27.28v.79L20 20.5 21.5 19l-6-5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+                    <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.71.71l.27.28v.79L20 20.5 21.5 19l-6-5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
                   </svg>
                 </button>
 
@@ -414,22 +414,20 @@ export default function Navbar() {
                   aria-label="Search suggestions"
                   onMouseDown={(e) => e.preventDefault()} /* keep focus while clicking */
                 >
-                    {(query.trim() ? filtered : defaults).map((s, i) => (
-                      <button
-                        key={`post-${s.slug}`}
+                  {(query.trim() ? filtered : defaults).map((s, i) => (
+                    <button
+                      key={`post-${s.slug}`}
                       role="option"
                       aria-selected={i === activeIdx}
-                      className={`w-full text-left px-3 py-2.5 flex items-center justify-between gap-3 ${
-                        i === activeIdx ? "bg-slate-50" : "bg-white"
-                      } hover:bg-slate-50`}
+                      className={`w-full text-left px-3 py-2.5 flex items-center justify-between gap-3 ${i === activeIdx ? "bg-slate-50" : "bg-white"
+                        } hover:bg-slate-50`}
                       onMouseEnter={() => setActiveIdx(i)}
                       onClick={() => selectSuggestion(s)}
                     >
                       <span className="flex items-center gap-2">
                         <span
-                          className={`inline-block h-5 w-5 rounded-full border grid place-items-center text-[10px] ${
-                            s.kind === "post" ? "border-slate-300" : "border-slate-200"
-                          }`}
+                          className={`inline-block h-5 w-5 rounded-full border grid place-items-center text-[10px] ${s.kind === "post" ? "border-slate-300" : "border-slate-200"
+                            }`}
                           aria-hidden
                         >
                           {s.kind === "post" ? "P" : s.kind === "page" ? "↗" : "#"}
@@ -462,9 +460,8 @@ export default function Navbar() {
                     <button
                       key={option.code}
                       type="button"
-                      className={`w-full px-3 py-2 text-left rounded-lg text-sm hover:bg-slate-50 flex items-center justify-between ${
-                        option.code === language ? "bg-slate-100 font-semibold" : ""
-                      }`}
+                      className={`w-full px-3 py-2 text-left rounded-lg text-sm hover:bg-slate-50 flex items-center justify-between ${option.code === language ? "bg-slate-100 font-semibold" : ""
+                        }`}
                       onClick={() => {
                         setLanguage(option.code);
                         setLangMenuOpen(false);
@@ -513,19 +510,16 @@ export default function Navbar() {
             >
               <span className="relative h-5 w-5">
                 <span
-                  className={`absolute left-0 top-[5px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${
-                    mobileMenuOpen ? "translate-y-[5px] rotate-45" : ""
-                  }`}
+                  className={`absolute left-0 top-[5px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${mobileMenuOpen ? "translate-y-[5px] rotate-45" : ""
+                    }`}
                 />
                 <span
-                  className={`absolute left-0 top-[10px] h-[2px] w-5 bg-current transition-opacity duration-200 ease-out ${
-                    mobileMenuOpen ? "opacity-0" : "opacity-100"
-                  }`}
+                  className={`absolute left-0 top-[10px] h-[2px] w-5 bg-current transition-opacity duration-200 ease-out ${mobileMenuOpen ? "opacity-0" : "opacity-100"
+                    }`}
                 />
                 <span
-                  className={`absolute left-0 top-[15px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${
-                    mobileMenuOpen ? "-translate-y-[5px] -rotate-45" : ""
-                  }`}
+                  className={`absolute left-0 top-[15px] h-[2px] w-5 bg-current transition-transform duration-200 ease-out ${mobileMenuOpen ? "-translate-y-[5px] -rotate-45" : ""
+                    }`}
                 />
               </span>
             </button>
@@ -536,7 +530,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap inline-flex items-center gap-1 focus-ring rounded-lg"
+                  className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap hidden md:inline-flex items-center gap-1 focus-ring rounded-lg"
                 >
                   <span className="truncate max-w-[9rem]">
                     {displayName ?? (language === "AR" ? "الحساب" : "Account")}
@@ -568,7 +562,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => { setAuthMode("signin"); setAuthOpen(true); }}
-                className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap focus-ring rounded-lg"
+                className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap hidden md:inline-flex focus-ring rounded-lg"
               >
                 {t.nav.signIn}
               </button>
@@ -578,7 +572,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); }}
-              className="btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
+              className="hidden md:inline-flex btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
             >
               {t.nav.joinWaitlist}
             </button>
@@ -588,9 +582,8 @@ export default function Navbar() {
 
       <div
         id="mobile-nav-menu"
-        className={`md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 transition-all duration-200 ease-out ${
-          mobileMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
-        }`}
+        className={`md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 transition-all duration-200 ease-out ${mobileMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+          }`}
       >
         <div className="px-4 py-4 space-y-2">
           {visibleNavItems.map((item) =>
@@ -617,6 +610,44 @@ export default function Navbar() {
               </Link>
             )
           )}
+          <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
+            {isAuthed ? (
+              <>
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  {displayName ?? (language === "AR" ? "الحساب" : "Account")}
+                </div>
+                <Link
+                  href="/profile"
+                  className="block py-2 text-sm font-semibold text-slate-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t.nav.editProfile}
+                </Link>
+                <button
+                  type="button"
+                  className="w-full text-left py-2 text-sm font-semibold text-slate-800"
+                  onClick={async () => { await supabase.auth.signOut(); setMobileMenuOpen(false); }}
+                >
+                  {t.nav.signOut}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setAuthMode("signin"); setAuthOpen(true); setMobileMenuOpen(false); }}
+                className="w-full text-left py-2 text-sm font-semibold text-slate-800"
+              >
+                {t.nav.signIn}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); setMobileMenuOpen(false); }}
+              className="btn btn-primary w-full justify-center h-10 mt-2"
+            >
+              {t.nav.joinWaitlist}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -629,7 +660,7 @@ export default function Navbar() {
               <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>✕</button>
             </div>
 
-            <div className="relative min-h-[210px]">
+            <div className="relative min-h-[260px]">
               {/* FORM */}
               <div className={`p-4 space-y-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
                 <form onSubmit={submit} className="space-y-3" noValidate>

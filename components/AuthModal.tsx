@@ -163,16 +163,15 @@ export default function AuthModal({
             {mode === "signup"
               ? "Create a new account with your name, email, and password."
               : mode === "signin"
-              ? "Sign in with your email and password."
-              : "Request a password reset link by email."}
+                ? "Sign in with your email and password."
+                : "Request a password reset link by email."}
           </p>
 
           <div className="p-5 md:p-6 max-h-[85vh] overflow-auto">
             {/* FORM */}
             <div
-              className={`space-y-4 transition-opacity duration-300 ${
-                phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
+              className={`space-y-4 transition-opacity duration-300 ${phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
+                }`}
               aria-hidden={phase !== "form"}
             >
               <form onSubmit={submit} noValidate className="space-y-4" aria-busy={phase === "sending"}>
@@ -236,7 +235,7 @@ export default function AuthModal({
                 ) : null}
 
                 {error && (
-                  <div className="text-sm text-red-600 animate-soft-shake" role="alert" aria-live="polite">
+                  <div className="text-sm text-red-600 animate-soft-shake text-center" role="alert" aria-live="polite">
                     {error}
                   </div>
                 )}
@@ -259,13 +258,13 @@ export default function AuthModal({
                     ? mode === "signup"
                       ? "Creating…"
                       : mode === "signin"
-                      ? "Signing in…"
-                      : "Sending reset…"
+                        ? "Signing in…"
+                        : "Sending reset…"
                     : mode === "signup"
-                    ? "Sign up"
-                    : mode === "signin"
-                    ? "Sign in"
-                    : "Send reset link"}
+                      ? "Sign up"
+                      : mode === "signin"
+                        ? "Sign in"
+                        : "Send reset link"}
                 </button>
 
                 <div className="pt-2 text-center text-sm text-slate-600">
@@ -324,9 +323,8 @@ export default function AuthModal({
 
             {/* SENDING */}
             <div
-              className={`p-6 flex items-center justify-center gap-3 transition-opacity duration-300 ${
-                phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
+              className={`p-6 flex items-center justify-center gap-3 transition-opacity duration-300 ${phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
+                }`}
               aria-hidden={phase !== "sending"}
             >
               <div className="loader" aria-hidden />
@@ -334,16 +332,15 @@ export default function AuthModal({
                 {mode === "signup"
                   ? "Creating your account…"
                   : mode === "signin"
-                  ? "Signing you in…"
-                  : "Sending reset email…"}
+                    ? "Signing you in…"
+                    : "Sending reset email…"}
               </div>
             </div>
 
             {/* DONE */}
             <div
-              className={`p-6 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${
-                phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
-              }`}
+              className={`p-6 flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"
+                }`}
               aria-hidden={phase !== "done"}
             >
               <div className="success-check" aria-hidden />
@@ -351,8 +348,8 @@ export default function AuthModal({
                 {mode === "signup"
                   ? "Account created. Check your email if verification is required."
                   : mode === "signin"
-                  ? "Signed in successfully."
-                  : "If an account exists, a reset link has been sent to that email."}
+                    ? "Signed in successfully."
+                    : "If an account exists, a reset link has been sent to that email."}
               </div>
               <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose}>
                 Close
