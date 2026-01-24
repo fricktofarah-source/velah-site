@@ -17,27 +17,27 @@ export default function SustainabilityPage() {
       <SustainabilityHero />
 
       {/* 2. Microplastics (Parallax Water Background) */}
-      <SectionReveal>
+      <SectionReveal delay={0.1}>
         <Microplastics />
       </SectionReveal>
 
       {/* 3. NEW: Taste/Purity Section */}
-      <SectionReveal>
+      <SectionReveal delay={0.2}>
         <TasteSection />
       </SectionReveal>
 
       {/* 4. Savings Calculator */}
-      <SectionReveal>
+      <SectionReveal delay={0.3}>
         <SavingsCalculator />
       </SectionReveal>
 
       {/* 5. Impact Stats (Clean, No Borders) */}
-      <SectionReveal>
+      <SectionReveal delay={0.4}>
         <SustainabilityImpact />
       </SectionReveal>
 
       {/* 6. CTA (Solid Green, Visible Background) */}
-      <SectionReveal>
+      <SectionReveal delay={0.5}>
         <section className="relative py-32 overflow-hidden bg-white">
           {/* Background Image - Increased Opacity */}
           <div className="absolute inset-x-0 bottom-0 h-full opacity-60 pointer-events-none">
