@@ -4,6 +4,7 @@ import { type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import WIPPopup from "./WIPPopup";
 
 export default function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -22,6 +23,7 @@ export default function RootShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       {hideShell ? null : <Footer />}
+      <WIPPopup />
     </>
   );
 }
