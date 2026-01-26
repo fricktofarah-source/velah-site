@@ -25,7 +25,6 @@ const HOME_SECTIONS: SectionConfig[] = [
   { key: "bottles", render: () => <Bottles /> },
   { key: "marquee", fullBleed: true, render: () => <MarqueeBand /> },
   { key: "how", render: () => <HowItWorks /> },
-  { key: "subscription", render: () => <SubscriptionPeek /> },
   { key: "impact", render: () => <ImpactStats /> },
   { key: "blog", render: () => <BlogPreview posts={posts} /> },
 ];

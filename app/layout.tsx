@@ -3,8 +3,11 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/components/AuthProvider";
+import { CartProvider } from "@/components/CartProvider";
+import CartDrawer from "@/components/shop/CartDrawer";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import RootShell from "@/components/RootShell";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Velah",
@@ -42,7 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <LanguageProvider>
           <AuthProvider>
-            <RootShell>{children}</RootShell>
+            <CartProvider>
+              <RootShell>{children}</RootShell>
+              <CartDrawer />
+            </CartProvider>
           </AuthProvider>
         </LanguageProvider>
       </body>

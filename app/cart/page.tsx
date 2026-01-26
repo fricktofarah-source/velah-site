@@ -39,8 +39,8 @@ export default function CartPage() {
   const userId = user?.id ?? null;
   const bottleMeta: Record<BottleSize, { label: string; note: string }> = {
     "5G": { label: copy.bottleLabels.fiveG, note: copy.bottleLabels.singleNote },
-    "1L": { label: copy.bottleLabels.oneL, note: copy.bottleLabels.singleNote },
-    "500mL": { label: copy.bottleLabels.fiveHund, note: copy.bottleLabels.packNote },
+    "1L": { label: copy.bottleLabels.oneL, note: "" },
+    "500mL": { label: copy.bottleLabels.fiveHund, note: "6 pack" },
   };
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);

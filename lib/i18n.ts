@@ -733,7 +733,6 @@ export const translations: Record<Language, SiteCopy> = {
       companyLinks: [
         { label: "About", href: "/about" },
         { label: "Blog", href: "/blog" },
-        { label: "AI plan", href: "/subscription" },
       ],
       supportTitle: "Support",
       supportLinks: [

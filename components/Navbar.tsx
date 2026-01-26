@@ -11,6 +11,7 @@ import { useLanguage } from "./LanguageProvider";
 import { useAuth } from "./AuthProvider";
 import { posts } from "@/lib/posts";
 import Magnetic from "./Magnetic";
+import { useCart } from "@/components/CartProvider";
 
 function sumCart(items: Array<{ qty: number }> | null | undefined) {
   if (!items?.length) return 0;
@@ -47,6 +48,9 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { cart, openCart } = useCart();
+  const shopCartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  const displayCount = shopCartCount > 0 ? shopCartCount : cartCount;
 
   // Routing
   const pathname = usePathname();
@@ -270,12 +274,12 @@ export default function Navbar() {
 
   const navLinks = t.nav.navLinks;
   const allNavItems: Array<
-    | { key: "about" | "sustainability" | "subscription" | "blog"; label: string; type: "section"; sectionId: string }
-    | { key: "hydration"; label: string; type: "route"; href: string }
+    | { key: "about" | "sustainability" | "subscription" | "blog" | "shop"; label: string; type: "section"; sectionId: string }
+    | { key: "hydration" | "shop"; label: string; type: "route"; href: string }
   > = [
       { key: "about", label: navLinks.about, type: "section", sectionId: "about" },
       { key: "sustainability", label: navLinks.sustainability, type: "section", sectionId: "sustainability" },
-      { key: "subscription", label: navLinks.subscription, type: "section", sectionId: "subscription" },
+      { key: "shop", label: "Shop", type: "route", href: "/shop" },
       { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
       { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
     ];
@@ -484,8 +488,19 @@ export default function Navbar() {
               )}
             </div>
 
-            <Link
-              href="/cart"
+
+
+            <button
+              type="button"
+              onClick={() => {
+                if (shopCartCount > 0 || pathname.includes('/shop')) {
+                  openCart();
+                } else {
+                  // Fallback to old behavior if shop is empty? 
+                  // Or just always open drawer? Use openCart() as the primary interaction now.
+                  openCart();
+                }
+              }}
               className="relative inline-flex h-10 w-10 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
               aria-label="Cart"
             >
@@ -495,12 +510,12 @@ export default function Navbar() {
                   <path d="M9 8a3 3 0 0 1 6 0" />
                 </g>
               </svg>
-              {cartCount > 0 ? (
+              {displayCount > 0 ? (
                 <span className="absolute -right-1 -top-1 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-[var(--velah)] text-[10px] font-semibold text-slate-900 grid place-items-center">
-                  {cartCount}
+                  {displayCount}
                 </span>
               ) : null}
-            </Link>
+            </button>
 
             <button
               id="mobile-nav-button"
