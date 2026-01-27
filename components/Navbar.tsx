@@ -274,13 +274,13 @@ export default function Navbar() {
 
   const navLinks = t.nav.navLinks;
   const allNavItems: Array<
-    | { key: "about" | "sustainability" | "subscription" | "blog" | "shop"; label: string; type: "section"; sectionId: string }
-    | { key: "hydration" | "shop"; label: string; type: "route"; href: string }
+    | { key: "subscription"; label: string; type: "section"; sectionId: string }
+    | { key: "about" | "sustainability" | "blog" | "hydration" | "shop"; label: string; type: "route"; href: string }
   > = [
-      { key: "about", label: navLinks.about, type: "section", sectionId: "about" },
-      { key: "sustainability", label: navLinks.sustainability, type: "section", sectionId: "sustainability" },
+      { key: "about", label: navLinks.about, type: "route", href: "/about" },
+      { key: "sustainability", label: navLinks.sustainability, type: "route", href: "/sustainability" },
       { key: "shop", label: "Shop", type: "route", href: "/shop" },
-      { key: "blog", label: navLinks.blog, type: "section", sectionId: "blog" },
+      { key: "blog", label: navLinks.blog, type: "route", href: "/blog" },
       { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
     ];
   const visibleNavItems = allNavItems;
