@@ -48,6 +48,12 @@ export default function Bottles() {
             {t.bottles.heading}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600">{t.about.paragraphs[0]}</p>
+
+          <div className="mt-8 text-center">
+            <Link href="/shop" className="btn btn-primary h-11 rounded-full px-8">
+              Go to Shop
+            </Link>
+          </div>
         </div>
 
         <div
