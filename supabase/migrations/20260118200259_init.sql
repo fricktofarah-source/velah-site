@@ -54,7 +54,7 @@ create table if not exists public.hydration_events (
 create unique index if not exists hydration_events_user_client_idx on public.hydration_events (user_id, client_event_id);
 create index if not exists hydration_events_user_day_idx on public.hydration_events (user_id, day);
 
-create or replace view public.hydration_daily_totals as
+create or replace view public.hydration_daily_totals with (security_invoker = true) as
   select
     user_id,
     day,
