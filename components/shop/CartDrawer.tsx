@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 import { BUNDLES, Product } from "@/lib/products";
-import ProductModal from "./ProductModal";
 
 export default function CartDrawer() {
     const { cart, isOpen, closeCart, updateQty, subtotal, totalDeposit, grandTotal, addItem } = useCart();
     const [isClient, setIsClient] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const visibleBundles = BUNDLES.filter(b => !cart.find(c => c.id === b.id));
 
@@ -42,23 +41,24 @@ export default function CartDrawer() {
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                         {visibleBundles.map(bundle => (
-                            <div
+                            <Link
                                 key={bundle.id}
-                                className="group relative bg-white p-3 rounded-xl border border-slate-100 hover:border-[var(--velah)]/50 transition-all shadow-sm cursor-pointer"
-                                onClick={() => setSelectedProduct(bundle)}
+                                href={`/shop/${bundle.id}`}
+                                onClick={closeCart}
+                                className="group block relative bg-white p-3 rounded-xl border border-slate-100 hover:border-[var(--velah)]/50 transition-all shadow-sm"
                             >
                                 <div className="relative w-full h-24 mb-3 bg-slate-50 rounded-lg overflow-hidden">
                                     <Image src={bundle.image} alt={bundle.name} fill className="object-cover" />
                                 </div>
                                 <h4 className="text-sm font-bold text-slate-900 leading-tight mb-1">{bundle.name}</h4>
                                 <p className="text-xs text-slate-500 mb-3">{bundle.price} AED</p>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); addItem(bundle); }}
-                                    className="w-full py-1.5 text-xs font-semibold bg-[var(--velah)] text-slate-900 rounded-full hover:bg-[#68bac8] transition-colors"
+                                <div
+                                    // This button is just for show, the parent link handles navigation
+                                    className="w-full py-1.5 text-xs font-semibold bg-[var(--velah)] text-slate-900 rounded-full group-hover:bg-[#68bac8] transition-colors"
                                 >
-                                    Add to Cart
-                                </button>
-                            </div>
+                                    View Details
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -150,16 +150,6 @@ export default function CartDrawer() {
                     )}
                 </div>
             </div>
-
-            {/* Product Modal from Suggestions */}
-            {selectedProduct && (
-                <div className="relative z-[150]">
-                    <ProductModal
-                        product={selectedProduct}
-                        onClose={() => setSelectedProduct(null)}
-                    />
-                </div>
-            )}
         </>
     );
 }
