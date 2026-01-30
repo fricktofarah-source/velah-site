@@ -229,6 +229,11 @@ type CartCopy = {
   };
 };
 
+type ShopCopy = {
+  addToCart: string;
+  backToShop: string;
+};
+
 type ContactCopy = {
   label: string;
   title: string;
@@ -403,6 +408,7 @@ type SiteCopy = {
   orderPage: OrderPageCopy;
   orderBuilder: OrderBuilderCopy;
   cart: CartCopy;
+  shop: ShopCopy;
   contact: ContactCopy;
   contactForm: ContactFormCopy;
   faq: FaqCopy;
@@ -824,6 +830,10 @@ export const translations: Record<Language, SiteCopy> = {
         singleNote: "Single bottle",
         packNote: "Sold in packs of 6",
       },
+    },
+    shop: {
+      addToCart: "Add to cart",
+      backToShop: "Back to shop",
     },
     contact: {
       label: "Contact",
@@ -1438,6 +1448,10 @@ export const translations: Record<Language, SiteCopy> = {
         singleNote: "عبوة واحدة",
         packNote: "تباع في باك ٦",
       },
+    },
+    shop: {
+      addToCart: "أضف إلى السلة",
+      backToShop: "العودة إلى المتجر",
     },
     contact: {
       label: "تواصل",
