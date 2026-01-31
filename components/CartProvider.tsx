@@ -32,6 +32,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [isInitialized, setIsInitialized] = useState(false);
     // Track who "owns" the currently loaded local cart to handle merge logic
     const [localCartOwner, setLocalCartOwner] = useState<string>("guest");
+    // "idle" | "syncing" | "synced"
+    const [dbSyncStatus, setDbSyncStatus] = useState<"idle" | "syncing" | "synced">("idle");
     const { user } = useAuth();
 
     // Load from local storage on mount
@@ -57,9 +59,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     // Sync with Server on User Login / Change
     useEffect(() => {
-        if (!isInitialized || !user) return;
+        if (!isInitialized) return;
+
+        // Reset sync status when user changes (e.g. logout or switch)
+        if (!user) {
+            setDbSyncStatus("idle");
+            return;
+        }
 
         const syncCart = async () => {
+            setDbSyncStatus("syncing");
             try {
                 // 1. Fetch Server Cart
                 const { data, error } = await supabase
@@ -70,15 +79,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
                 if (error && error.code !== 'PGRST116') {
                     console.error("Error fetching server cart:", error);
+                    setDbSyncStatus("synced"); // Fail safe to allow saving future changes? Or keep trying?
                     return;
                 }
 
                 const serverItems: CartItem[] = (data?.items as any) || [];
 
                 // 2. Merge Logic
-                // If local cart is "guest" and has items, merge into server.
-                // If local cart is already owned by this user, or empty, trust the server (or just keep sync).
-
                 if (localCartOwner === "guest" && cart.length > 0) {
                     // MERGE: Guest -> Server
                     const merged = [...serverItems];
@@ -86,30 +93,69 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     cart.forEach(localItem => {
                         const existingIdx = merged.findIndex(i => i.id === localItem.id);
                         if (existingIdx >= 0) {
-                            // Add quantities? Or overwrite? 
-                            // Usually Add is expected behavior when "logging in with items in basket".
                             merged[existingIdx].qty += localItem.qty;
                         } else {
                             merged.push(localItem);
                         }
                     });
 
-                    // Update State (this will trigger the Save effect)
                     setCart(merged);
+                    // We update owner immediately so the subsequent Save effect knows we are owning this now
                     setLocalCartOwner(user.id);
                 } else {
                     // SYNC: Server -> Client
-                    // If we are just loading firmly as the user, take server state.
-                    // This handles the "Open on Phone" case.
                     setCart(serverItems);
                     setLocalCartOwner(user.id);
                 }
             } catch (err) {
                 console.error("Sync failed", err);
+            } finally {
+                setDbSyncStatus("synced");
             }
         };
 
         syncCart();
+
+        // 3. Realtime Subscription
+        const channel = supabase
+            .channel('cart_updates')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'order_carts',
+                    filter: `user_id=eq.${user.id}`,
+                },
+                (payload) => {
+                    // When an update comes in from another device
+                    const newItems = (payload.new as any).items as CartItem[];
+                    if (newItems) {
+                        // We simply replace our cart with the server version
+                        // We need to be careful not to create a loop, but because we only SAVE on local change,
+                        // and setFromExternal doesn't trigger a user-initiated change event in some architectures, 
+                        // but here `cart` is state. 
+                        // To avoid loop: The Save effect will see `cart` change. It will try to upsert. 
+                        // The upsert will trigger Realtime. Loop!
+                        // FIX: We need a way to distinguish "Local Change" from "Remote Change".
+                        // However, for this MVP, if the content is identical, Supabase might filter, 
+                        // or we can check equality before setting.
+
+                        setCart((current) => {
+                            // Deep compare simple check
+                            if (JSON.stringify(current) === JSON.stringify(newItems)) {
+                                return current;
+                            }
+                            return newItems;
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, isInitialized]); // Run when user changes (login) or init finishes
 
@@ -117,7 +163,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!isInitialized) return;
 
-        // Local Save (with owner metadata)
+        // Local Save (Always save locally for offline/reloads)
         const payload = {
             items: cart,
             ownerId: user?.id || "guest"
@@ -125,8 +171,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
 
         // Server Save
-        if (user) {
-            // Debounce could be good here, but for now direct save is okay for low volume
+        // Only save if we have a user AND we are "synced". 
+        // This prevents overwriting server data with "empty" local data during the split-second before fetch completes.
+        if (user && dbSyncStatus === "synced") {
             supabase
                 .from('order_carts')
                 .upsert({
@@ -138,7 +185,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     if (error) console.error("Error saving cart to server:", error);
                 });
         }
-    }, [cart, isInitialized, user]);
+    }, [cart, isInitialized, user, dbSyncStatus]);
 
     const openCart = () => setIsOpen(true);
     const closeCart = () => setIsOpen(false);
