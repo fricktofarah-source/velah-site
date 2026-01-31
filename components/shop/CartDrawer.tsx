@@ -52,12 +52,16 @@ export default function CartDrawer() {
                                 </div>
                                 <h4 className="text-sm font-bold text-slate-900 leading-tight mb-1">{bundle.name}</h4>
                                 <p className="text-xs text-slate-500 mb-3">{bundle.price} AED</p>
-                                <div
-                                    // This button is just for show, the parent link handles navigation
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault(); // Prevent navigating to detail page when adding to cart
+                                        e.stopPropagation(); // Prevent the parent Link's onClick from firing
+                                        addItem(bundle, 1);
+                                    }}
                                     className="w-full py-1.5 text-xs font-semibold bg-[var(--velah)] text-slate-900 rounded-full group-hover:bg-[#68bac8] transition-colors"
                                 >
-                                    View Details
-                                </div>
+                                    Add to Cart
+                                </button>
                             </Link>
                         ))}
                     </div>
@@ -82,9 +86,9 @@ export default function CartDrawer() {
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 text-slate-500">
                                 <p>Your cart is empty.</p>
-                                <button onClick={closeCart} className="text-[#2C7A85] font-medium hover:underline">
+                                <Link href="/shop" onClick={closeCart} className="text-[#2C7A85] font-medium hover:underline">
                                     Start Shopping
-                                </button>
+                                </Link>
                             </div>
                         ) : (
                             <ul className="space-y-6">
