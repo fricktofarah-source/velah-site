@@ -15,7 +15,7 @@ const LOGO_TOTAL_DURATION = 8.5;
 
 export default function AnimatedVelahLogo() {
   useGSAP(() => {
-    const path = document.querySelector(".logo-path");
+    const path = document.querySelector(".logo-path") as SVGPathElement;
     const length = path ? path.getTotalLength() : 1000; // Fallback to a large number if path is not immediately available
 
     gsap.set(".logo-path", {
