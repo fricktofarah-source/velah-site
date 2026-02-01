@@ -3,10 +3,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function POST(req: Request) {
   try {
@@ -18,8 +16,7 @@ export async function POST(req: Request) {
     }
 
     // Use anon key to validate the JWT and get the user
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-    const { data: userRes, error: userErr } = await supabase.auth.getUser(token);
+    const { data: userRes, error: userErr } = await supabaseServer.auth.getUser(token);
     if (userErr || !userRes?.user?.email) {
       return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
     }
@@ -27,8 +24,7 @@ export async function POST(req: Request) {
     const email = userRes.user.email.toLowerCase();
 
     // Promote newsletter -> confirmed
-    const admin = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-    await admin
+    await supabaseAdmin
       .from("newsletter")
       .upsert(
         { email, email_lc: email, status: "confirmed" },

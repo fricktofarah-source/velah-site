@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Product, PRODUCTS, BUNDLES } from "@/lib/products";
+import { Product } from "@/lib/products";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -83,7 +83,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     return;
                 }
 
-                const serverItems: CartItem[] = (data?.items as any) || [];
+                const serverItems: CartItem[] = (data?.items as CartItem[]) || [];
 
                 // 2. Merge Logic
                 if (localCartOwner === "guest" && cart.length > 0) {
@@ -129,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 },
                 (payload) => {
                     // When an update comes in from another device
-                    const newItems = (payload.new as any).items as CartItem[];
+                    const newItems = (payload.new as { items: CartItem[] }).items;
                     if (newItems) {
                         // We simply replace our cart with the server version
                         // We need to be careful not to create a loop, but because we only SAVE on local change,

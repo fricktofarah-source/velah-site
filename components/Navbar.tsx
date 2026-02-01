@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import AuthModal from "./AuthModal";
+
 import { supabase } from "../lib/supabaseClient";
 import { useLanguage } from "./LanguageProvider";
 import { useAuth } from "./AuthProvider";
@@ -33,16 +33,6 @@ function readLocalCartCount() {
 export default function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const { status: authStatus, user } = useAuth();
-  // Waitlist modal
-  const [open, setOpen] = useState(false);
-  const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
-  const [email, setEmail] = useState("");
-  const [zone, setZone] = useState(t.nav.waitlistModal.areaPlaceholder);
-  const [errorKey, setErrorKey] = useState<"invalid-email" | null>(null);
-
-  // Auth
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signup" | "signin">("signin");
   const [isAuthed, setIsAuthed] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,9 +55,6 @@ export default function Navbar() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langWrapRef = useRef<HTMLDivElement | null>(null);
-
-  // Refs
-  const emailRef = useRef<HTMLInputElement | null>(null);
 
   // -------- Suggestions data --------
   const baseList = posts
@@ -129,10 +116,6 @@ export default function Navbar() {
 
   // -------- Effects --------
 
-  useEffect(() => {
-    setZone(t.nav.waitlistModal.areaPlaceholder);
-  }, [t.nav.waitlistModal.areaPlaceholder]);
-
   // Auth session + listener
 
 
@@ -173,29 +156,6 @@ export default function Navbar() {
       window.removeEventListener("storage", onStorage);
     };
   }, [authStatus, user, loadCartCount]);
-
-  // Global open-waitlist trigger (from Hero)
-  useEffect(() => {
-    const onOpen = () => {
-      setOpen(true);
-      setPhase("form");
-      setErrorKey(null);
-    };
-    window.addEventListener("velah:open-waitlist", onOpen);
-    return () => window.removeEventListener("velah:open-waitlist", onOpen);
-  }, []);
-
-  // ESC closes waitlist
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
-    if (open) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
-  // Focus first input when opening waitlist
-  useEffect(() => {
-    if (open && phase === "form") setTimeout(() => emailRef.current?.focus(), 100);
-  }, [open, phase]);
 
   // Close search if clicking outside
   useEffect(() => {
@@ -290,26 +250,8 @@ export default function Navbar() {
     languageOptions.find((option) => option.code === language)?.label ?? language;
 
   // -------- Waitlist form --------
-  function validateEmail(v: string) { return /\S+@\S+\.\S+/.test(v.trim()); }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validateEmail(email)) { setErrorKey("invalid-email"); return; }
-    setErrorKey(null);
-    setPhase("sending");
-    try {
-      await fetch("/api/join-waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), zone }),
-      });
-      await new Promise((r) => setTimeout(r, 350));
-      setPhase("done");
-      localStorage.setItem("velah:waitlist", JSON.stringify({ email: email.trim(), zone, when: Date.now() }));
-    } catch {
-      setPhase("done");
-    }
-  }
+
 
   return (
     <>
@@ -578,7 +520,9 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
-                onClick={() => { setAuthMode("signin"); setAuthOpen(true); }}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('velah:open-auth', { detail: { mode: 'signin' } }));
+                }}
                 className="relative z-[60] nav-link px-0 h-auto whitespace-nowrap hidden md:inline-flex focus-ring rounded-lg"
               >
                 {t.nav.signIn}
@@ -589,7 +533,9 @@ export default function Navbar() {
             <Magnetic strength={0.4}>
               <button
                 type="button"
-                onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); }}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('velah:open-waitlist'));
+                }}
                 className="hidden md:inline-flex btn btn-primary h-9 px-3 text-sm relative z-[60] rounded-full shrink-0 focus-ring"
                 data-action="join-waitlist"
               >
@@ -654,7 +600,10 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
-                onClick={() => { setAuthMode("signin"); setAuthOpen(true); setMobileMenuOpen(false); }}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('velah:open-auth', { detail: { mode: 'signin' } }));
+                  setMobileMenuOpen(false);
+                }}
                 className="w-full text-left py-2 text-sm font-semibold text-slate-800"
               >
                 {t.nav.signIn}
@@ -662,7 +611,10 @@ export default function Navbar() {
             )}
             <button
               type="button"
-              onClick={() => { setOpen(true); setPhase("form"); setErrorKey(null); setMobileMenuOpen(false); }}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('velah:open-waitlist'));
+                setMobileMenuOpen(false);
+              }}
               className="btn btn-primary w-full justify-center h-10 mt-2"
             >
               {t.nav.joinWaitlist}
@@ -671,81 +623,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Waitlist modal */}
-      {open && (
-        <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 p-4 animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
-          <div className="card w-full max-w-lg overflow-hidden animate-pop-in">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="font-semibold">{waitlistCopy.title}</div>
-              <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>✕</button>
-            </div>
 
-            <div className="relative min-h-[260px]">
-              {/* FORM */}
-              <div className={`p-4 space-y-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "form" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <form onSubmit={submit} className="space-y-3" noValidate>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <label htmlFor="email" className="text-sm">{waitlistCopy.emailLabel}</label>
-                    <input
-                      id="email"
-                      ref={emailRef}
-                      type="email"
-                      className={`border rounded-2xl px-3 py-2 ${errorKey ? "border-red-400 focus:outline-red-500" : ""}`}
-                      value={email}
-                      onChange={(e) => { setEmail(e.target.value); if (errorKey) setErrorKey(null); }}
-                      placeholder="you@company.com"
-                      aria-invalid={errorKey ? true : false}
-                      aria-describedby={errorKey ? "email-error" : undefined}
-                    />
-                    <label htmlFor="zone" className="text-sm">{waitlistCopy.areaLabel}</label>
-                    <input
-                      id="zone"
-                      className="border rounded-2xl px-3 py-2"
-                      value={zone}
-                      placeholder={waitlistCopy.areaPlaceholder}
-                      onChange={(e) => setZone(e.target.value)}
-                    />
-                  </div>
-
-                  {errorKey && (
-                    <div id="email-error" className="text-sm text-red-600 mt-1 animate-soft-shake" role="alert" aria-live="polite">
-                      {waitlistCopy.invalidEmail}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <button type="submit" className="btn btn-primary h-10">{waitlistCopy.joinCta}</button>
-                    <div className="text-xs text-slate-500">{waitlistCopy.tagline}</div>
-                  </div>
-                </form>
-              </div>
-
-              {/* SENDING */}
-              <div className={`p-6 flex items-center justify-center gap-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "sending" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <div className="loader" aria-hidden />
-                <div className="text-sm text-slate-600">{waitlistCopy.sending}</div>
-              </div>
-
-              {/* DONE */}
-              <div className={`p-6 flex flex-col items-center justify-center gap-3 absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${phase === "done" ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                <div className="success-check" aria-hidden />
-                <div className="text-emerald-700 text-sm">{waitlistCopy.success}</div>
-                {!isAuthed ? (
-                  <div className="flex gap-2">
-                    <button type="button" className="btn btn-ghost btn-no-arrow h-9" onClick={() => setOpen(false)}>{waitlistCopy.close}</button>
-                    <button type="button" className="btn btn-primary h-9" onClick={() => { setOpen(false); setAuthMode("signup"); setAuthOpen(true); }}>
-                      {waitlistCopy.signup}
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Auth modal */}
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialMode={authMode} />
     </>
   );
 }

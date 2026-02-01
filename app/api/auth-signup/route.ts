@@ -3,13 +3,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
+import { joinWaitlist } from "@/lib/waitlist";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const REDIRECT_TO = process.env.AUTH_EMAIL_REDIRECT_TO || "https://drinkvelah.com/auth/callback";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const REDIRECT_TO = process.env.AUTH_EMAIL_REDIRECT_TO;
+
+if (!RESEND_API_KEY || !REDIRECT_TO) {
+  throw new Error("Missing RESEND_API_KEY or AUTH_EMAIL_REDIRECT_TO");
+}
 
 type SignupPayload = {
     email?: string | null;
@@ -81,12 +84,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: "Please enter your name." }, { status: 400 });
         }
 
-        const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-            auth: { persistSession: false },
-        });
-
         // 1) Create unconfirmed user
-        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
             user_metadata: { full_name: name },
@@ -111,19 +110,14 @@ export async function POST(req: Request) {
 
         if (joinList) {
             try {
-                await fetch(new URL("/api/join-waitlist", process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com"), {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    // noEmail: true → write to DB only, NO extra email (we already send the account confirmation)
-                    body: JSON.stringify({ email, noEmail: true, name }),
-                });
+                await joinWaitlist({ email, noEmail: true, name });
             } catch {
                 // ignore — account creation succeeded; waitlist is best-effort
             }
         }
 
         // 3) Generate one Supabase signup confirmation link
-        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
             type: "signup",
             email,
             password,

@@ -3,13 +3,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO || "https://drinkvelah.com/auth/reset";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO;
+
+if (!RESEND_API_KEY || !REDIRECT_TO) {
+  throw new Error("Missing RESEND_API_KEY or AUTH_PASSWORD_RESET_REDIRECT_TO");
+}
 
 type ResetPayload = {
   email?: string | null;
@@ -42,11 +44,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid email." }, { status: 400 });
     }
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-    });
-
-    const { data, error } = await admin.auth.admin.generateLink({
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
       options: { redirectTo: REDIRECT_TO },

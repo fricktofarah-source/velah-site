@@ -139,21 +139,6 @@ button,
     }
   }
 
-  .section-reveal {
-    opacity: 0;
-    transform: translateY(56px);
-    transition:
-      opacity 0.9s cubic-bezier(.22, 1, .36, 1),
-      transform 0.9s cubic-bezier(.22, 1, .36, 1);
-    transition-delay: var(--section-reveal-delay, 0s);
-    will-change: opacity, transform;
-  }
-
-  .section-reveal--visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   .scroll-video {
     position: relative;
     min-height: var(--scroll-video-min-height, 200vh);

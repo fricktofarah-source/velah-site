@@ -1,9 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
 
 export default function Microplastics() {
     const ref = useRef<HTMLElement>(null);

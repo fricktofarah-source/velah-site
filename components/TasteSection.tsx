@@ -1,22 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function TasteSection() {
-    const ref = useRef<HTMLElement>(null);
-    const parallaxEnabled = useParallaxEnabled();
-    const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-    const y = useTransform(scrollYProgress, [0, 1], [-50, 50]);
+    const sectionRef = useRef<HTMLElement>(null);
+
+    useGSAP(() => {
+        gsap.to(".taste-bg", {
+            y: -50,
+            scrollTrigger: {
+                trigger: sectionRef.current,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true,
+            },
+        });
+    }, { scope: sectionRef });
 
     return (
-        <section ref={ref} className="relative py-24 sm:py-32 bg-white overflow-hidden">
+        <section ref={sectionRef} className="relative py-24 sm:py-32 bg-white overflow-hidden">
             {/* Gentle Water Parallax Background (Moved from Pure Science) */}
-            <motion.div
-                style={parallaxEnabled ? { y } : undefined}
-                className="absolute inset-0 z-0 opacity-40 pointer-events-none"
+            <div
+                className="absolute inset-0 z-0 opacity-40 pointer-events-none taste-bg"
             >
                 <Image
                     src="/assets/water-bg.png"
@@ -24,7 +35,7 @@ export default function TasteSection() {
                     fill
                     className="object-cover scale-110"
                 />
-            </motion.div>
+            </div>
             {/* Top Blend */}
             <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white via-white/70 to-transparent" />
             {/* Bottom Blend */}
@@ -34,7 +45,7 @@ export default function TasteSection() {
                 <div className="space-y-8">
                     <h2 className="text-3xl sm:text-5xl font-bold text-slate-900 leading-tight">
                         Taste the difference. <br />
-                        <span className="text-emerald-600">Or rather, don't.</span>
+                        <span className="text-emerald-600">Or rather, don&apos;t.</span>
                     </h2>
 
                     <div className="grid sm:grid-cols-2 gap-8 text-left max-w-2xl mx-auto pt-8">

@@ -143,7 +143,7 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
       heading: "Refill, not landfill.",
       body:
         "Every Velah bottle is part of a loop. Mineral source → glass bottle → your home → return → clean → refill. Less plastic, less noise, more alignment with Dubai’s sustainability goals.",
-      bullets: ["Loop indicator rotates with scroll", "Real-time plastic savings counter (optional)"],
+      bullets: [],
       loopPoints: [
         { title: "Mineral source", detail: "Protected spring with full mineral profile." },
         { title: "Glass bottle", detail: "Reusable gallon, sanitized after each return." },
@@ -270,7 +270,7 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
       heading: "إعادة تعبئة، لا مطامر.",
       body:
         "كل قارورة من فيلا جزء من حلقة. مصدر معدني → قارورة زجاجية → منزلك → إرجاع → تنظيف → إعادة تعبئة. بلاستيك أقل، ضجيج أقل، وتوافق أكبر مع أهداف الاستدامة في الإمارات.",
-      bullets: ["تتحرك مؤشرات الحلقة مع التمرير", "عداد لتوفير البلاستيك في الوقت الحقيقي (اختياري)"],
+      bullets: [],
       loopPoints: [
         { title: "المصدر المعدني", detail: "نبع محمي ذو تركيبة معدنية كاملة." },
         { title: "القارورة الزجاجية", detail: "جالون قابل لإعادة الاستخدام يُعقم بعد كل إرجاع." },

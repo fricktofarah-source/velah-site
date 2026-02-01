@@ -4,9 +4,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
-import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const STEP_ICONS: Record<number, React.ReactElement> = {
   1: (
@@ -34,8 +37,6 @@ const STEP_ICONS: Record<number, React.ReactElement> = {
   ),
 };
 
-const ease = [0.22, 1, 0.36, 1] as const;
-
 export default function HowItWorks() {
   const { language, t } = useLanguage();
   const copy = t.howItWorks;
@@ -45,13 +46,28 @@ export default function HowItWorks() {
   const step = steps.find((s) => s.id === active) ?? steps[0];
   const stepCounterLabel = language === "AR" ? `الخطوة ${active} من ${steps.length}` : `Step ${active} of ${steps.length}`;
   const sectionRef = useRef<HTMLElement | null>(null);
-  const parallaxEnabled = useParallaxEnabled();
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-  const bgParallax = useTransform(scrollYProgress, [0, 1], [-120, 140]);
-  const fgParallax = useTransform(scrollYProgress, [0, 1], [30, -60]);
+
+  useGSAP(() => {
+    gsap.to(".how-bg", {
+      y: -80,
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+
+    gsap.to(".how-content", {
+      y: 30,
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+  }, { scope: sectionRef });
 
   useEffect(() => {
     if (!steps.some((s) => s.id === active)) {
@@ -76,11 +92,7 @@ export default function HowItWorks() {
         <Timeline steps={steps} active={active} onSelect={setActive} />
 
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <motion.div
-            key={`story-${active}`}
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease }}
+          <div
             className="space-y-6 text-center lg:text-left"
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
@@ -110,18 +122,14 @@ export default function HowItWorks() {
                 {copy.aiPlanCta}
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            key={`scene-${active}`}
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease, delay: 0.05 }}
+          <div
             className="relative overflow-hidden rounded-[3rem] border border-white/60 bg-white/30 p-8 shadow-[0_40px_120px_rgba(15,23,42,0.12)] backdrop-blur-xl"
           >
             <div className="pointer-events-none absolute inset-x-6 top-4 h-40 rounded-[2rem] bg-white/40 blur-3xl" />
             <StepScene stepId={step.id} visuals={visuals} />
-          </motion.div>
+          </div>
         </div>
       </div>
     </>
@@ -134,41 +142,23 @@ export default function HowItWorks() {
       className="relative isolate overflow-hidden py-24 sm:py-32"
       aria-labelledby="how-title"
     >
-      {parallaxEnabled ? (
-        <motion.div style={{ y: bgParallax }} className="absolute inset-0">
-          <Image
-            src="/about/Desert_camels_bg.png"
-            alt=""
-            fill
-            sizes="100vw"
-            priority={false}
-            className="object-cover object-center opacity-80 scale-x-[-1]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
-        </motion.div>
-      ) : (
-        <div className="absolute inset-0">
-          <Image
-            src="/about/Desert_camels_bg.png"
-            alt=""
-            fill
-            sizes="100vw"
-            priority={false}
-            className="object-cover object-center opacity-80 scale-x-[-1]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
-        </div>
-      )}
+      <div className="absolute inset-0 how-bg">
+        <Image
+          src="/about/Desert_camels_bg.png"
+          alt=""
+          fill
+          sizes="100vw"
+          priority={false}
+          className="object-cover object-center opacity-80 scale-x-[-1]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/40 to-white" />
+      </div>
       <div className="pointer-events-none absolute inset-x-0 top-16 mx-auto h-64 w-[80%] rounded-full bg-white/60 blur-[150px]" />
       <div className="pointer-events-none absolute left-[10%] top-12 h-56 w-56 rounded-full bg-[radial-gradient(circle,_rgba(127,203,216,0.18),_transparent_60%)] blur-3xl" />
       <div className="pointer-events-none absolute right-[5%] bottom-4 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(148,163,184,0.2),_transparent_65%)] blur-[120px]" />
-      {parallaxEnabled ? (
-        <motion.div style={{ y: fgParallax }} className="section-shell relative z-10">
-          {sectionContent}
-        </motion.div>
-      ) : (
-        <div className="section-shell relative z-10">{sectionContent}</div>
-      )}
+      <div className="section-shell relative z-10 how-content">
+        {sectionContent}
+      </div>
     </section>
   );
 }

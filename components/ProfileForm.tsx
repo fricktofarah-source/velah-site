@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AppLoader from "@/components/AppLoader";
 import { useLanguage } from "@/components/LanguageProvider";
-import { useAuth } from "@/components/AuthProvider";
+import UpdateEmail from "./Profile/UpdateEmail";
+import AccountActions from "./Profile/AccountActions";
 
 type ProfileUser = {
   id: string;
@@ -16,8 +16,6 @@ type ProfileUser = {
 export default function ProfileForm({ user }: { user: ProfileUser }) {
   const { t } = useLanguage();
   const copy = t.app.profile;
-  const router = useRouter();
-  const { session } = useAuth();
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -28,8 +26,6 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
   const [hydrationReminders, setHydrationReminders] = useState(true);
   const [deliveryReminders, setDeliveryReminders] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
-  const [emailStatus, setEmailStatus] = useState<string | null>(null);
-  const [newEmail, setNewEmail] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -98,51 +94,6 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
     setStatus(copy.statusSaved);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
-
-  const handleLogoutAll = async () => {
-    await supabase.auth.signOut({ scope: "global" });
-    router.replace("/");
-  };
-
-  const handleEmailChange = async () => {
-    const nextEmail = newEmail.trim().toLowerCase();
-    setEmailStatus(null);
-    if (!nextEmail) {
-      setEmailStatus("Enter a valid email.");
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ email: nextEmail });
-    if (error) {
-      setEmailStatus(error.message);
-      return;
-    }
-    setEmailStatus("Check your inbox to confirm the new email.");
-    setNewEmail("");
-  };
-
-  const handleDelete = async () => {
-    const sure = window.confirm(copy.deleteConfirm);
-    if (!sure) return;
-
-    setStatus(copy.statusDelete);
-    const token = session?.access_token;
-    const res = await fetch("/api/account/delete", {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
-    if (!res.ok) {
-      setStatus(copy.statusDeleteFail);
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
-
   if (loading) return <AppLoader label={copy.loadingLabel} />;
 
   return (
@@ -204,23 +155,7 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
         </label>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</p>
-        <label className="block">
-          <span className="sr-only">New email</span>
-          <input
-            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            placeholder="new@email.com"
-            value={newEmail}
-            onChange={(event) => setNewEmail(event.target.value)}
-            autoComplete="email"
-          />
-        </label>
-        <button onClick={handleEmailChange} className="btn btn-ghost h-10 rounded-full px-4">
-          Update email
-        </button>
-        {emailStatus ? <p className="text-sm text-slate-500">{emailStatus}</p> : null}
-      </div>
+      <UpdateEmail />
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.notificationsLabel}</p>
@@ -246,17 +181,7 @@ export default function ProfileForm({ user }: { user: ProfileUser }) {
 
       {status ? <p className="text-sm text-slate-500">{status}</p> : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
-        <button onClick={handleLogout} className="btn btn-ghost h-11 w-full rounded-full">
-          {copy.logout}
-        </button>
-        <button onClick={handleLogoutAll} className="btn btn-ghost h-11 w-full rounded-full">
-          Sign out everywhere
-        </button>
-        <button onClick={handleDelete} className="btn btn-ghost h-11 w-full rounded-full text-red-500">
-          {copy.delete}
-        </button>
-      </div>
+      <AccountActions />
     </div>
   );
 }

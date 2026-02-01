@@ -1,10 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
+import { motion } from "framer-motion";
 import Counter from "@/components/Counter";
-import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
 
 const STATS = [
     { value: 50, suffix: "+", label: "Bottles You Will Save", description: "Every single time you refill." },
@@ -15,12 +13,6 @@ const STATS = [
 
 export default function SustainabilityImpact() {
     const sectionRef = useRef<HTMLElement | null>(null);
-    const parallaxEnabled = useParallaxEnabled();
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start end", "end start"],
-    });
-    const bgParallax = useTransform(scrollYProgress, [0, 1], [-50, 50]);
 
     return (
         <section
@@ -41,7 +33,7 @@ export default function SustainabilityImpact() {
                         <span className="text-emerald-600">Real Change.</span>
                     </h2>
                     <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-                        Sustainability isn't just about what we've done. It's about what <em className="not-italic text-slate-900 font-medium">you will do</em>.
+                        Sustainability isn&apos;t just about what we&apos;ve done. It&apos;s about what <em className="not-italic text-slate-900 font-medium">you will do</em>.
                     </p>
                 </div>
 

@@ -1,59 +1,38 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type SectionRevealProps = {
-  children: ReactNode;
+  children: React.ReactNode;
   delay?: number;
   once?: boolean;
 };
 
-type SectionRevealStyle = CSSProperties & {
-  "--section-reveal-delay"?: string;
-};
-
 export default function SectionReveal({ children, delay = 0, once = true }: SectionRevealProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const container = useRef<HTMLDivElement | null>(null);
 
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            if (once) {
-              observer.unobserve(entry.target);
-            }
-          } else if (!once) {
-            setIsVisible(false);
-          }
-        });
+  useGSAP(() => {
+    gsap.from(container.current, {
+      opacity: 0,
+      y: 50,
+      duration: 1,
+      ease: "power2.out",
+      delay,
+      scrollTrigger: {
+        trigger: container.current,
+        start: "top 90%",
+        toggleActions: once ? "play none none none" : "play none play none",
       },
-      {
-        threshold: 0,
-        rootMargin: "0px 0px -5% 0px",
-      }
-    );
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [once]);
-
-  const style: SectionRevealStyle = delay
-    ? {
-      ["--section-reveal-delay" as const]: `${delay}s`,
-    }
-    : {};
+    });
+  }, { scope: container });
 
   return (
-    <div ref={ref} className={`section-reveal${isVisible ? " section-reveal--visible" : ""}`} style={style}>
+    <div ref={container} className="section-reveal">
       {children}
     </div>
   );

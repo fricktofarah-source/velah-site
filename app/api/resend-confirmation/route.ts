@@ -3,15 +3,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 import crypto from "crypto";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
-const EXP_HOURS = Number(process.env.WAITLIST_CONFIRM_EXP_HOURS || 24);
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL;
+const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS;
+
+if (!RESEND_API_KEY || !BASE_URL || !EXP_HOURS) {
+  throw new Error("Missing RESEND_API_KEY, WAITLIST_CONFIRM_BASE_URL, or WAITLIST_CONFIRM_EXP_HOURS");
+}
 
 // cooldown to avoid abuse
 const COOLDOWN_MIN = 15;
@@ -42,9 +44,6 @@ function htmlMessage(title: string, body: string) {
 }
 
 export async function POST(req: Request) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
   const resend = new Resend(RESEND_API_KEY);
 
   // detect content type to support JSON and HTML form posts
@@ -91,7 +90,7 @@ export async function POST(req: Request) {
     }
 
     // lookup existing row (case-insensitive)
-    const { data: rows } = await supabase
+    const { data: rows } = await supabaseAdmin
       .from("newsletter")
       .select("id, status, confirmation_sent_at, email_lc")
       .eq("email_lc", email.toLowerCase())
@@ -144,7 +143,7 @@ export async function POST(req: Request) {
 
     // issue new token + timestamp
     const token = crypto.randomUUID();
-    await supabase
+    await supabaseAdmin
       .from("newsletter")
       .update({
         confirmation_token: token,

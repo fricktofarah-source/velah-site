@@ -8,10 +8,43 @@ import TimezoneSync from "@/components/TimezoneSync";
 import { useAuth } from "@/components/AuthProvider";
 
 /* ---------- helpers ---------- */
-const clamp = (n: number, lo = 0, hi = 1_000_000) => Math.min(hi, Math.max(lo, n));
+const clamp = (n: number, lo = 0, hi = 1_00_000) => Math.min(hi, Math.max(lo, n));
 const fmt = (n: number) => new Intl.NumberFormat().format(n);
 
 type HistoryItem = { day: string; intake_ml: number };
+
+// --- NEW: Local Storage helpers for guest mode ---
+const GUEST_GOAL_KEY = "velah:hydration-guest:goal";
+const GUEST_HISTORY_KEY = "velah:hydration-guest:history";
+
+function getLocalGoal(): number | null {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem(GUEST_GOAL_KEY);
+    return raw ? Number(raw) : null;
+}
+
+function saveLocalGoal(ml: number) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(GUEST_GOAL_KEY, String(ml));
+}
+
+function getLocalHistory(): HistoryItem[] {
+    if (typeof window === "undefined") return [];
+    const raw = localStorage.getItem(GUEST_HISTORY_KEY);
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveLocalHistory(history: HistoryItem[]) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(GUEST_HISTORY_KEY, JSON.stringify(history));
+}
+
 
 export default function HydrationPage() {
     const { t } = useLanguage();
@@ -142,6 +175,38 @@ export default function HydrationPage() {
             setHistory(list);
         }
 
+        function loadGuest() {
+            const localGoal = getLocalGoal();
+            if (localGoal) {
+                setGoal(localGoal);
+                setGoalInput(String(localGoal));
+            } else {
+                setGoal(null);
+                setGoalInput("");
+            }
+
+            const localHistory = getLocalHistory();
+            const todayEntry = localHistory.find(h => h.day === today);
+            setIntake(todayEntry?.intake_ml || 0);
+            setAdjustInput(todayEntry?.intake_ml ? String(todayEntry.intake_ml) : "");
+
+            // Ensure history only contains the last 7 days
+            const start = new Date();
+            start.setDate(start.getDate() - 6);
+            const validHistory = localHistory.filter(h => h.day >= dayKey(start));
+            
+            const byDay = new Map<string, number>();
+            validHistory.forEach((r) => byDay.set(r.day, r.intake_ml));
+            const list: HistoryItem[] = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const k = dayKey(d);
+                list.push({ day: k, intake_ml: byDay.get(k) ?? 0 });
+            }
+            setHistory(list);
+        }
+
         if (userId) {
             loadAuthed(userId).catch((error) => {
                 console.warn("Failed to load hydration data for user", error);
@@ -153,11 +218,7 @@ export default function HydrationPage() {
                 setHistory([]);
             });
         } else {
-            setGoal(null);
-            setIntake(0);
-            setGoalInput("");
-            setAdjustInput("");
-            setHistory([]);
+            loadGuest();
         }
     }, [authStatus, userId, today]);
 
@@ -179,12 +240,12 @@ export default function HydrationPage() {
         if (!ml) return;
         setGoal(ml);
 
-        if (!userId) {
-            return;
-        } else {
+        if (userId) {
             await supabase
                 .from("profiles")
                 .upsert({ user_id: userId, hydration_goal_ml: ml }, { onConflict: "user_id" });
+        } else {
+            saveLocalGoal(ml);
         }
     }
 
@@ -192,9 +253,11 @@ export default function HydrationPage() {
         const v = clamp(ml);
         setIntake(v);
         setAdjustInput(String(v));
-        if (!userId) {
-            return;
-        } else {
+
+        const newHistory = history.map((d) => (d.day === today ? { ...d, intake_ml: v } : d));
+        setHistory(newHistory);
+        
+        if (userId) {
             const delta = v - intake;
             if (delta !== 0) {
                 await supabase.from("hydration_events").insert({
@@ -206,9 +269,9 @@ export default function HydrationPage() {
                     client_event_id: crypto.randomUUID(),
                 });
             }
+        } else {
+            saveLocalHistory(newHistory);
         }
-        // update history slot for today
-        setHistory((h) => h.map((d) => (d.day === today ? { ...d, intake_ml: v } : d)));
     }
 
     async function add(ml: number) {

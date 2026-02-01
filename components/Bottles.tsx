@@ -3,19 +3,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useLanguage } from "./LanguageProvider";
 import { PRODUCTS } from "@/lib/products";
 import { useCart } from "@/components/CartProvider";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const ease = [0.22, 1, 0.36, 1] as const;
-
-const revealProps = (delay = 0) => ({
-  initial: { opacity: 0, y: 32 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.35 },
-  transition: { duration: 0.9, ease, delay },
-});
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Bottles() {
   const { t } = useLanguage();
@@ -34,6 +29,29 @@ export default function Bottles() {
     "1l": "/about/1L_invisiblebg.png",
     "500ml": "/about/500mL_invisiblebg.png",
   };
+
+  useGSAP(() => {
+    gsap.from(".bottle-card", {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        ease: "power2.out",
+        stagger: 0.1,
+        scrollTrigger: {
+            trigger: ".bottle-grid",
+            start: "top 80%",
+        }
+    });
+
+    gsap.to(".bottle-image", {
+        y: -10,
+        repeat: -1,
+        yoyo: true,
+        duration: 2,
+        ease: "sine.inOut",
+        stagger: 0.2,
+    });
+  });
 
   return (
     <section id="bottles" className="relative isolate overflow-hidden bg-white py-24 sm:py-32">
@@ -58,7 +76,7 @@ export default function Bottles() {
         </div>
 
         <div
-          className="relative mt-16 flex gap-12 overflow-x-auto pb-8 pl-10 pr-24 md:grid md:grid-cols-3 md:gap-12 md:overflow-visible md:px-0 md:pb-0"
+          className="relative mt-16 flex gap-12 overflow-x-auto pb-8 pl-10 pr-24 md:grid md:grid-cols-3 md:gap-12 md:overflow-visible md:px-0 md:pb-0 bottle-grid"
           style={{ scrollSnapType: "x mandatory", scrollPaddingInline: "4.5rem" }}
         >
           {bottles.map((b, idx) => {
@@ -66,10 +84,9 @@ export default function Bottles() {
             const product = PRODUCTS.find(p => p.id === pid);
 
             return (
-              <motion.article
+              <article
                 key={b.key}
-                {...revealProps(idx * 0.08)}
-                className="group relative flex min-w-[78%] snap-center snap-always flex-col items-center gap-6 text-center md:min-w-0"
+                className="group relative flex min-w-[78%] snap-center snap-always flex-col items-center gap-6 text-center md:min-w-0 bottle-card"
               >
                 <div className="pointer-events-none absolute inset-x-0 top-8 z-[-1] h-56 w-full rounded-full bg-white/40 blur-3xl" />
                 <div className="relative flex w-full flex-col items-center">
@@ -80,7 +97,7 @@ export default function Bottles() {
                       alt={b.name}
                       fill
                       sizes="(min-width: 1024px) 16rem, (min-width: 768px) 15rem, 14rem"
-                      className="object-contain object-bottom drop-shadow-[0_45px_110px_rgba(15,23,42,0.25)] transition-transform duration-700 group-hover:scale-[1.03]"
+                      className="object-contain object-bottom drop-shadow-[0_45px_110px_rgba(15,23,42,0.25)] transition-transform duration-700 group-hover:scale-[1.03] bottle-image"
                     />
                   </div>
                   <div className="pointer-events-none absolute bottom-[-10px] h-16 w-40 rounded-full bg-gradient-to-r from-transparent via-slate-200/70 to-transparent blur-2xl sm:w-48" />
@@ -102,7 +119,7 @@ export default function Bottles() {
                     </div>
                   )}
                 </div>
-              </motion.article>
+              </article>
             );
           })}
         </div>

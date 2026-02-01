@@ -7,7 +7,6 @@ import SavingsCalculator from "@/components/SavingsCalculator";
 import TasteSection from "@/components/TasteSection";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import SectionReveal from "@/components/SectionReveal";
 
 export default function SustainabilityPage() {

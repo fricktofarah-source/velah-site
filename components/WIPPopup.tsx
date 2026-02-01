@@ -47,7 +47,7 @@ export default function WIPPopup() {
         <h2 className="text-2xl font-bold mb-4 text-slate-900">Work in Progress</h2>
         <div className="space-y-4">
           <p>
-            Please note that this website is currently a work in progress. We're actively building and refining, so some features and content may not yet be final.
+            Please note that this website is currently a work in progress. We&apos;re actively building and refining, so some features and content may not yet be final.
           </p>
           <p>
             Join our waitlist or follow our social media channels to stay updated on our progress and official launch.

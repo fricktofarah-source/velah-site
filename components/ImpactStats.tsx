@@ -1,12 +1,15 @@
 'use client';
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import Counter from "./Counter";
 import { useLanguage } from "./LanguageProvider";
-import { useParallaxEnabled } from "@/lib/useParallaxEnabled";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type ImpactCopy = ReturnType<typeof useLanguage>["t"]["impact"];
 
@@ -15,13 +18,29 @@ export default function ImpactStats() {
   const copy = t.impact;
   const stats = copy.stats;
   const sectionRef = useRef<HTMLElement | null>(null);
-  const parallaxEnabled = useParallaxEnabled();
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-  const bgParallax = useTransform(scrollYProgress, [0, 1], [-140, 180]);
-  const fgParallax = useTransform(scrollYProgress, [0, 1], [40, -60]);
+
+  useGSAP(() => {
+    gsap.to(".impact-bg", {
+      y: -80,
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+
+    gsap.to(".impact-content", {
+      y: 40,
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+  }, { scope: sectionRef });
+
 
   return (
     <section
@@ -29,42 +48,23 @@ export default function ImpactStats() {
       id="sustainability"
       className="relative isolate overflow-hidden py-28 sm:py-36"
     >
-      {parallaxEnabled ? (
-        <motion.div style={{ y: bgParallax }} className="absolute inset-0">
-          <Image
-            src="/about/Oasis_bg.png"
-            alt=""
-            fill
-            sizes="100vw"
-            priority={false}
-            className="object-cover object-bottom scale-[0.95]"
-          />
-        </motion.div>
-      ) : (
-        <div className="absolute inset-0">
-          <Image
-            src="/about/Oasis_bg.png"
-            alt=""
-            fill
-            sizes="100vw"
-            priority={false}
-            className="object-cover object-bottom scale-[0.95]"
-          />
-        </div>
-      )}
+      <div className="absolute inset-0 impact-bg">
+        <Image
+          src="/about/Oasis_bg.png"
+          alt=""
+          fill
+          sizes="100vw"
+          priority={false}
+          className="object-cover object-bottom scale-[0.95]"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-white via-white/65 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white via-white/70 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-white via-white/80 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-white via-white/80 to-transparent" />
-      {parallaxEnabled ? (
-        <motion.div style={{ y: fgParallax }} className="section-shell relative z-10">
-          <Content stats={stats} copy={copy} />
-        </motion.div>
-      ) : (
-        <div className="section-shell relative z-10">
-          <Content stats={stats} copy={copy} />
-        </div>
-      )}
+      <div className="section-shell relative z-10 impact-content">
+        <Content stats={stats} copy={copy} />
+      </div>
     </section>
   );
 }

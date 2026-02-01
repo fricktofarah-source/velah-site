@@ -1,14 +1,37 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WIPPopup from "./WIPPopup";
+import WaitlistModal from "./WaitlistModal";
+import AuthModal from "./AuthModal"; // Import AuthModal
 
 export default function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hideShell = pathname === "/auth/reset";
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false); // New state for AuthModal
+  const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signin'); // New state for AuthModal initialMode
+
+  useEffect(() => {
+    const openWaitlist = () => setIsWaitlistOpen(true);
+    window.addEventListener("velah:open-waitlist", openWaitlist);
+    return () => window.removeEventListener("velah:open-waitlist", openWaitlist);
+  }, []);
+
+  useEffect(() => {
+    const openAuth = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && (customEvent.detail.mode === 'signup' || customEvent.detail.mode === 'signin')) {
+        setAuthMode(customEvent.detail.mode);
+      }
+      setIsAuthOpen(true);
+    };
+    window.addEventListener("velah:open-auth", openAuth);
+    return () => window.removeEventListener("velah:open-auth", openAuth);
+  }, []);
 
   return (
     <>
@@ -24,6 +47,8 @@ export default function RootShell({ children }: { children: ReactNode }) {
       </main>
       {hideShell ? null : <Footer />}
       <WIPPopup />
+      <WaitlistModal open={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
+      <AuthModal open={isAuthOpen} onClose={() => setIsAuthOpen(false)} initialMode={authMode} />
     </>
   );
 }

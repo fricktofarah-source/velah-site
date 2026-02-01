@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import ProductGrid from "@/components/shop/ProductGrid";
-import Link from "next/link";
 import { PRODUCTS, BUNDLES } from "@/lib/products";
 
 export const metadata: Metadata = {

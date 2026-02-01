@@ -3,16 +3,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || "https://drinkvelah.com";
-const EXP_HOURS = Number(process.env.WAITLIST_CONFIRM_EXP_HOURS || 24);
+const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL;
+const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS;
+
+if (!BASE_URL || !EXP_HOURS) {
+  throw new Error("Missing WAITLIST_CONFIRM_BASE_URL or WAITLIST_CONFIRM_EXP_HOURS");
+}
 
 export async function GET(req: Request) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
   if (!token) {
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   }
 
   // Find pending row with matching token that is not expired
-  const { data: rows, error } = await supabase
+  const { data: rows, error } = await supabaseAdmin
     .from("newsletter")
     .select("id, confirmation_sent_at, status")
     .eq("confirmation_token", token)
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
   const row = rows[0];
   const sentAt = row.confirmation_sent_at ? new Date(row.confirmation_sent_at) : null;
-  const expiresAt = sentAt ? new Date(sentAt.getTime() + EXP_HOURS * 3600_000) : null;
+  const expiresAt = sentAt ? new Date(sentAt.getTime() + Number(EXP_HOURS) * 3600_000) : null;
   const now = new Date();
 
   if (!sentAt || !expiresAt || now > expiresAt) {
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
   }
 
   // Flip to confirmed and clear token
-  await supabase
+  await supabaseAdmin
     .from("newsletter")
     .update({ status: "confirmed", confirmation_token: null })
     .eq("id", row.id);

@@ -7,7 +7,6 @@ import { CartProvider } from "@/components/CartProvider";
 import CartDrawer from "@/components/shop/CartDrawer";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import RootShell from "@/components/RootShell";
-import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Velah",

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
-import { BUNDLES, Product } from "@/lib/products";
+import { BUNDLES } from "@/lib/products";
 
 export default function CartDrawer() {
     const { cart, isOpen, closeCart, updateQty, subtotal, totalDeposit, grandTotal, addItem } = useCart();
