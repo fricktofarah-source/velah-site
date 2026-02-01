@@ -7,10 +7,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO;
+const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO || process.env.AUTH_EMAIL_REDIRECT_TO;
 
 if (!RESEND_API_KEY || !REDIRECT_TO) {
-  throw new Error("Missing RESEND_API_KEY or AUTH_PASSWORD_RESET_REDIRECT_TO");
+  throw new Error("Missing RESEND_API_KEY or a redirect URL (AUTH_PASSWORD_RESET_REDIRECT_TO or AUTH_EMAIL_REDIRECT_TO)");
 }
 
 type ResetPayload = {
