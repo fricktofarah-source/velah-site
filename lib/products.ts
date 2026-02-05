@@ -7,6 +7,7 @@ export type Product = {
     deposit: number;
     image: string;
     isBundle?: boolean;
+    subscriptionEligible?: boolean;
 };
 
 export const PRODUCTS: Product[] = [
@@ -17,6 +18,7 @@ export const PRODUCTS: Product[] = [
         price: 25,
         deposit: 75,
         image: "/assets/velah_bottle_5g.png",
+        subscriptionEligible: true,
     },
     {
         id: "1L_single",
@@ -25,6 +27,7 @@ export const PRODUCTS: Product[] = [
         price: 7,
         deposit: 20,
         image: "/assets/velah_bottle_1l.png",
+        subscriptionEligible: true,
     },
     {
         id: "500ml_case",
@@ -33,6 +36,7 @@ export const PRODUCTS: Product[] = [
         price: 24,
         deposit: 60,
         image: "/assets/velah_bottle_500ml.png",
+        subscriptionEligible: true,
     },
 ];
 
@@ -45,6 +49,7 @@ export const BUNDLES: Product[] = [
         deposit: 270,
         image: "/assets/bundle_weekender_1769445820686.png",
         isBundle: true,
+        subscriptionEligible: true,
     },
     {
         id: "office",
@@ -54,6 +59,7 @@ export const BUNDLES: Product[] = [
         deposit: 300,
         image: "/assets/bundle_office_stock_1769445834674.png",
         isBundle: true,
+        subscriptionEligible: true,
     },
     {
         id: "variety",
@@ -63,5 +69,6 @@ export const BUNDLES: Product[] = [
         deposit: 315,
         image: "/assets/bundle_variety_pack_1769445849306.png",
         isBundle: true,
+        subscriptionEligible: true,
     },
 ];

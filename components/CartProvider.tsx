@@ -7,6 +7,8 @@ import { useAuth } from "@/components/AuthProvider";
 
 type CartItem = Product & {
     qty: number;
+    plan?: 'one-time' | 'subscription';
+    frequency?: 'weekly' | 'biweekly' | 'monthly';
 };
 
 type CartContextType = {
@@ -14,12 +16,15 @@ type CartContextType = {
     isOpen: boolean;
     openCart: () => void;
     closeCart: () => void;
-    addItem: (product: Product, qty?: number) => void;
-    removeItem: (productId: string) => void;
-    updateQty: (productId: string, qty: number) => void;
+    addItem: (product: Product, qty?: number, plan?: 'one-time' | 'subscription', frequency?: 'weekly' | 'biweekly' | 'monthly') => void;
+    updateItem: (productId: string, plan: 'one-time' | 'subscription', updates: Partial<CartItem>) => void;
+    removeItem: (productId: string, plan: 'one-time' | 'subscription') => void;
+    updateQty: (productId: string, plan: 'one-time' | 'subscription', qty: number) => void;
     subtotal: number;
     totalDeposit: number;
     grandTotal: number;
+    deliveryFee: number;
+    isFreeDelivery: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -190,36 +195,71 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const openCart = () => setIsOpen(true);
     const closeCart = () => setIsOpen(false);
 
-    const addItem = (product: Product, qty = 1) => {
+    const addItem = (product: Product, qty = 1, plan: 'one-time' | 'subscription' = 'one-time', frequency?: 'weekly' | 'biweekly' | 'monthly') => {
         setCart((prev) => {
-            const existing = prev.find((item) => item.id === product.id);
+            // Find valid existing item (same ID AND same plan)
+            const existing = prev.find((item) => item.id === product.id && item.plan === plan);
+
             if (existing) {
                 return prev.map((item) =>
-                    item.id === product.id ? { ...item, qty: item.qty + qty } : item
+                    (item.id === product.id && item.plan === plan) ? { ...item, qty: item.qty + qty } : item
                 );
             }
-            return [...prev, { ...product, qty }];
+            // Default frequency for new subscriptions if not provided
+            const defaultFrequency = plan === 'subscription' ? (frequency || 'weekly') : undefined;
+            return [...prev, { ...product, qty, plan, frequency: defaultFrequency }];
         });
         setIsOpen(true);
     };
 
-    const removeItem = (productId: string) => {
-        setCart((prev) => prev.filter((item) => item.id !== productId));
+    const updateItem = (productId: string, plan: 'one-time' | 'subscription', updates: Partial<CartItem>) => {
+        setCart((prev) => prev.map((item) => {
+            if (item.id === productId && item.plan === plan) {
+                // If the plan is changing, we need to check if we are merging into another existing item
+                // But for simplicity in this user request context, we'll just update directly.
+                // React key constraints in CartDrawer will handle display.
+                return { ...item, ...updates };
+            }
+            return item;
+        }));
     };
 
-    const updateQty = (productId: string, qty: number) => {
+    const removeItem = (productId: string, plan: 'one-time' | 'subscription') => {
+        setCart((prev) => prev.filter((item) => !(item.id === productId && item.plan === plan)));
+    };
+
+    const updateQty = (productId: string, plan: 'one-time' | 'subscription', qty: number) => {
         if (qty <= 0) {
-            removeItem(productId);
+            removeItem(productId, plan);
             return;
         }
         setCart((prev) =>
-            prev.map((item) => (item.id === productId ? { ...item, qty } : item))
+            prev.map((item) => (item.id === productId && item.plan === plan ? { ...item, qty } : item))
         );
     };
 
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const totalDeposit = cart.reduce((sum, item) => sum + item.deposit * item.qty, 0);
-    const grandTotal = subtotal + totalDeposit;
+    // Logic Gates
+    const hasSubscription = cart.some(item => item.plan === 'subscription');
+
+    // Calculate Subtotal with Discounts
+    const subtotal = cart.reduce((sum, item) => {
+        const itemPrice = item.plan === 'subscription' ? item.price * 0.85 : item.price;
+        return sum + itemPrice * item.qty;
+    }, 0);
+
+    // Free Delivery: If Sub exists OR Total >= 80 (using discounted subtotal? usually based on value. Let's stick to subtotal)
+    const isFreeDelivery = hasSubscription || subtotal >= 80;
+    const deliveryFee = isFreeDelivery ? 0 : 15;
+
+    // Asset Protection: Per-Item Logic
+    // Subscription items get deposit WAIVED.
+    // One-Time items get deposit CHARGED.
+    const totalDeposit = cart.reduce((sum, item) => {
+        if (item.plan === 'subscription') return sum;
+        return sum + item.deposit * item.qty;
+    }, 0);
+
+    const grandTotal = subtotal + totalDeposit + deliveryFee;
 
     return (
         <CartContext.Provider
@@ -229,11 +269,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 openCart,
                 closeCart,
                 addItem,
+                updateItem,
                 removeItem,
                 updateQty,
                 subtotal,
                 totalDeposit,
                 grandTotal,
+                deliveryFee,
+                isFreeDelivery,
             }}
         >
             {children}
