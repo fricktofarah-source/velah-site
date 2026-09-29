@@ -5,6 +5,19 @@ import { useEffect, useRef, useState } from "react";
 // Set by RootShell when a visitor arrives via a link with ?from= (e.g. /waitlist?from=whatsapp)
 export const WAITLIST_SOURCE_KEY = "velah:waitlist-source";
 
+// Cities to measure demand; "Other" lets people type their own
+const CITY_OPTIONS = [
+  "Dubai",
+  "Abu Dhabi",
+  "Sharjah",
+  "Ajman",
+  "Al Ain",
+  "Ras Al Khaimah",
+  "Fujairah",
+  "Umm Al Quwain",
+];
+const OTHER_CITY = "Other";
+
 function readSource() {
   try {
     return sessionStorage.getItem(WAITLIST_SOURCE_KEY) || "website";
@@ -21,6 +34,8 @@ export default function WaitlistModal({
   onClose: () => void;
 }) {
   const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [otherCity, setOtherCity] = useState("");
   const [phase, setPhase] = useState<"form" | "sending" | "done">("form");
   const [error, setError] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement | null>(null);
@@ -36,6 +51,8 @@ export default function WaitlistModal({
       setTimeout(() => emailRef.current?.focus(), 80);
     } else {
       setEmail("");
+      setCity("");
+      setOtherCity("");
     }
   }, [open]);
 
@@ -55,13 +72,16 @@ export default function WaitlistModal({
 
     const em = email.trim().toLowerCase();
     if (!validEmail(em)) return setError("Please enter a valid email.");
+    if (!city) return setError("Please choose your city.");
+    const cityValue = city === OTHER_CITY ? otherCity.trim() : city;
+    if (!cityValue) return setError("Please type your city.");
 
     try {
       setPhase("sending");
       const res = await fetch("/api/join-waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: em, source: readSource() }),
+        body: JSON.stringify({ email: em, city: cityValue, source: readSource() }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t join the waitlist.");
@@ -123,7 +143,7 @@ export default function WaitlistModal({
                     ref={emailRef}
                     type="email"
                     autoComplete="email"
-                    enterKeyHint="go"
+                    enterKeyHint="next"
                     value={email}
                     disabled={disabled}
                     onChange={(e) => setEmail(e.target.value)}
@@ -131,6 +151,46 @@ export default function WaitlistModal({
                     placeholder="you@company.com"
                     aria-invalid={!!error}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="waitlist-city" className="text-sm">
+                    City
+                  </label>
+                  <select
+                    id="waitlist-city"
+                    name="city"
+                    value={city}
+                    disabled={disabled}
+                    onChange={(e) => setCity(e.target.value)}
+                    className={`border rounded-2xl px-3 py-2 w-full bg-white focus-ring ${city ? "" : "text-slate-400"}`}
+                  >
+                    <option value="" disabled>
+                      Select your city
+                    </option>
+                    {CITY_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="text-slate-900">
+                        {option}
+                      </option>
+                    ))}
+                    <option value={OTHER_CITY} className="text-slate-900">
+                      Other
+                    </option>
+                  </select>
+                  {city === OTHER_CITY && (
+                    <input
+                      name="other-city"
+                      type="text"
+                      autoComplete="address-level2"
+                      maxLength={60}
+                      value={otherCity}
+                      disabled={disabled}
+                      onChange={(e) => setOtherCity(e.target.value)}
+                      className="border rounded-2xl px-3 py-2 w-full focus-ring"
+                      placeholder="Which city?"
+                      aria-label="Your city"
+                    />
+                  )}
                 </div>
 
                 {error && (

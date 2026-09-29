@@ -17,8 +17,9 @@ export async function POST(req: Request) {
     const userAgent = req.headers.get("user-agent") || null;
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
     const source = typeof body.source === "string" ? body.source : null;
+    const city = typeof body.city === "string" ? body.city : null;
 
-    const result = await joinWaitlist({ email, zone, noEmail, name, userAgent, ip, source });
+    const result = await joinWaitlist({ email, zone, noEmail, name, userAgent, ip, source, city });
 
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
