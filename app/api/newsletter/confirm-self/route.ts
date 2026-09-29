@@ -23,13 +23,17 @@ export async function POST(req: Request) {
 
     const email = userRes.user.email.toLowerCase();
 
-    // Promote newsletter -> confirmed
-    await supabaseAdmin
+    // Confirm an existing opt-in only; never create a subscription the user didn't ask for.
+    // email_lc is a generated column (lower(email)), so it can be filtered on but not written.
+    const { error } = await supabaseAdmin
       .from("newsletter")
-      .upsert(
-        { email, email_lc: email, status: "confirmed" },
-        { onConflict: "email_lc" }
-      );
+      .update({ status: "confirmed" })
+      .eq("email_lc", email)
+      .eq("status", "pending");
+    if (error) {
+      console.error("confirm-self: update failed", error);
+      return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

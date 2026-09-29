@@ -6,13 +6,6 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO || process.env.AUTH_EMAIL_REDIRECT_TO;
-
-if (!RESEND_API_KEY || !REDIRECT_TO) {
-  throw new Error("Missing RESEND_API_KEY or a redirect URL (AUTH_PASSWORD_RESET_REDIRECT_TO or AUTH_EMAIL_REDIRECT_TO)");
-}
-
 type ResetPayload = {
   email?: string | null;
 };
@@ -23,6 +16,14 @@ function coerceString(value: unknown) {
 }
 
 export async function POST(req: Request) {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  if (!RESEND_API_KEY) {
+    console.error("auth-reset: RESEND_API_KEY is not set");
+    return NextResponse.json({ ok: false, error: "Password reset is temporarily unavailable. Please try again later." }, { status: 500 });
+  }
+  // Must land on the reset page (not the signup callback), or the user never sees the new-password form
+  const REDIRECT_TO = process.env.AUTH_PASSWORD_RESET_REDIRECT_TO || new URL("/auth/reset", req.url).toString();
+
   try {
     const ct = req.headers.get("content-type") || "";
     const isJson = ct.includes("application/json");
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
       if (msg.includes("user not found")) {
         return NextResponse.json({ ok: true });
       }
+      console.error("auth-reset: generateLink failed", error);
       return NextResponse.json({ ok: false, error: "Could not start password reset." }, { status: 500 });
     }
 
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
     }
 
     const resend = new Resend(RESEND_API_KEY);
-    await resend.emails.send({
+    const { error: sendErr } = await resend.emails.send({
       from: "Velah <no-reply@drinkvelah.com>",
       to: email,
       subject: "Reset your Velah password",
@@ -106,9 +108,14 @@ export async function POST(req: Request) {
         </table>
       `,
     });
+    if (sendErr) {
+      console.error("auth-reset: email failed", sendErr);
+      return NextResponse.json({ ok: false, error: "Couldn’t send the reset email. Please try again." }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("auth-reset: unexpected error", err);
     return NextResponse.json({ ok: false, error: "Server error. Please try again." }, { status: 500 });
   }
 }

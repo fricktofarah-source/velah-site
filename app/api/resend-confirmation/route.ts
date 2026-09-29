@@ -7,14 +7,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 import crypto from "crypto";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL;
-const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS;
-
-if (!RESEND_API_KEY || !BASE_URL || !EXP_HOURS) {
-  throw new Error("Missing RESEND_API_KEY, WAITLIST_CONFIRM_BASE_URL, or WAITLIST_CONFIRM_EXP_HOURS");
-}
-
 // cooldown to avoid abuse
 const COOLDOWN_MIN = 15;
 
@@ -44,6 +36,13 @@ function htmlMessage(title: string, body: string) {
 }
 
 export async function POST(req: Request) {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || new URL(req.url).origin;
+  const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS || "48";
+  if (!RESEND_API_KEY) {
+    console.error("resend-confirmation: RESEND_API_KEY is not set");
+    return NextResponse.json({ ok: false, error: "Email is temporarily unavailable." }, { status: 500 });
+  }
   const resend = new Resend(RESEND_API_KEY);
 
   // detect content type to support JSON and HTML form posts

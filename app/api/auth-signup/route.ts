@@ -7,13 +7,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 import { joinWaitlist } from "@/lib/waitlist";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const REDIRECT_TO = process.env.AUTH_EMAIL_REDIRECT_TO;
-
-if (!RESEND_API_KEY || !REDIRECT_TO) {
-  throw new Error("Missing RESEND_API_KEY or AUTH_EMAIL_REDIRECT_TO");
-}
-
 type SignupPayload = {
     email?: string | null;
     password?: string | null;
@@ -40,6 +33,13 @@ function isStrongPassword(value: string) {
 }
 
 export async function POST(req: Request) {
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_API_KEY) {
+        console.error("auth-signup: RESEND_API_KEY is not set");
+        return NextResponse.json({ ok: false, error: "Sign up is temporarily unavailable. Please try again later." }, { status: 500 });
+    }
+    const REDIRECT_TO = process.env.AUTH_EMAIL_REDIRECT_TO || new URL("/auth/callback", req.url).toString();
+
     try {
         const ct = req.headers.get("content-type") || "";
         const isJson = ct.includes("application/json");
@@ -94,7 +94,10 @@ export async function POST(req: Request) {
         if (createErr) {
             const m = (createErr.message || "").toLowerCase();
             if (m.includes("already") || m.includes("registered")) {
-                return NextResponse.json({ ok: false, error: "An account with this email already exists. Try signing in." }, { status: 400 });
+                return NextResponse.json(
+                    { ok: false, error: "An account with this email already exists. Sign in, or use “Forgot password?” if you never confirmed it." },
+                    { status: 400 }
+                );
             }
             if (m.includes("password")) {
                 return NextResponse.json(
@@ -105,18 +108,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: "Couldn’t create the account. Please try again." }, { status: 400 });
         }
 
-        // 2) If they opted into the newsletter, record it as pending (no email)
-        // Inside app/api/auth-signup/route.ts, after user creation & before returning:
+        const userId = created.user?.id ?? null;
+        // Roll back the new user if we can't email them, so they aren't stuck unconfirmed
+        const failAndRollback = async (error: string) => {
+            if (userId) await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => null);
+            return NextResponse.json({ ok: false, error }, { status: 500 });
+        };
 
-        if (joinList) {
-            try {
-                await joinWaitlist({ email, noEmail: true, name });
-            } catch {
-                // ignore — account creation succeeded; waitlist is best-effort
-            }
-        }
-
-        // 3) Generate one Supabase signup confirmation link
+        // 2) Generate one Supabase signup confirmation link
         const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
             type: "signup",
             email,
@@ -124,13 +123,14 @@ export async function POST(req: Request) {
             options: { redirectTo: REDIRECT_TO },
         });
         if (linkErr || !linkData?.properties?.action_link) {
-            return NextResponse.json({ ok: false, error: "Couldn’t generate confirmation link." }, { status: 500 });
+            console.error("auth-signup: generateLink failed", linkErr);
+            return failAndRollback("Couldn’t generate confirmation link. Please try again.");
         }
         const actionLink = linkData.properties.action_link as string;
 
-        // 4) Send that single email via Resend
+        // 3) Send that single email via Resend
         const resend = new Resend(RESEND_API_KEY);
-        await resend.emails.send({
+        const { error: sendErr } = await resend.emails.send({
             from: "Velah <no-reply@drinkvelah.com>",
             to: email,
             subject: "Confirm your Velah account",
@@ -161,9 +161,23 @@ export async function POST(req: Request) {
         </div>
       `,
         });
+        if (sendErr) {
+            console.error("auth-signup: confirmation email failed", sendErr);
+            return failAndRollback("Couldn’t send the confirmation email. Please try again.");
+        }
 
-        return NextResponse.json({ ok: true, userId: created.user?.id ?? null });
-    } catch {
+        // 4) If they opted into the newsletter, record it as pending until they confirm (no extra email)
+        if (joinList) {
+            try {
+                await joinWaitlist({ email, noEmail: true, name, status: "pending" });
+            } catch {
+                // ignore — account creation succeeded; newsletter is best-effort
+            }
+        }
+
+        return NextResponse.json({ ok: true, userId });
+    } catch (err) {
+        console.error("auth-signup: unexpected error", err);
         return NextResponse.json({ ok: false, error: "Server error. Please try again." }, { status: 500 });
     }
 }

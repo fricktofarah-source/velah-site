@@ -31,6 +31,15 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = "velah:shop-cart";
 
+// order_carts.items may still hold rows from the legacy /cart page ({ size, qty }); ignore anything that isn't a shop item
+function sanitizeItems(items: unknown): CartItem[] {
+    if (!Array.isArray(items)) return [];
+    return items.filter(
+        (item): item is CartItem =>
+            !!item && typeof item.id === "string" && typeof item.price === "number" && typeof item.qty === "number"
+    );
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -39,7 +48,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [localCartOwner, setLocalCartOwner] = useState<string>("guest");
     // "idle" | "syncing" | "synced"
     const [dbSyncStatus, setDbSyncStatus] = useState<"idle" | "syncing" | "synced">("idle");
-    const { user } = useAuth();
+    const { status: authStatus, user } = useAuth();
 
     // Load from local storage on mount
     useEffect(() => {
@@ -49,10 +58,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 const parsed = JSON.parse(raw);
                 // Handle legacy array format (treat as guest) vs new object format
                 if (Array.isArray(parsed)) {
-                    setCart(parsed);
+                    setCart(sanitizeItems(parsed));
                     setLocalCartOwner("guest");
                 } else if (parsed && typeof parsed === 'object') {
-                    setCart(parsed.items || []);
+                    setCart(sanitizeItems(parsed.items));
                     setLocalCartOwner(parsed.ownerId || "guest");
                 }
             } catch (e) {
@@ -64,11 +73,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     // Sync with Server on User Login / Change
     useEffect(() => {
-        if (!isInitialized) return;
+        if (!isInitialized || authStatus === "loading") return;
 
         // Reset sync status when user changes (e.g. logout or switch)
         if (!user) {
             setDbSyncStatus("idle");
+            // Signed out: drop the previous user's cart so it isn't merged back in as a "guest" cart
+            // on the next sign-in (which doubled quantities) or shown to someone else on this device
+            if (authStatus === "ready" && localCartOwner !== "guest") {
+                setCart([]);
+                setLocalCartOwner("guest");
+            }
             return;
         }
 
@@ -88,15 +103,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     return;
                 }
 
-                const serverItems: CartItem[] = (data?.items as CartItem[]) || [];
+                const serverItems = sanitizeItems(data?.items);
 
                 // 2. Merge Logic
                 if (localCartOwner === "guest" && cart.length > 0) {
-                    // MERGE: Guest -> Server
-                    const merged = [...serverItems];
+                    // MERGE: Guest -> Server (same product on a different plan stays a separate line)
+                    const merged = serverItems.map((item) => ({ ...item }));
 
                     cart.forEach(localItem => {
-                        const existingIdx = merged.findIndex(i => i.id === localItem.id);
+                        const existingIdx = merged.findIndex(i => i.id === localItem.id && i.plan === localItem.plan);
                         if (existingIdx >= 0) {
                             merged[existingIdx].qty += localItem.qty;
                         } else {
@@ -134,8 +149,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 },
                 (payload) => {
                     // When an update comes in from another device
-                    const newItems = (payload.new as { items: CartItem[] }).items;
-                    if (newItems) {
+                    const rawItems = (payload.new as { items?: unknown }).items;
+                    if (rawItems) {
+                        const newItems = sanitizeItems(rawItems);
                         // We simply replace our cart with the server version
                         // We need to be careful not to create a loop, but because we only SAVE on local change,
                         // and setFromExternal doesn't trigger a user-initiated change event in some architectures, 
@@ -162,7 +178,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             supabase.removeChannel(channel);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, isInitialized]); // Run when user changes (login) or init finishes
+    }, [user, isInitialized, authStatus]); // Run when user changes (login/logout) or init finishes
 
     // Save to local storage AND Server on change
     useEffect(() => {
@@ -171,7 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Local Save (Always save locally for offline/reloads)
         const payload = {
             items: cart,
-            ownerId: user?.id || "guest"
+            ownerId: localCartOwner
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
 
@@ -190,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     if (error) console.error("Error saving cart to server:", error);
                 });
         }
-    }, [cart, isInitialized, user, dbSyncStatus]);
+    }, [cart, isInitialized, user, dbSyncStatus, localCartOwner]);
 
     const openCart = () => setIsOpen(true);
     const closeCart = () => setIsOpen(false);

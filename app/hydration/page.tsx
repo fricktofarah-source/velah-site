@@ -238,12 +238,20 @@ export default function HydrationPage() {
     async function saveGoal() {
         const ml = clamp(Number(goalInput || "0"));
         if (!ml) return;
+        const previousGoal = goal;
         setGoal(ml);
 
         if (userId) {
-            await supabase
+            const { error } = await supabase
                 .from("profiles")
                 .upsert({ user_id: userId, hydration_goal_ml: ml }, { onConflict: "user_id" });
+            if (error) {
+                console.warn("Failed to save hydration goal", error);
+                setGoal(previousGoal);
+                setLoadError("Couldn't save your goal. Please try again.");
+                return;
+            }
+            setLoadError(null);
         } else {
             saveLocalGoal(ml);
         }
@@ -251,6 +259,8 @@ export default function HydrationPage() {
 
     async function setTotal(ml: number) {
         const v = clamp(ml);
+        const previousIntake = intake;
+        const previousHistory = history;
         setIntake(v);
         setAdjustInput(String(v));
 
@@ -258,9 +268,9 @@ export default function HydrationPage() {
         setHistory(newHistory);
         
         if (userId) {
-            const delta = v - intake;
+            const delta = v - previousIntake;
             if (delta !== 0) {
-                await supabase.from("hydration_events").insert({
+                const { error } = await supabase.from("hydration_events").insert({
                     user_id: userId,
                     day: today,
                     amount_ml: delta,
@@ -268,6 +278,16 @@ export default function HydrationPage() {
                     source: "hydration_page",
                     client_event_id: crypto.randomUUID(),
                 });
+                if (error) {
+                    // Roll back so the page doesn't show water that was never saved
+                    console.warn("Failed to log hydration", error);
+                    setIntake(previousIntake);
+                    setAdjustInput(String(previousIntake));
+                    setHistory(previousHistory);
+                    setLoadError("Couldn't save that entry. Please try again.");
+                    return;
+                }
+                setLoadError(null);
             }
         } else {
             saveLocalHistory(newHistory);

@@ -19,7 +19,9 @@ export default function TimezoneSync() {
       try {
         const cached = window.localStorage.getItem(storageKey);
         if (cached === timeZone) return;
-        await supabase.from("profiles").upsert({ user_id: userId, time_zone: timeZone }, { onConflict: "user_id" });
+        const { error } = await supabase.from("profiles").upsert({ user_id: userId, time_zone: timeZone }, { onConflict: "user_id" });
+        // Only cache on success, otherwise a failed write is never retried
+        if (error) throw error;
         window.localStorage.setItem(storageKey, timeZone);
       } catch (error) {
         console.warn("Failed to sync timezone", error);

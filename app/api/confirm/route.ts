@@ -5,15 +5,10 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL;
-const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS;
-
-if (!BASE_URL || !EXP_HOURS) {
-  throw new Error("Missing WAITLIST_CONFIRM_BASE_URL or WAITLIST_CONFIRM_EXP_HOURS");
-}
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
+  const BASE_URL = process.env.WAITLIST_CONFIRM_BASE_URL || url.origin;
+  const EXP_HOURS = process.env.WAITLIST_CONFIRM_EXP_HOURS || "48";
   const token = url.searchParams.get("token");
   if (!token) {
     return NextResponse.redirect(`${BASE_URL}/confirm/invalid`);
