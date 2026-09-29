@@ -2,6 +2,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
+// Set by RootShell when a visitor arrives via a link with ?from= (e.g. /waitlist?from=whatsapp)
+export const WAITLIST_SOURCE_KEY = "velah:waitlist-source";
+
+function readSource() {
+  try {
+    return sessionStorage.getItem(WAITLIST_SOURCE_KEY) || "website";
+  } catch {
+    return "website";
+  }
+}
+
 export default function WaitlistModal({
   open,
   onClose,
@@ -50,7 +61,7 @@ export default function WaitlistModal({
       const res = await fetch("/api/join-waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: em }),
+        body: JSON.stringify({ email: em, source: readSource() }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Couldn’t join the waitlist.");
@@ -154,7 +165,7 @@ export default function WaitlistModal({
             >
               <div className="success-check" aria-hidden />
               <div className="text-emerald-700 text-sm text-center">
-                You're on the list! We'll be in touch.
+                You&apos;re on the list! We&apos;ll be in touch.
               </div>
               <button className="btn btn-ghost btn-no-arrow h-9 focus-ring" onClick={onClose}>
                 Close

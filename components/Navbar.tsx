@@ -55,6 +55,7 @@ export default function Navbar() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langWrapRef = useRef<HTMLDivElement | null>(null);
+  const accountWrapRef = useRef<HTMLDivElement | null>(null);
 
   // -------- Suggestions data --------
   const baseList = posts
@@ -195,6 +196,32 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [mobileMenuOpen]);
 
+  // Close account dropdown on outside click
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!accountWrapRef.current) return;
+      if (!accountWrapRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
+
+  // Lock body scroll when mobile menu is open; clear search state on close
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      // Reset shared search state so it doesn't leak between mobile/desktop
+      setQuery("");
+      setOpenSuggest(false);
+      setActiveIdx(-1);
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
   // --- NEW: subtle hide-on-scroll, reveal on scroll-up (UI-only) ---
   const [hidden, setHidden] = useState(false);
   const lastYRef = useRef(0);
@@ -244,7 +271,6 @@ export default function Navbar() {
       { key: "hydration", label: navLinks.hydration, type: "route", href: "/hydration" },
     ];
   const visibleNavItems = allNavItems;
-  const waitlistCopy = t.nav.waitlistModal;
   const languageOptions = t.nav.languages;
   const currentLanguageLabel =
     languageOptions.find((option) => option.code === language)?.label ?? language;
@@ -434,15 +460,7 @@ export default function Navbar() {
 
             <button
               type="button"
-              onClick={() => {
-                if (shopCartCount > 0 || pathname.includes('/shop')) {
-                  openCart();
-                } else {
-                  // Fallback to old behavior if shop is empty? 
-                  // Or just always open drawer? Use openCart() as the primary interaction now.
-                  openCart();
-                }
-              }}
+              onClick={openCart}
               className="relative inline-flex h-10 w-10 items-center justify-center text-slate-700 hover:text-slate-900 focus-ring rounded-lg"
               aria-label="Cart"
             >
@@ -485,7 +503,7 @@ export default function Navbar() {
 
             {/* Account / Sign in (text-only) */}
             {isAuthed ? (
-              <div className="relative">
+              <div ref={accountWrapRef} className="relative">
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
@@ -548,10 +566,49 @@ export default function Navbar() {
 
       <div
         id="mobile-nav-menu"
-        className={`md:hidden fixed top-[4.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 transition-all duration-200 ease-out ${mobileMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+        className={`md:hidden fixed top-[5.5rem] sm:top-[6.5rem] left-0 right-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 transition-all duration-200 ease-out ${mobileMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
           }`}
       >
         <div className="px-4 py-4 space-y-2">
+          {/* Mobile search */}
+          <div className="pb-3 mb-2 border-b border-slate-100">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const list = query.trim() ? filtered : defaults;
+                if (list[0]) { selectSuggestion(list[0]); setMobileMenuOpen(false); }
+              }}
+              className="relative"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none">
+                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.71.71l.27.28v.79L20 20.5 21.5 19l-6-5zM10 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+              </svg>
+              <input
+                type="search"
+                placeholder={t.nav.searchPlaceholder}
+                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm focus-ring"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setOpenSuggest(true); setActiveIdx(-1); }}
+                onFocus={() => setOpenSuggest(true)}
+                onKeyDown={onSearchKeyDown}
+              />
+              {openSuggest && ((query.trim() ? filtered : defaults).length > 0) && (
+                <div className="mt-1 rounded-xl border bg-white shadow-lg overflow-hidden" role="listbox">
+                  {(query.trim() ? filtered : defaults).map((s, i) => (
+                    <button
+                      key={`mobile-${s.slug}`}
+                      role="option"
+                      aria-selected={i === activeIdx}
+                      className={`w-full text-left px-3 py-2.5 text-sm ${i === activeIdx ? "bg-slate-50" : "bg-white"} hover:bg-slate-50`}
+                      onClick={() => { selectSuggestion(s); setMobileMenuOpen(false); }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </form>
+          </div>
           {visibleNavItems.map((item) =>
             item.type === "section" ? (
               <button

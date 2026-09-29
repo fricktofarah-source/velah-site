@@ -1,7 +1,6 @@
 // components/about/AnimatedVelahLogo.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
@@ -10,8 +9,6 @@ const LOGO_OUTER_PATH =
 const LOGO_WAVE_PATH =
   "M643,589h-14.5c-26.43,0-58.34-25.24-75.01-43.99-48.65-54.67-97.31-133.12-182.86-122.89-99.44,11.9-116.5,145.81-21.59,177.33,58.26,19.35,111.82-14.69,150.47-55.44,4-4.22,6.09-11.11,13.01-11.05,5.98.05,8.51,7.35,11.97,11.05,40.06,42.89,95.85,77.53,156.19,53.17,84.48-34.11,70.51-153.47-15.48-172.88-54.04-12.2-99.58,15.43-135.02,53.19,31.39,34.27,54.25,76.98,93.9,102.93l18.92,8.58";
 const LOGO_FULL_PATH = `${LOGO_OUTER_PATH}Z${LOGO_WAVE_PATH}Z`;
-
-const LOGO_TOTAL_DURATION = 8.5;
 
 export default function AnimatedVelahLogo() {
   useGSAP(() => {

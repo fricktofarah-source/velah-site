@@ -9,6 +9,10 @@ export default function WIPPopup() {
   const { user, status } = useAuth();
 
   useEffect(() => {
+    // Visitors arriving from the /waitlist link go straight to the waitlist form, so skip this popup for the visit
+    if (new URLSearchParams(window.location.search).has('waitlist')) {
+      sessionStorage.setItem('wipPopupShownThisSession', 'true');
+    }
     const hasBeenShownThisSession = sessionStorage.getItem('wipPopupShownThisSession') === 'true';
 
     if (hasBeenShownThisSession) {

@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, type ReactNode } from "react";
+import Link from "next/link";
+import { useRef } from "react";
 import { ABOUT_COPY } from "@/lib/aboutCopy";
 import BottleCarouselStage from "@/components/BottleCarouselStage";
 import { useLanguage } from "./LanguageProvider";
@@ -75,7 +76,7 @@ export default function Hero() {
   return (
     <section
       ref={container}
-      className="relative isolate overflow-hidden bg-gradient-to-b from-white via-[#f6fbfb] to-white pb-12 pt-0 sm:pb-24 sm:pt-8"
+      className="relative isolate overflow-hidden bg-[#f0ebe3] bg-gradient-to-b from-white via-[#f6fbfb] to-white pb-12 pt-0 sm:pb-24 sm:pt-8"
       data-section="hero"
     >
       <div className="absolute inset-0">
@@ -117,19 +118,35 @@ export default function Hero() {
                 </span>
               ))}
             </div>
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start hero-bullets">
+              <Link href="/shop" className="btn btn-primary h-12 rounded-full px-8 text-base font-semibold shadow-lg shadow-[var(--velah)]/20">
+                {copy.shopCta}
+              </Link>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('velah:open-waitlist'))}
+                className="btn btn-ghost h-12 rounded-full px-8 text-base font-semibold border border-slate-200"
+              >
+                {copy.waitlistCta}
+              </button>
+            </div>
           </div>
           <div
             className="relative mx-auto flex w-full max-w-4xl flex-col items-center gap-6 hero-carousel"
           >
             <BottleCarouselStage shots={copy.carouselShots} heightClass="h-[70vh] sm:h-[80vh]" showBackground={false} />
-            <div className="text-center text-sm text-slate-500">
+            <button
+              type="button"
+              onClick={() => document.getElementById('bottles')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="text-center text-sm text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+            >
               {copy.scrollHint}
               <span
                 className="mt-3 block text-lg text-slate-400 hero-scroll-hint"
               >
                 ↓
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>

@@ -74,7 +74,7 @@ export default function FlowSection({ copy }: { copy: AboutCopy["flow"] }) {
                 <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600 flow-body">{copy.body}</p>
             </div>
             <div className="relative mt-12 grid gap-10 lg:grid-cols-3 flow-steps">
-                {copy.steps.map((step, idx) => (
+                {copy.steps.map((step) => (
                     <div
                         key={step.title}
                         className="group relative z-10 pl-12 text-center lg:text-left"

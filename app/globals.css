@@ -5,6 +5,7 @@
 /* --- Base tokens & global behaviors --- */
 :root {
   --velah: #7FCBD8;
+  color-scheme: light;
 }
 
 /* Smooth anchor scroll */

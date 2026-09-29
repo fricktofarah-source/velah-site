@@ -60,7 +60,7 @@ export default function ContactForm() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{copy.nameLabel} <span className="normal-case tracking-normal font-normal">{copy.optionalLabel}</span></span>
             <input
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus-ring"
               value={name}
@@ -102,16 +102,22 @@ export default function ContactForm() {
       </label>
       <button
         type="submit"
-        className="btn btn-primary h-12 w-full rounded-full"
+        className="btn btn-primary h-12 w-full rounded-full gap-2"
         disabled={status === "sending"}
       >
+        {status === "sending" && <span className="loader" />}
         {status === "sending" ? copy.sending : copy.send}
       </button>
       {status === "success" ? (
-        <p className="text-sm text-slate-600">{copy.success}</p>
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+          <span className="success-check shrink-0" />
+          {copy.success}
+        </div>
       ) : null}
       {status === "error" ? (
-        <p className="text-sm text-red-500">{copy.error}</p>
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+          {copy.error}
+        </div>
       ) : null}
     </form>
   );

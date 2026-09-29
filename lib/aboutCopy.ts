@@ -13,6 +13,8 @@ export type AboutCopy = {
     body: string;
     bullets: string[];
     scrollHint: string;
+    shopCta: string;
+    waitlistCta: string;
     carouselShots: CarouselShot[];
   };
   problem: {
@@ -78,6 +80,8 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
         "Pure mineral water. In a city built on desert. Velah delivers real mineral water in reusable glass gallons designed for Dubai’s health-focused, eco-aware residents.",
       bullets: [],
       scrollHint: "Scroll to discover the story",
+      shopCta: "Shop Now",
+      waitlistCta: "Join Waitlist",
       carouselShots: [
         {
           image: "/about/5G_Invisiblebg.png",
@@ -205,6 +209,8 @@ export const ABOUT_COPY: Record<Language, AboutCopy> = {
         "مياه معدنية نقية في مدينة بُنيت فوق الرمال. فيلا توصل مياهًا معدنية حقيقية في قوارير زجاجية قابلة لإعادة الاستخدام، صُممت لجيل دبي المهتم بالصحة والبيئة.",
       bullets: [],
       scrollHint: "تابع التمرير لاكتشاف القصة",
+      shopCta: "تسوّق الآن",
+      waitlistCta: "انضم إلى قائمة الانتظار",
       carouselShots: [
         {
           image: "/about/5G_Invisiblebg.png",

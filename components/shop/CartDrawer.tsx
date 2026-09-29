@@ -7,9 +7,8 @@ import { useCart } from "@/components/CartProvider";
 import { BUNDLES } from "@/lib/products";
 
 export default function CartDrawer() {
-    const { cart, isOpen, closeCart, updateQty, subtotal, totalDeposit, grandTotal, addItem, deliveryFee, isFreeDelivery, removeItem, updateItem } = useCart();
+    const { cart, isOpen, closeCart, updateQty, subtotal, totalDeposit, grandTotal, addItem, deliveryFee, isFreeDelivery, updateItem } = useCart();
     const [isClient, setIsClient] = useState(false);
-    const [showInfo, setShowInfo] = useState(false); // New state for info toggle
 
     const visibleBundles = BUNDLES.filter(b => !cart.find(c => c.id === b.id));
 
@@ -44,14 +43,16 @@ export default function CartDrawer() {
                 onClick={closeCart}
             />
 
-            {/* Main Container for Drawers - Flex Row, aligned right */}
+            {/* Main Container for Drawers - Flex Row, aligned right.
+                Forced LTR: in Arabic (RTL) the row flips and the closed cart only slides halfway off screen */}
             <div
+                dir="ltr"
                 className={`fixed inset-y-0 right-0 z-[101] flex items-stretch h-full pointer-events-none`}
             >
 
-                {/* SIDE CAR (Upsells) - Slides out to the left of the main cart */}
+                {/* SIDE CAR (Upsells) - Hidden on mobile, slides out on larger screens */}
                 <div
-                    className={`w-72 bg-white/95 backdrop-blur shadow-xl border-r border-slate-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col will-change-transform ${isOpen && visibleBundles.length > 0 ? "translate-x-0 opacity-100 pointer-events-auto" : "translate-x-12 opacity-0 pointer-events-none"
+                    className={`hidden md:flex w-72 bg-white/95 backdrop-blur shadow-xl border-r border-slate-100 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex-col will-change-transform ${isOpen && visibleBundles.length > 0 ? "translate-x-0 opacity-100 pointer-events-auto" : "translate-x-12 opacity-0 pointer-events-none"
                         }`}
                     style={{ transitionDelay: isOpen ? "0.15s" : "0s" }}
                 >
@@ -97,8 +98,8 @@ export default function CartDrawer() {
                     <div className="bg-white z-10 flex flex-col border-b border-slate-100">
                         <div className="p-6 pb-4 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-900 tracking-tight">Your Ritual</h2>
-                            <button onClick={closeCart} className="p-2 -mr-2 text-slate-400 hover:text-slate-600">
-                                ✕
+                            <button onClick={closeCart} className="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Close cart">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6L6 18M6 6l12 12"/></svg>
                             </button>
                         </div>
 
@@ -127,9 +128,16 @@ export default function CartDrawer() {
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
                         {cart.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 text-slate-500">
-                                <p>Your cart is empty.</p>
-                                <Link href="/shop" onClick={closeCart} className="text-[#2C7A85] font-medium hover:underline">
+                            <div className="h-full flex flex-col items-center justify-center text-center space-y-5 text-slate-500 py-12">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-slate-300" aria-hidden>
+                                    <g stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M6 8h12l-1 11H7L6 8Z" />
+                                        <path d="M9 8a3 3 0 0 1 6 0" />
+                                    </g>
+                                </svg>
+                                <p className="text-base font-medium text-slate-600">Your cart is empty</p>
+                                <p className="text-sm text-slate-400">Add some products to get started.</p>
+                                <Link href="/shop" onClick={closeCart} className="btn btn-primary rounded-full h-10 px-6 text-sm font-semibold mt-2">
                                     Start Shopping
                                 </Link>
                             </div>
@@ -202,7 +210,7 @@ export default function CartDrawer() {
                                                                         : 'border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                                                                         }`}
                                                                 >
-                                                                    {freq === 'biweekly' ? 'Bi-Weekly' : freq}
+                                                                    {freq === 'biweekly' ? 'Bi-Weekly' : 'Weekly'}
                                                                 </button>
                                                             ))}
                                                         </div>
@@ -213,8 +221,8 @@ export default function CartDrawer() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-sm font-semibold text-slate-900 self-start">
-                                            {item.price * item.qty}
+                                        <div className="text-sm font-semibold text-slate-900 self-start whitespace-nowrap">
+                                            {item.price * item.qty} AED
                                         </div>
                                     </li>
                                 ))}
@@ -298,7 +306,7 @@ export default function CartDrawer() {
                             </div>
 
                             {/* Commitment Notice */}
-                            <div className="mb-4 text-[10px] text-slate-400 leading-relaxed text-center">
+                            <div className="mb-4 text-xs text-slate-500 leading-relaxed text-center bg-slate-50 rounded-lg px-3 py-2.5">
                                 By proceeding, you agree that subscriptions cannot be cancelled until 3 billing cycles have been completed. Early cancellation may incur a fee equal to the discount received.
                             </div>
 

@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLanguage } from "./LanguageProvider";
 import { PRODUCTS } from "@/lib/products";
 import { useCart } from "@/components/CartProvider";
@@ -16,6 +17,24 @@ export default function Bottles() {
   const { t } = useLanguage();
   const { addItem } = useCart();
   const bottles = t.bottles.items;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeBottle, setActiveBottle] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollLeft = el.scrollLeft;
+    const itemWidth = el.scrollWidth / bottles.length;
+    const idx = Math.round(scrollLeft / itemWidth);
+    setActiveBottle(Math.min(idx, bottles.length - 1));
+  }, [bottles.length]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   // Mapping local bottle keys to Shop IDs
   const productMap: Record<string, string> = {
@@ -76,10 +95,11 @@ export default function Bottles() {
         </div>
 
         <div
-          className="relative mt-16 flex gap-12 overflow-x-auto pb-8 pl-10 pr-24 md:grid md:grid-cols-3 md:gap-12 md:overflow-visible md:px-0 md:pb-0 bottle-grid"
+          ref={scrollRef}
+          className="relative mt-16 flex gap-12 overflow-x-auto pb-8 pl-10 pr-24 md:grid md:grid-cols-3 md:gap-12 md:overflow-visible md:px-0 md:pb-0 bottle-grid hide-scrollbar"
           style={{ scrollSnapType: "x mandatory", scrollPaddingInline: "4.5rem" }}
         >
-          {bottles.map((b, idx) => {
+          {bottles.map((b) => {
             const pid = productMap[b.key];
             const product = PRODUCTS.find(p => p.id === pid);
 
@@ -122,6 +142,24 @@ export default function Bottles() {
               </article>
             );
           })}
+        </div>
+
+        {/* Mobile scroll indicator dots */}
+        <div className="flex justify-center gap-2 mt-6 md:hidden" aria-hidden>
+          {bottles.map((b, idx) => (
+            <button
+              key={b.key}
+              type="button"
+              tabIndex={-1}
+              className={`h-2 rounded-full transition-all duration-300 ${idx === activeBottle ? "w-6 bg-[var(--velah)]" : "w-2 bg-slate-300"}`}
+              onClick={() => {
+                const el = scrollRef.current;
+                if (!el) return;
+                const itemWidth = el.scrollWidth / bottles.length;
+                el.scrollTo({ left: itemWidth * idx, behavior: "smooth" });
+              }}
+            />
+          ))}
         </div>
       </div>
     </section>

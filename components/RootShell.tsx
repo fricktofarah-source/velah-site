@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WIPPopup from "./WIPPopup";
-import WaitlistModal from "./WaitlistModal";
+import WaitlistModal, { WAITLIST_SOURCE_KEY } from "./WaitlistModal";
 import AuthModal from "./AuthModal"; // Import AuthModal
 
 export default function RootShell({ children }: { children: ReactNode }) {
@@ -19,6 +19,26 @@ export default function RootShell({ children }: { children: ReactNode }) {
     const openWaitlist = () => setIsWaitlistOpen(true);
     window.addEventListener("velah:open-waitlist", openWaitlist);
     return () => window.removeEventListener("velah:open-waitlist", openWaitlist);
+  }, []);
+
+  // drinkvelah.com/waitlist redirects to /?waitlist=1: open the form straight away, then tidy the URL.
+  // A ?from= value (e.g. /waitlist?from=whatsapp) is remembered for this visit so the signup records its source.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const from = url.searchParams.get("from");
+    const openForm = url.searchParams.has("waitlist");
+    if (!from && !openForm) return;
+    if (from) {
+      try {
+        sessionStorage.setItem(WAITLIST_SOURCE_KEY, from.slice(0, 32));
+      } catch {
+        // storage unavailable (private mode); the signup is just recorded as "website"
+      }
+    }
+    if (openForm) setIsWaitlistOpen(true);
+    url.searchParams.delete("waitlist");
+    url.searchParams.delete("from");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
   }, []);
 
   useEffect(() => {

@@ -16,12 +16,19 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     // Plan State
     const [plan, setPlan] = useState<'one-time' | 'subscription'>('one-time');
     const [frequency, setFrequency] = useState<'weekly' | 'biweekly' | 'monthly'>('weekly');
+    const [qty, setQty] = useState(1);
 
     const formatPrice = (amount: number) => new Intl.NumberFormat('en-US').format(amount);
 
     return (
         <main className="bg-white py-16 sm:py-24">
             <div className="section-shell section-shell--wide">
+                {/* Breadcrumb */}
+                <nav className="text-sm text-slate-500 mb-8 flex items-center gap-2">
+                    <Link href="/shop" className="hover:text-[var(--velah)] transition-colors">Shop</Link>
+                    <span className="text-slate-300">/</span>
+                    <span className="text-slate-900 font-medium">{product.name}</span>
+                </nav>
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -138,7 +145,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                                                         : 'bg-transparent border-slate-200 text-slate-400 hover:bg-white hover:text-slate-600'
                                                         }`}
                                                 >
-                                                    {freq === 'biweekly' ? 'Bi-Weekly' : freq}
+                                                    {freq === 'biweekly' ? 'Bi-Weekly' : 'Weekly'}
                                                 </button>
                                             ))}
                                         </div>
@@ -147,10 +154,30 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                             </div>
                         )}
 
-                        <div className="mt-8 flex items-center gap-4">
+                        <div className="mt-8 flex items-center gap-3">
+                            {/* Quantity selector */}
+                            <div className="flex items-center gap-3 border border-slate-200 rounded-full px-3 py-2 h-14 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setQty(Math.max(1, qty - 1))}
+                                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors text-lg"
+                                    aria-label="Decrease quantity"
+                                >
+                                    −
+                                </button>
+                                <span className="text-base font-semibold w-6 text-center tabular-nums">{qty}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setQty(qty + 1)}
+                                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors text-lg"
+                                    aria-label="Increase quantity"
+                                >
+                                    +
+                                </button>
+                            </div>
                             <button
-                                onClick={() => addItem(product, 1, plan, plan === 'subscription' ? frequency : undefined)}
-                                className="w-full btn btn-primary h-14 rounded-full text-lg font-bold shadow-lg shadow-[var(--velah)]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                onClick={() => addItem(product, qty, plan, plan === 'subscription' ? frequency : undefined)}
+                                className="flex-1 btn btn-primary h-14 rounded-full text-lg font-bold shadow-lg shadow-[var(--velah)]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
                                 {plan === 'subscription' ? 'Start Subscription' : 'Add to Cart'}
                             </button>

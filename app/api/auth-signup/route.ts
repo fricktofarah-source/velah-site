@@ -169,7 +169,7 @@ export async function POST(req: Request) {
         // 4) If they opted into the newsletter, record it as pending until they confirm (no extra email)
         if (joinList) {
             try {
-                await joinWaitlist({ email, noEmail: true, name, status: "pending" });
+                await joinWaitlist({ email, noEmail: true, name, status: "pending", source: "signup" });
             } catch {
                 // ignore — account creation succeeded; newsletter is best-effort
             }

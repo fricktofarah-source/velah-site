@@ -118,7 +118,7 @@ export default function HowItWorks() {
               >
                 {copy.next}
               </button>
-              <Link href="/subscription" className="btn btn-primary rounded-full px-6 py-3 text-sm font-semibold">
+              <Link href="/shop" className="btn btn-primary rounded-full px-6 py-3 text-sm font-semibold">
                 {copy.aiPlanCta}
               </Link>
             </div>

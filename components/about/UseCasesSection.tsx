@@ -89,7 +89,7 @@ export default function UseCasesSection({ copy }: { copy: AboutCopy["useCases"] 
                 <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600 use-cases-body">{copy.body}</p>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3 use-cases-cards">
-                {copy.cards.map((card, idx) => (
+                {copy.cards.map((card) => (
                     <div
                         key={card.title}
                         className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white/90 p-6 text-center shadow-[0_30px_70px_rgba(15,23,42,0.07)] lg:text-left"

@@ -248,6 +248,7 @@ type ContactFormCopy = {
   sendingAs: (name: string, email: string) => string;
   memberFallback: string;
   nameLabel: string;
+  optionalLabel: string;
   emailLabel: string;
   messageLabel: string;
   sending: string;
@@ -848,6 +849,7 @@ export const translations: Record<Language, SiteCopy> = {
       sendingAs: (name, email) => `Sending as ${name} · ${email}`,
       memberFallback: "Velah member",
       nameLabel: "Name",
+      optionalLabel: "(optional)",
       emailLabel: "Email",
       messageLabel: "Your message",
       sending: "Sending...",
@@ -1466,6 +1468,7 @@ export const translations: Record<Language, SiteCopy> = {
       sendingAs: (name, email) => `جارٍ الإرسال باسم ${name} · ${email}`,
       memberFallback: "عضو فيلا",
       nameLabel: "الاسم",
+      optionalLabel: "(اختياري)",
       emailLabel: "البريد الإلكتروني",
       messageLabel: "رسالتك",
       sending: "جارٍ الإرسال...",

@@ -80,9 +80,11 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="#"
+              href="https://x.com/drinkvelah"
               aria-label="X / Twitter"
               className="h-9 w-9 grid place-items-center rounded-full border hover:bg-slate-50 focus-ring"
+              target="_blank"
+              rel="noreferrer"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
                 <path
